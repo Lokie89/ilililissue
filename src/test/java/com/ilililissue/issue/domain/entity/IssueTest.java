@@ -16,30 +16,30 @@ public class IssueTest {
     void createIssue() {
         Member member = new Member(MemberRole.GUEST);
 
-        Assertions.assertThatThrownBy(() -> new Issue(null, member));
+        Assertions.assertThatThrownBy(() -> Issue.of(member));
     }
 
     @Test
     void equals() {
         Member originRegister = new Member(MemberRole.ADMINISTRATOR);
         Id originId = new Id(5);
-        Issue originIssue = new Issue(originId, originRegister);
+        Issue originIssue = Issue.withId(originId, originRegister);
 
-        Issue sameIdAndRegisterIssue = new Issue(originId, originRegister);
+        Issue sameIdAndRegisterIssue = Issue.withId(originId, originRegister);
         Assertions.assertThat(originIssue).isEqualTo(sameIdAndRegisterIssue);
 
         Id sameValueId = new Id(5);
 
-        Issue sameValueIdAndRegisterIssue = new Issue(sameValueId, originRegister);
+        Issue sameValueIdAndRegisterIssue = Issue.withId(sameValueId, originRegister);
         Assertions.assertThat(originIssue).isEqualTo(sameValueIdAndRegisterIssue);
 
         Member sameRoleRegister = new Member(MemberRole.ADMINISTRATOR);
 
-        Issue sameValueIdAndSameRoleRegisterIssue = new Issue(sameValueId, sameRoleRegister);
+        Issue sameValueIdAndSameRoleRegisterIssue = Issue.withId(sameValueId, sameRoleRegister);
         Assertions.assertThat(originIssue).isEqualTo(sameValueIdAndSameRoleRegisterIssue);
 
         Id differentValueId = new Id(6);
-        Issue differentValueIdAndSameRegisterIssue = new Issue(differentValueId, originRegister);
+        Issue differentValueIdAndSameRegisterIssue = Issue.withId(differentValueId, originRegister);
         Assertions.assertThat(originIssue).isNotEqualTo(differentValueIdAndSameRegisterIssue);
 
     }

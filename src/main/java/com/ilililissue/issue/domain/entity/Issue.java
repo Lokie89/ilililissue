@@ -14,7 +14,7 @@ public class Issue {
     private Id id;
     private Member register;
 
-    public Issue(
+    private Issue(
             Id id,
             Member register) {
         this.id = id;
@@ -34,5 +34,13 @@ public class Issue {
 
     private boolean isAuthenticatedRegister() {
         return this.register.isAdministrator();
+    }
+
+    public static Issue withId(Id id, Member register) {
+        return new Issue(id, register);
+    }
+
+    public static Issue of(Member register) {
+        return new Issue(null, register);
     }
 }
