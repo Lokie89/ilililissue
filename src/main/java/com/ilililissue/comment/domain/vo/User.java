@@ -10,11 +10,11 @@ import lombok.RequiredArgsConstructor;
  */
 @EqualsAndHashCode(of = "id")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class Register {
+public class User {
     private final Id id;
     private final String username;
 
-    public static Register of(Id id, String username) {
-        return new Register(id, username);
+    public static User of(Id id, String username) {
+        return new User(id, username);
     }
 }

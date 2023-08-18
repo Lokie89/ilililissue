@@ -3,6 +3,7 @@ package com.ilililissue.comment.domain.entity;
 import com.ilililissue.comment.domain.AlreadyEditedCommentException;
 import com.ilililissue.comment.domain.vo.CommentContent;
 import com.ilililissue.comment.domain.vo.Id;
+import com.ilililissue.comment.domain.vo.User;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -22,7 +23,7 @@ public class Comment {
     private Id id;
     private CommentContent content;
     private boolean updated;
-    private long userId;
+    private User user;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
@@ -42,7 +43,7 @@ public class Comment {
         private Id id;
         private CommentContent content;
         private boolean updated;
-        private long userId;
+        private User user;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
 
@@ -61,8 +62,8 @@ public class Comment {
             return this;
         }
 
-        public Builder userId(long userId) {
-            this.userId = userId;
+        public Builder register(User user) {
+            this.user = user;
             return this;
         }
 
@@ -77,7 +78,7 @@ public class Comment {
         }
 
         public Comment build() {
-            return new Comment(this.id, this.content, this.updated, this.userId,
+            return new Comment(this.id, this.content, this.updated, this.user,
                     this.createdAt, this.modifiedAt);
         }
 
