@@ -22,6 +22,10 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
+	// https://bnpt.tistory.com/entry/HV000183-Unable-to-initialize-jakartaelExpressionFactory
+	implementation 'org.glassfish:jakarta.el:4.0.2'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
