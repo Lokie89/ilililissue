@@ -11,11 +11,9 @@ public class CommentTest {
     @DisplayName("업데이트 된 댓글 업데이트 테스트")
     @Test
     void updateCommentAlreadyUpdated() {
-        final long issueId = 53L;
         final String comment = "(수정) 수정 댓글";
 
         Comment updateComment = Comment.builder()
-                .issueId(issueId)
                 .content(comment)
                 .build();
 

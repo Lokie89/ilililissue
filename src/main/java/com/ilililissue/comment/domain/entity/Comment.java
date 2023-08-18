@@ -23,7 +23,6 @@ public class Comment {
     private CommentContent content;
     private boolean updated;
     private long userId;
-    private long issueId;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
 
@@ -44,7 +43,6 @@ public class Comment {
         private CommentContent content;
         private boolean updated;
         private long userId;
-        private long issueId;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
 
@@ -68,11 +66,6 @@ public class Comment {
             return this;
         }
 
-        public Builder issueId(long issueId) {
-            this.issueId = issueId;
-            return this;
-        }
-
         public Builder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -84,7 +77,7 @@ public class Comment {
         }
 
         public Comment build() {
-            return new Comment(this.id, this.content, this.updated, this.userId, this.issueId,
+            return new Comment(this.id, this.content, this.updated, this.userId,
                     this.createdAt, this.modifiedAt);
         }
 
