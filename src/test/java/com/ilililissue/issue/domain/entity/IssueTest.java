@@ -1,8 +1,8 @@
 package com.ilililissue.issue.domain.entity;
 
 import com.ilililissue.issue.domain.vo.Id;
-import com.ilililissue.member.domain.Member;
-import com.ilililissue.member.domain.MemberRole;
+import com.ilililissue.issue.domain.vo.User;
+import com.ilililissue.issue.domain.vo.UserRole;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -14,14 +14,14 @@ public class IssueTest {
 
     @Test
     void createIssue() {
-        Member member = new Member(MemberRole.GUEST);
+        User member = User.of(UserRole.GUEST);
 
         Assertions.assertThatThrownBy(() -> Issue.of(member));
     }
 
     @Test
     void equals() {
-        Member originRegister = new Member(MemberRole.ADMINISTRATOR);
+        User originRegister = User.of(UserRole.ADMINISTRATOR);
         Id originId = new Id(5);
         Issue originIssue = Issue.withId(originId, originRegister);
 
@@ -33,7 +33,7 @@ public class IssueTest {
         Issue sameValueIdAndRegisterIssue = Issue.withId(sameValueId, originRegister);
         Assertions.assertThat(originIssue).isEqualTo(sameValueIdAndRegisterIssue);
 
-        Member sameRoleRegister = new Member(MemberRole.ADMINISTRATOR);
+        User sameRoleRegister = User.of(UserRole.ADMINISTRATOR);
 
         Issue sameValueIdAndSameRoleRegisterIssue = Issue.withId(sameValueId, sameRoleRegister);
         Assertions.assertThat(originIssue).isEqualTo(sameValueIdAndSameRoleRegisterIssue);

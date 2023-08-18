@@ -6,4 +6,5 @@ package com.ilililissue.issue.domain.vo;
  */
 public enum UserRole {
     ADMINISTRATOR,
+    GUEST,
 }

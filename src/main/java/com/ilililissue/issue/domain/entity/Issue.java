@@ -2,7 +2,7 @@ package com.ilililissue.issue.domain.entity;
 
 import com.ilililissue.issue.domain.UnauthorizedException;
 import com.ilililissue.issue.domain.vo.Id;
-import com.ilililissue.member.domain.Member;
+import com.ilililissue.issue.domain.vo.User;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -12,11 +12,11 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(of = "id")
 public class Issue {
     private Id id;
-    private Member register;
+    private User register;
 
     private Issue(
             Id id,
-            Member register) {
+            User register) {
         this.id = id;
         this.register = register;
         this.validate();
@@ -36,11 +36,11 @@ public class Issue {
         return this.register.isAdministrator();
     }
 
-    public static Issue withId(Id id, Member register) {
+    public static Issue withId(Id id, User register) {
         return new Issue(id, register);
     }
 
-    public static Issue of(Member register) {
+    public static Issue of(User register) {
         return new Issue(null, register);
     }
 }

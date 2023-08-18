@@ -16,4 +16,8 @@ public class User {
     public static User of(UserRole role) {
         return new User(role);
     }
+
+    public boolean isAdministrator() {
+        return role == UserRole.ADMINISTRATOR;
+    }
 }
