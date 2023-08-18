@@ -1,5 +1,6 @@
 package com.ilililissue.comment.domain.entity;
 
+import com.ilililissue.comment.domain.AlreadyEditedCommentException;
 import com.ilililissue.comment.domain.vo.CommentContent;
 import com.ilililissue.comment.domain.vo.Id;
 import org.assertj.core.api.Assertions;
@@ -11,9 +12,19 @@ public class CommentTest {
     @DisplayName("업데이트 된 댓글 업데이트 테스트")
     @Test
     void updateCommentAlreadyUpdated() {
-        final CommentContent comment = CommentContent.from("(수정) 수정 댓글");
+        final CommentContent originComment = CommentContent.from("댓글");
+        final CommentContent updateComment = CommentContent.from("(수정) 수정 댓글");
 
-        Comment updateComment = Comment.of(comment, null);
+        Comment createdComment = Comment.of(originComment, null);
+        Comment updatingComment = Comment.of(updateComment, null);
+
+        createdComment.updateComment(updatingComment);
+
+        Comment updatingTwiceComment = Comment.of(updateComment, null);
+
+        Assertions.assertThatThrownBy(() -> createdComment.updateComment(updatingTwiceComment))
+                .isInstanceOf(AlreadyEditedCommentException.class)
+                .hasMessageContaining("이미 수정된 댓글");
 
     }
 

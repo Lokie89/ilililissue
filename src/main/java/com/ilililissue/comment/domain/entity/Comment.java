@@ -32,6 +32,7 @@ public class Comment {
             throw new AlreadyEditedCommentException();
         }
         this.content = updateComment.content;
+        this.updated = true;
     }
 
     public static Comment withId(Id id, CommentContent content, User user, boolean updated,
