@@ -22,15 +22,10 @@ public class Comment {
 
     private Id id;
     private CommentContent content;
-    private boolean updated;
     private User user;
+    private boolean updated;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
-
-
-    public static Builder builder() {
-        return new Builder();
-    }
 
     public void updateComment(Comment updateComment) {
         if (updated) {
@@ -39,48 +34,12 @@ public class Comment {
         this.content = updateComment.content;
     }
 
-    public static class Builder {
-        private Id id;
-        private CommentContent content;
-        private boolean updated;
-        private User user;
-        private LocalDateTime createdAt;
-        private LocalDateTime modifiedAt;
+    public static Comment withId(Id id, CommentContent content, User user, boolean updated,
+                                 LocalDateTime createdAt, LocalDateTime modifiedAt) {
+        return new Comment(id, content, user, updated, createdAt, modifiedAt);
+    }
 
-        public Builder id(Id id) {
-            this.id = id;
-            return this;
-        }
-
-        public Builder content(String content) {
-            this.content = CommentContent.from(content);
-            return this;
-        }
-
-        public Builder updated(boolean updated) {
-            this.updated = updated;
-            return this;
-        }
-
-        public Builder register(User user) {
-            this.user = user;
-            return this;
-        }
-
-        public Builder createdAt(LocalDateTime createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public Builder modifiedAt(LocalDateTime modifiedAt) {
-            this.modifiedAt = modifiedAt;
-            return this;
-        }
-
-        public Comment build() {
-            return new Comment(this.id, this.content, this.updated, this.user,
-                    this.createdAt, this.modifiedAt);
-        }
-
+    public static Comment of(CommentContent content, User user) {
+        return new Comment(null, content, user, false, null, null);
     }
 }
