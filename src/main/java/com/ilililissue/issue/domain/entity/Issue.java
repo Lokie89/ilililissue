@@ -1,8 +1,10 @@
 package com.ilililissue.issue.domain.entity;
 
+import com.ilililissue.common.SelfValidating;
 import com.ilililissue.issue.domain.UnauthorizedException;
 import com.ilililissue.issue.domain.vo.Id;
 import com.ilililissue.issue.domain.vo.User;
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -15,9 +17,12 @@ import lombok.EqualsAndHashCode;
  * @since 2023/08/18
  *
  */
-@EqualsAndHashCode(of = "id")
-public class Issue {
+@EqualsAndHashCode(of = "id", callSuper = false)
+public class Issue extends SelfValidating<Issue> {
+
     private Id id;
+
+    @NotNull
     private User register;
 
     private Issue(
@@ -28,7 +33,8 @@ public class Issue {
         this.validate();
     }
 
-    private void validate() {
+    protected void validate() {
+        super.validate();
         this.validateRegister();
     }
 

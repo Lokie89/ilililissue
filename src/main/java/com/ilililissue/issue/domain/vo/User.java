@@ -1,17 +1,23 @@
 package com.ilililissue.issue.domain.vo;
 
-import lombok.AccessLevel;
+import com.ilililissue.common.SelfValidating;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 /**
  * @author SeongRok.Oh
  * @since 2023/08/18
  */
-@EqualsAndHashCode
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class User {
+@EqualsAndHashCode(callSuper = false)
+public class User extends SelfValidating<User> {
+
     private final UserRole role;
+
+    private User(
+            UserRole role
+    ) {
+        this.role = role;
+        this.validate();
+    }
 
     public static User of(UserRole role) {
         return new User(role);
