@@ -1,5 +1,7 @@
-package com.ilililissue.comment.domain;
+package com.ilililissue.comment.domain.entity;
 
+import com.ilililissue.comment.domain.AlreadyEditedCommentException;
+import com.ilililissue.comment.domain.vo.CommentContent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 

@@ -1,7 +1,6 @@
 package com.ilililissue.comment.domain.entity;
 
 import com.ilililissue.comment.domain.AlreadyEditedCommentException;
-import com.ilililissue.comment.domain.Comment;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

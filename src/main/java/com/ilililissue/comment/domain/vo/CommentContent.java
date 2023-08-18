@@ -1,4 +1,4 @@
-package com.ilililissue.comment.domain;
+package com.ilililissue.comment.domain.vo;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
