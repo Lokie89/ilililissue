@@ -48,12 +48,21 @@ public class Comment extends SelfValidating<Comment> {
     }
 
     public void updateComment(Comment updateComment) {
-        if (updated) {
+        if (unableToUpdate(updateComment)) {
             throw new AlreadyEditedCommentException();
         }
         this.content = updateComment.content;
         this.updated = true;
     }
+
+    private boolean unableToUpdate(Comment updateComment) {
+        return this.updated || isDifferentRegister(updateComment);
+    }
+
+    private boolean isDifferentRegister(Comment updateComment) {
+        return !this.register.equals(updateComment.register);
+    }
+
 
     public static Comment withId(Id id, CommentContent content, User register, boolean updated,
                                  LocalDateTime createdAt, LocalDateTime modifiedAt) {
