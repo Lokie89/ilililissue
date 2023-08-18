@@ -1,13 +1,20 @@
 package com.ilililissue.comment.domain.vo;
 
-import lombok.AccessLevel;
+import com.ilililissue.common.SelfValidating;
+import jakarta.validation.constraints.NotBlank;
 import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
-@EqualsAndHashCode
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class CommentContent {
+@EqualsAndHashCode(callSuper = false)
+public class CommentContent extends SelfValidating<CommentContent> {
+
+    @NotBlank
     private final String content;
+
+    private CommentContent(
+            String content
+    ) {
+        this.content = content;
+    }
 
     public static CommentContent from(String content) {
         return new CommentContent(content);
