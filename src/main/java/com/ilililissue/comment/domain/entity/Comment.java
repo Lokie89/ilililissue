@@ -2,8 +2,10 @@ package com.ilililissue.comment.domain.entity;
 
 import com.ilililissue.comment.domain.AlreadyEditedCommentException;
 import com.ilililissue.comment.domain.vo.CommentContent;
+import com.ilililissue.comment.domain.vo.Id;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -13,10 +15,11 @@ import java.time.LocalDateTime;
  * <ul>업데이트 된 댓글은 업데이트 할 수 없다.</ul>
  * </li>
  */
+@EqualsAndHashCode(of = "id")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Comment {
 
-    private Long id;
+    private Id id;
     private CommentContent content;
     private boolean updated;
     private long userId;
@@ -37,7 +40,7 @@ public class Comment {
     }
 
     public static class Builder {
-        private Long id;
+        private Id id;
         private CommentContent content;
         private boolean updated;
         private long userId;
@@ -45,7 +48,7 @@ public class Comment {
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
 
-        public Builder id(Long id) {
+        public Builder id(Id id) {
             this.id = id;
             return this;
         }
