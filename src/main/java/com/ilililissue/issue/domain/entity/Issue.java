@@ -6,8 +6,14 @@ import com.ilililissue.issue.domain.vo.User;
 import lombok.EqualsAndHashCode;
 
 /**
+ * <h2>이슈 도메인</h2>
+ * <li>
+ * <ul>이슈는 관리자만 생성할 수 있다.</ul>
+ * </li>
+ *
  * @author SeongRok.Oh
  * @since 2023/08/18
+ *
  */
 @EqualsAndHashCode(of = "id")
 public class Issue {

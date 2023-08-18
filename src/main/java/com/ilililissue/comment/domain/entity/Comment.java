@@ -22,7 +22,7 @@ public class Comment {
 
     private Id id;
     private CommentContent content;
-    private User user;
+    private User register;
     private boolean updated;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
@@ -35,12 +35,12 @@ public class Comment {
         this.updated = true;
     }
 
-    public static Comment withId(Id id, CommentContent content, User user, boolean updated,
+    public static Comment withId(Id id, CommentContent content, User register, boolean updated,
                                  LocalDateTime createdAt, LocalDateTime modifiedAt) {
-        return new Comment(id, content, user, updated, createdAt, modifiedAt);
+        return new Comment(id, content, register, updated, createdAt, modifiedAt);
     }
 
-    public static Comment of(CommentContent content, User user) {
-        return new Comment(null, content, user, false, null, null);
+    public static Comment of(CommentContent content, User register) {
+        return new Comment(null, content, register, false, null, null);
     }
 }
