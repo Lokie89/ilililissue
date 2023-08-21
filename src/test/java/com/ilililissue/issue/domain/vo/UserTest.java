@@ -15,9 +15,9 @@ public class UserTest {
     void equals() {
 
         final UserRole administratorRole = UserRole.ADMINISTRATOR;
-        final User originUser = User.of(administratorRole);
+        final User originUser = User.of(null, administratorRole);
 
-        final User sameRoleUser = User.of(administratorRole);
+        final User sameRoleUser = User.of(null, administratorRole);
 
         Assertions.assertThat(originUser).isEqualTo(sameRoleUser);
 

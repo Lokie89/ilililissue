@@ -29,4 +29,16 @@ public class IssueImage extends SelfValidating<IssueImages> {
         return new IssueImage(fileName, extension);
     }
 
+    public static IssueImage from(String fullFileName) {
+        return splitExtension(fullFileName);
+    }
+
+    // ???
+    private static IssueImage splitExtension(String fullFileName) {
+        int indexExtension = fullFileName.lastIndexOf("\\.");
+        String fileName = fullFileName.substring(0, indexExtension);
+        String extension = fileName.substring(indexExtension + 1);
+        return new IssueImage(fileName, ImageExtension.from(extension));
+    }
+
 }
