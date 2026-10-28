@@ -4,16 +4,19 @@
 
 ## 먼저 확인할 위치
 
-- `README.md`: 없음 (Phase 0 이후 작성 예정)
+- `README.md`: 실행 방법, 인증 방식, 전체 API 목록
 - 실행 진입점: `src/main/java/com/ilililissue/IlililissueApplication.java`
-- 주요 소스 파일:
-  - `src/main/java/com/ilililissue/issue/domain/entity/Issue.java`
-  - `src/main/java/com/ilililissue/comment/domain/entity/Comment.java`
-  - `src/main/java/com/ilililissue/common/SelfValidating.java`
-  - `src/main/java/com/ilililissue/issue/adapter/out/persistence/IssuePersistenceAdapter.java`
-- 테스트: `src/test/java/com/ilililissue/**`
-- 설정 파일: `build.gradle`, `src/main/resources/application.yml`, `docker-compose.yml`
-- 환경변수 예시: 없음 (`architecture.md`의 비밀값 이름 참고)
+- 주요 소스 파일 (모듈별 `domain` / `application` / `adapter.in.web` / `adapter.out.persistence`):
+  - 인증·보안: `src/main/java/com/ilililissue/auth/config/SecurityConfig.java`, `auth/application/service/AuthService.java`
+  - 이슈: `issue/domain/entity/Issue.java`, `issue/application/service/IssueService.java`
+  - 투표·결과: `vote/application/service/VoteService.java`
+  - 의견·추천: `opinion/application/service/OpinionService.java`
+  - 신고: `report/application/service/ReportService.java`
+  - 참여 지표: `metrics/application/service/MetricsService.java`
+  - 공통 예외 처리: `common/adapter/in/web/GlobalExceptionHandler.java`, `common/DomainException.java`
+- 테스트: `src/test/java/com/ilililissue/**` (API 통합 테스트 공통: `support/ApiTestSupport.java`)
+- 설정 파일: `build.gradle`, `src/main/resources/application.yml`, `src/test/resources/application.yml`, `docker-compose.yml`
+- 환경변수 예시: `.env.example`
 
 ## 도메인 문서
 

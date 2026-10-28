@@ -18,6 +18,26 @@
 
 ## 현재 기록
 
+### 2026-10-28 (2) — MVP API 구현
+
+- 목표: Phase 2~5 백엔드 MVP API 완성 (사용자 지시: 별도 지시 없으면 다음 Phase로 계속 진행)
+- 변경:
+  - Phase 2 인증: 회원가입·로그인·재발급·로그아웃, Spring Security OAuth2 Resource Server + Nimbus JWT, HttpOnly 쿠키, 리프레시 토큰 해시 저장·rotation
+  - Phase 3 이슈: 공개 조회 API, 관리자 카테고리·이슈 작성·상태 전이·정정 API
+  - Phase 4 참여: 투표, 결과(투표자 공개), 의견 작성·수정, 입장별 목록(추천순/최신순), 추천
+  - Phase 5 운영: 신고·관리자 숨김/기각, 참여 이벤트 로그, 관리자 지표 API
+  - `README.md` 작성 (실행, 인증, API 목록)
+- 검증: `./gradlew test` → 59개 통과 (H2). MySQL 실기동(`bootRun`)은 미실행 — Docker Desktop 데몬이 꺼져 있음
+- 남은 작업:
+  - Docker Desktop 실행 후 MySQL로 `bootRun` 및 핵심 흐름 수동 확인
+  - Phase 6 웹 클라이언트(Next.js), 앱(Expo)은 4주 검증 이후
+  - 운영 DB 스키마 관리(Flyway) 도입 — 현재 `ddl-auto: update`
+  - 미정 정책: 추천 취소·자기 의견 추천, 비회원 방문자 식별, 의견 삭제, 회원 탈퇴
+- 주의 사항:
+  - 결과·의견 목록·추천은 투표자만 가능. 비로그인 401, 미투표 403
+  - 의견 목록 조회는 탭 열람 이벤트를 기록하므로 읽기 전용 트랜잭션이 아니다
+  - 지표 정의는 `domain-policy.md`의 ParticipationEvent 참고
+
 ### 2026-10-28
 
 - 목표: ai-agents 하네스 도입, 코드 분석, 기획 기반 개발 계획 수립, Phase 0(빌드·테스트 복구)
