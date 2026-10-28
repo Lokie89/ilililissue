@@ -2,20 +2,27 @@ package com.ilililissue.member.adapter.in.web;
 
 import com.ilililissue.auth.adapter.in.web.AuthCookies;
 import com.ilililissue.common.adapter.in.web.LoginMember;
+import com.ilililissue.member.application.port.in.BlockMemberUseCase;
+import com.ilililissue.member.application.port.in.BlockedMember;
 import com.ilililissue.member.application.port.in.GetMemberQuery;
 import com.ilililissue.member.application.port.in.RegisterMemberCommand;
 import com.ilililissue.member.application.port.in.RegisterMemberUseCase;
 import com.ilililissue.member.application.port.in.WithdrawMemberUseCase;
+import com.ilililissue.member.domain.vo.MemberBlockId;
 import com.ilililissue.member.domain.vo.MemberId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
@@ -25,6 +32,7 @@ public class MemberController {
     private final RegisterMemberUseCase registerMemberUseCase;
     private final GetMemberQuery getMemberQuery;
     private final WithdrawMemberUseCase withdrawMemberUseCase;
+    private final BlockMemberUseCase blockMemberUseCase;
     private final AuthCookies authCookies;
 
     @PostMapping
@@ -47,6 +55,27 @@ public class MemberController {
     public ResponseEntity<Void> withdraw(@LoginMember MemberId memberId, @RequestBody WithdrawRequest request) {
         withdrawMemberUseCase.withdraw(memberId, request.password());
         return ResponseEntity.noContent().headers(authCookies.expire()).build();
+    }
+
+    /**
+     * 내가 차단한 회원 목록. 차단은 의견 목록에서 한다({@code POST /api/opinions/{id}/author-block}).
+     */
+    @GetMapping("/me/blocks")
+    public List<BlockResponse> blocks(@LoginMember MemberId memberId) {
+        return blockMemberUseCase.getBlocks(memberId).stream().map(BlockResponse::from).toList();
+    }
+
+    @DeleteMapping("/me/blocks/{blockId}")
+    public ResponseEntity<Void> unblock(@LoginMember MemberId memberId, @PathVariable long blockId) {
+        blockMemberUseCase.unblock(memberId, new MemberBlockId(blockId));
+        return ResponseEntity.noContent().build();
+    }
+
+    public record BlockResponse(long id, String nickname, LocalDateTime blockedAt) {
+
+        static BlockResponse from(BlockedMember blocked) {
+            return new BlockResponse(blocked.blockId().getValue(), blocked.nickname(), blocked.blockedAt());
+        }
     }
 
     public record WithdrawRequest(String password) {

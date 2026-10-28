@@ -331,6 +331,12 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...change } : item)));
   }
 
+  // 의견은 이슈당 회원 1개이므로 차단한 작성자의 의견은 이 카드 하나뿐이다.
+  function removeItem(id: number) {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+    setTotal((prev) => Math.max(0, prev - 1));
+  }
+
   return (
     <section>
       <div className="mb-3 flex items-end justify-between border-b border-stone-200">
@@ -362,7 +368,12 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((item) => (
-            <OpinionCard key={item.id} item={item} onChange={(change) => updateItem(item.id, change)} />
+            <OpinionCard
+              key={item.id}
+              item={item}
+              onChange={(change) => updateItem(item.id, change)}
+              onBlocked={() => removeItem(item.id)}
+            />
           ))}
         </ul>
       )}
@@ -375,7 +386,15 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
   );
 }
 
-function OpinionCard({ item, onChange }: { item: OpinionItem; onChange: (change: Partial<OpinionItem>) => void }) {
+function OpinionCard({
+  item,
+  onChange,
+  onBlocked,
+}: {
+  item: OpinionItem;
+  onChange: (change: Partial<OpinionItem>) => void;
+  onBlocked: () => void;
+}) {
   const [message, setMessage] = useState<string | null>(null);
 
   // 추천했으면 취소, 아니면 추천한다.
@@ -409,6 +428,21 @@ function OpinionCard({ item, onChange }: { item: OpinionItem; onChange: (change:
     }
   }
 
+  async function blockAuthor() {
+    if (
+      !window.confirm(
+        `${item.authorNickname}님을 차단할까요? 이 회원의 의견이 더 이상 보이지 않아요. 상대에게는 알리지 않고, 내 정보에서 해제할 수 있어요.`,
+      )
+    )
+      return;
+    try {
+      await api(`/api/opinions/${item.id}/author-block`, { method: "POST" });
+      onBlocked();
+    } catch (e) {
+      setMessage(errorMessage(e));
+    }
+  }
+
   return (
     <li className="rounded-lg border border-stone-200 p-4">
       <div className="mb-2 flex justify-between text-sm text-stone-500">
@@ -437,6 +471,11 @@ function OpinionCard({ item, onChange }: { item: OpinionItem; onChange: (change:
         {!item.mine && (
           <button type="button" onClick={report} className="text-stone-400 underline">
             신고
+          </button>
+        )}
+        {!item.mine && (
+          <button type="button" onClick={blockAuthor} className="text-stone-400 underline">
+            차단
           </button>
         )}
         {message && <span className="text-stone-500">{message}</span>}

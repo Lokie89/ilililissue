@@ -67,11 +67,17 @@ public class OpinionPersistenceAdapter implements OpinionPort, RecommendationPor
     }
 
     @Override
-    public PageResult<CountedOpinion> findVisible(IssueId issueId, Stance stance, OpinionSort sort,
+    public PageResult<CountedOpinion> findVisible(IssueId issueId, Stance stance,
+                                                  Collection<MemberId> excludedAuthorIds, OpinionSort sort,
                                                   PageQuery pageQuery) {
         Sort order = sort == OpinionSort.LATEST ? LATEST : RECOMMENDED;
-        Page<OpinionJpaEntity> page = opinionJpaRepository.findByIssueIdAndStanceAndHiddenFalseAndDeletedFalse(
-                issueId.getValue(), stance, PageRequest.of(pageQuery.page(), pageQuery.size(), order));
+        PageRequest pageable = PageRequest.of(pageQuery.page(), pageQuery.size(), order);
+        Page<OpinionJpaEntity> page = excludedAuthorIds.isEmpty()
+                ? opinionJpaRepository.findByIssueIdAndStanceAndHiddenFalseAndDeletedFalse(
+                        issueId.getValue(), stance, pageable)
+                : opinionJpaRepository.findByIssueIdAndStanceAndHiddenFalseAndDeletedFalseAndAuthorIdNotIn(
+                        issueId.getValue(), stance, excludedAuthorIds.stream().map(MemberId::getValue).toList(),
+                        pageable);
         return new PageResult<>(
                 page.getContent().stream()
                         .map(entity -> new CountedOpinion(mapToDomain(entity), entity.getRecommendationCount()))

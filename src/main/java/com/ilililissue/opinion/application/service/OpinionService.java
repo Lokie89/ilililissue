@@ -4,6 +4,7 @@ import com.ilililissue.common.application.PageQuery;
 import com.ilililissue.common.application.PageResult;
 import com.ilililissue.issue.application.port.in.IssueQuery;
 import com.ilililissue.issue.domain.vo.IssueId;
+import com.ilililissue.member.application.port.in.BlockMemberUseCase;
 import com.ilililissue.member.application.port.out.LoadMemberPort;
 import com.ilililissue.member.domain.entity.Member;
 import com.ilililissue.member.domain.vo.MemberId;
@@ -44,6 +45,7 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
     private final OpinionPort opinionPort;
     private final RecommendationPort recommendationPort;
     private final LoadMemberPort loadMemberPort;
+    private final BlockMemberUseCase blockMemberUseCase;
     private final RecordEventUseCase recordEventUseCase;
     private final Clock clock;
 
@@ -105,6 +107,13 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
         }
     }
 
+    @Transactional
+    @Override
+    public void blockAuthor(OpinionId opinionId, MemberId memberId) {
+        Opinion opinion = loadNotDeleted(opinionId);
+        blockMemberUseCase.block(memberId, opinion.getAuthorId());
+    }
+
     // 탭 열람 이벤트를 기록하므로 읽기 전용 트랜잭션을 쓰지 않는다.
     @Transactional
     @Override
@@ -116,7 +125,8 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
             recordEventUseCase.opinionsViewed(issueId, viewerId, viewerVote.getStance(), stance);
         }
 
-        PageResult<CountedOpinion> page = opinionPort.findVisible(issueId, stance, sort, pageQuery);
+        PageResult<CountedOpinion> page = opinionPort.findVisible(
+                issueId, stance, blockMemberUseCase.findBlockedIds(viewerId), sort, pageQuery);
         List<Opinion> opinions = page.content().stream().map(CountedOpinion::opinion).toList();
         Map<MemberId, Nickname> nicknames = loadMemberPort.findNicknames(
                 opinions.stream().map(Opinion::getAuthorId).toList());

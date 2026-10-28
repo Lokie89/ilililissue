@@ -102,6 +102,15 @@ public class OpinionController {
         opinionUseCase.cancelRecommendation(new OpinionId(opinionId), memberId);
     }
 
+    /**
+     * 의견 작성자를 차단한다. 해제는 {@code DELETE /api/members/me/blocks/{blockId}}.
+     */
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/api/opinions/{opinionId}/author-block")
+    public void blockAuthor(@PathVariable long opinionId, @LoginMember MemberId memberId) {
+        opinionUseCase.blockAuthor(new OpinionId(opinionId), memberId);
+    }
+
     public record OpinionRequest(String content) {
     }
 

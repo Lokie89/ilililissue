@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api, errorMessage } from "@/lib/api";
+import { BlockedMembers } from "@/components/blocked-members";
 import { useMe } from "@/components/me-provider";
 
 /**
- * 내 정보와 회원 탈퇴. 탈퇴하면 남긴 투표와 의견은 '탈퇴한 회원'으로 남는다.
+ * 내 정보, 차단한 회원, 회원 탈퇴. 탈퇴하면 남긴 투표와 의견은 '탈퇴한 회원'으로 남는다.
  */
 export function Account() {
   const { me, loading, clear } = useMe();
@@ -58,6 +59,8 @@ export function Account() {
           <dd className="break-all">{me.email}</dd>
         </dl>
       </section>
+
+      <BlockedMembers />
 
       <form onSubmit={withdraw} className="flex flex-col gap-3 rounded-lg border border-stone-200 p-5">
         <h2 className="font-semibold">회원 탈퇴</h2>

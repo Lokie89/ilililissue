@@ -60,6 +60,8 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/members` | 누구나 | 회원가입 `{email, nickname, password}` |
 | GET | `/api/members/me` | 회원 | 내 정보 |
 | POST | `/api/members/me/withdrawal` | 회원 | 탈퇴 `{password}` (인증 쿠키 삭제, 의견은 '탈퇴한 회원'으로 남음) |
+| GET | `/api/members/me/blocks` | 회원 | 내가 차단한 회원 목록 `[{id, nickname, blockedAt}]` |
+| DELETE | `/api/members/me/blocks/{blockId}` | 회원 | 차단 해제 |
 | POST | `/api/auth/login` | 누구나 | 로그인 `{email, password}` |
 | POST | `/api/auth/refresh` | 리프레시 쿠키 | 토큰 재발급 |
 | POST | `/api/auth/logout` | 누구나 | 로그아웃 (쿠키 삭제, 리프레시 토큰 폐기) |
@@ -77,6 +79,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/opinions/{id}/recommendations` | 투표자 | 의견 추천 (1회, 자기 의견 불가) |
 | DELETE | `/api/opinions/{id}/recommendations` | 회원 | 추천 취소 |
 | POST | `/api/opinions/{id}/reports` | 회원 | 의견 신고 `{reason}` (1회) |
+| POST | `/api/opinions/{id}/author-block` | 회원 | 의견 작성자 차단 (내 의견 목록에서 그 회원의 의견이 빠짐, 상대에게 알리지 않음) |
 | POST | `/api/admin/categories` | 관리자 | 카테고리 생성 `{name}` |
 | GET | `/api/admin/issues` | 관리자 | 전체 이슈 목록 (모든 상태) |
 | GET | `/api/admin/issues/{id}` | 관리자 | 이슈 상세 (모든 상태) |

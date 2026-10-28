@@ -30,7 +30,12 @@ public interface OpinionUseCase {
     void cancelRecommendation(OpinionId opinionId, MemberId memberId);
 
     /**
-     * 투표한 회원에게만 입장별 의견 목록을 공개한다. 숨김 처리된 의견은 제외한다.
+     * 의견 작성자를 차단한다. 이후 내 의견 목록에서 그 회원의 의견이 빠진다. 작성자에게 알리지 않는다.
+     */
+    void blockAuthor(OpinionId opinionId, MemberId memberId);
+
+    /**
+     * 투표한 회원에게만 입장별 의견 목록을 공개한다. 숨김 처리된 의견과 차단한 회원의 의견은 제외한다.
      */
     PageResult<OpinionItem> getOpinions(IssueId issueId, MemberId viewerId, Stance stance, OpinionSort sort,
                                         PageQuery pageQuery);

@@ -9,6 +9,7 @@ import com.ilililissue.opinion.domain.entity.Opinion;
 import com.ilililissue.opinion.domain.vo.OpinionId;
 import com.ilililissue.vote.domain.vo.Stance;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface OpinionPort {
@@ -20,9 +21,10 @@ public interface OpinionPort {
     Optional<Opinion> findByIssueIdAndAuthorId(IssueId issueId, MemberId authorId);
 
     /**
-     * 숨김·삭제되지 않은 의견을 입장별로 조회한다.
+     * 숨김·삭제되지 않은 의견을 입장별로 조회한다. excludedAuthorIds(차단한 회원)의 의견은 뺀다.
      */
-    PageResult<CountedOpinion> findVisible(IssueId issueId, Stance stance, OpinionSort sort, PageQuery pageQuery);
+    PageResult<CountedOpinion> findVisible(IssueId issueId, Stance stance, Collection<MemberId> excludedAuthorIds,
+                                           OpinionSort sort, PageQuery pageQuery);
 
     PageResult<Opinion> findHidden(PageQuery pageQuery);
 

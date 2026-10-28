@@ -117,6 +117,12 @@ export type AdminReport = {
   resolvedAt: string | null;
 };
 
+export type BlockedMember = {
+  id: number;
+  nickname: string;
+  blockedAt: string;
+};
+
 export type HiddenOpinion = {
   id: number;
   issueId: number;
