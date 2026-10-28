@@ -75,6 +75,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
         autoComplete={mode === "signup" ? "new-password" : "current-password"}
         className="rounded border border-stone-300 p-2"
       />
+      {mode === "signup" && (
+        <p className="text-xs text-stone-500">
+          가입하면{" "}
+          <Link href="/privacy" target="_blank" className="underline">
+            개인정보 처리방침
+          </Link>
+          에 따라 이메일·닉네임을 처리하는 데 동의하게 돼요.
+        </p>
+      )}
       {error && <p className="text-sm text-rose-600">{error}</p>}
       <button type="submit" disabled={submitting} className="rounded bg-stone-900 py-2 text-white disabled:opacity-40">
         {mode === "login" ? "로그인" : "가입하고 시작하기"}

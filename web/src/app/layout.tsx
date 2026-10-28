@@ -30,7 +30,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </header>
           <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">{children}</main>
           <footer className="border-t border-stone-200 py-6 text-center text-xs text-stone-400">
-            이슈 설명은 원문 기사를 바탕으로 직접 작성했으며, 투표 결과는 서비스 참여자 기준입니다.
+            <p>이슈 설명은 원문 기사를 바탕으로 직접 작성했으며, 투표 결과는 서비스 참여자 기준입니다.</p>
+            <Link href="/privacy" className="mt-2 inline-block underline">
+              개인정보 처리방침
+            </Link>
           </footer>
         </MeProvider>
       </body>
