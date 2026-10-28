@@ -16,7 +16,7 @@ public class MemberTest {
     @DisplayName("가입한 회원은 USER 역할을 가진다")
     @Test
     void register() {
-        Member member = Member.register(Email.from("user@example.com"), Nickname.from("토론러"), "{bcrypt}hash");
+        Member member = Member.register(Email.from("user@example.com"), Nickname.from("토론러"), "{bcrypt}hash", LocalDateTime.now());
 
         Assertions.assertThat(member.getRole()).isEqualTo(MemberRole.USER);
         Assertions.assertThat(member.isAdministrator()).isFalse();
@@ -29,7 +29,7 @@ public class MemberTest {
         Assertions.assertThatThrownBy(() -> Nickname.from("a"));
         Assertions.assertThatThrownBy(() -> Nickname.from("열세글자를넘는아주긴닉네임입니다"));
         Assertions.assertThatThrownBy(
-                () -> Member.register(Email.from("user@example.com"), Nickname.from("토론러"), " "));
+                () -> Member.register(Email.from("user@example.com"), Nickname.from("토론러"), " ", LocalDateTime.now()));
     }
 
     @DisplayName("탈퇴하면 이메일, 닉네임, 비밀번호를 지우고 다시 탈퇴할 수 없다")

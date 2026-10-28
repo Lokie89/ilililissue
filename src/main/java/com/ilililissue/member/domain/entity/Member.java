@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
  * <li>이메일, 닉네임의 유일성은 저장소에서 보장한다.</li>
  * <li>탈퇴하면 이메일·닉네임·비밀번호를 지운다. 투표와 의견은 남고 작성자는 {@value #WITHDRAWN_NICKNAME}으로 보인다.
  * 지운 이메일·닉네임으로 다시 가입할 수 있다.</li>
+ * <li>가입할 때 이용약관·개인정보 처리방침 동의 시각을 남긴다. 탈퇴해도 지우지 않는다(동의 기록).
+ * 동의 절차가 생기기 전 가입한 회원은 null이다.</li>
  * </ul>
  */
 @Getter
@@ -42,13 +44,16 @@ public class Member extends SelfValidating<Member> {
 
     private LocalDateTime withdrawnAt;
 
+    private final LocalDateTime termsAgreedAt;
+
     private Member(
             MemberId id,
             Email email,
             Nickname nickname,
             String encodedPassword,
             MemberRole role,
-            LocalDateTime withdrawnAt
+            LocalDateTime withdrawnAt,
+            LocalDateTime termsAgreedAt
     ) {
         this.id = id;
         this.email = email;
@@ -56,20 +61,27 @@ public class Member extends SelfValidating<Member> {
         this.encodedPassword = encodedPassword;
         this.role = role;
         this.withdrawnAt = withdrawnAt;
+        this.termsAgreedAt = termsAgreedAt;
         this.validate();
     }
 
-    public static Member register(Email email, Nickname nickname, String encodedPassword) {
-        return new Member(null, email, nickname, encodedPassword, MemberRole.USER, null);
+    public static Member register(Email email, Nickname nickname, String encodedPassword,
+                                  LocalDateTime termsAgreedAt) {
+        return new Member(null, email, nickname, encodedPassword, MemberRole.USER, null, termsAgreedAt);
     }
 
     public static Member withId(MemberId id, Email email, Nickname nickname, String encodedPassword, MemberRole role) {
-        return new Member(id, email, nickname, encodedPassword, role, null);
+        return new Member(id, email, nickname, encodedPassword, role, null, null);
     }
 
     public static Member withId(MemberId id, Email email, Nickname nickname, String encodedPassword, MemberRole role,
                                 LocalDateTime withdrawnAt) {
-        return new Member(id, email, nickname, encodedPassword, role, withdrawnAt);
+        return new Member(id, email, nickname, encodedPassword, role, withdrawnAt, null);
+    }
+
+    public static Member withId(MemberId id, Email email, Nickname nickname, String encodedPassword, MemberRole role,
+                                LocalDateTime withdrawnAt, LocalDateTime termsAgreedAt) {
+        return new Member(id, email, nickname, encodedPassword, role, withdrawnAt, termsAgreedAt);
     }
 
     public boolean isAdministrator() {

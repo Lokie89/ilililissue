@@ -38,7 +38,8 @@ public class MemberController {
     @PostMapping
     public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
         MemberId id = registerMemberUseCase.register(
-                new RegisterMemberCommand(request.email(), request.nickname(), request.password()));
+                new RegisterMemberCommand(request.email(), request.nickname(), request.password(),
+                        Boolean.TRUE.equals(request.agreedToTerms())));
         return ResponseEntity.created(URI.create("/api/members/" + id.getValue()))
                 .body(new RegisterResponse(id.getValue()));
     }
@@ -81,7 +82,10 @@ public class MemberController {
     public record WithdrawRequest(String password) {
     }
 
-    public record RegisterRequest(String email, String nickname, String password) {
+    /**
+     * @param agreedToTerms 이용약관·개인정보 처리방침 동의. true가 아니면 400.
+     */
+    public record RegisterRequest(String email, String nickname, String password, Boolean agreedToTerms) {
     }
 
     public record RegisterResponse(long id) {

@@ -41,10 +41,10 @@ public class TestIlililissueApplication {
                                JdbcTemplate jdbcTemplate) {
             return args -> {
                 registerMemberUseCase.register(
-                        new RegisterMemberCommand("admin@local.test", "관리자", "password1234"));
+                        new RegisterMemberCommand("admin@local.test", "관리자", "password1234", true));
                 jdbcTemplate.update("UPDATE member SET role = 'ADMIN' WHERE email = ?", "admin@local.test");
                 registerMemberUseCase.register(
-                        new RegisterMemberCommand("user@local.test", "토론러", "password1234"));
+                        new RegisterMemberCommand("user@local.test", "토론러", "password1234", true));
 
                 long categoryId = manageIssueUseCase.createCategory("사회").getId().getValue();
                 IssueId issueId = manageIssueUseCase.create(IssueCommand.of(

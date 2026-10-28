@@ -53,7 +53,7 @@ public abstract class ApiTestSupport {
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"%s","nickname":"%s","password":"%s"}
+                                {"email":"%s","nickname":"%s","password":"%s","agreedToTerms":true}
                                 """.formatted(email, "닉" + unique(), PASSWORD)))
                 .andExpect(status().isCreated());
     }

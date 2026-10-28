@@ -45,4 +45,6 @@ public class MemberJpaEntity {
     private MemberRole role;
 
     private LocalDateTime withdrawnAt;
+
+    private LocalDateTime termsAgreedAt;
 }

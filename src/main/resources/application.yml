@@ -16,6 +16,10 @@ auth:
   cookie-secure: true
   allowed-origins: ${ALLOWED_ORIGINS:}
 
+# 이용 기록 보관 기간(가안 1년). 바꾸면 개인정보 처리방침 2장도 고친다.
+metrics:
+  event-retention: 365d
+
 ---
 spring:
   config:

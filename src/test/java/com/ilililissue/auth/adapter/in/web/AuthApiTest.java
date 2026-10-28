@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -42,7 +43,7 @@ public class AuthApiTest {
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"%s","nickname":"%s","password":"%s"}
+                                {"email":"%s","nickname":"%s","password":"%s","agreedToTerms":true}
                                 """.formatted(email, nickname, PASSWORD)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber());
@@ -128,34 +129,42 @@ public class AuthApiTest {
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"%s","nickname":"%s","password":"%s"}
+                                {"email":"%s","nickname":"%s","password":"%s","agreedToTerms":true}
                                 """.formatted(email.toUpperCase(), uniqueNickname(), PASSWORD)))
                 .andExpect(status().isConflict());
 
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"%s","nickname":"%s","password":"%s"}
+                                {"email":"%s","nickname":"%s","password":"%s","agreedToTerms":true}
                                 """.formatted(uniqueEmail(), nickname, PASSWORD)))
                 .andExpect(status().isConflict());
     }
 
-    @DisplayName("짧은 비밀번호, 잘못된 이메일로는 가입할 수 없다")
+    @DisplayName("짧은 비밀번호, 잘못된 이메일, 약관 미동의로는 가입할 수 없다")
     @Test
     void invalidSignup() throws Exception {
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"%s","nickname":"%s","password":"short"}
+                                {"email":"%s","nickname":"%s","password":"short","agreedToTerms":true}
                                 """.formatted(uniqueEmail(), uniqueNickname())))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"not-email","nickname":"%s","password":"%s"}
+                                {"email":"not-email","nickname":"%s","password":"%s","agreedToTerms":true}
                                 """.formatted(uniqueNickname(), PASSWORD)))
                 .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/members")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","nickname":"%s","password":"%s"}
+                                """.formatted(uniqueEmail(), uniqueNickname(), PASSWORD)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(containsString("이용약관과 개인정보 처리방침에 동의해야 가입할 수 있습니다.")));
     }
 
     @DisplayName("비로그인은 401, 일반 회원의 관리자 경로 접근은 403")

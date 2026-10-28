@@ -2,12 +2,17 @@ package com.ilililissue.metrics.adapter.out.persistence;
 
 import com.ilililissue.metrics.domain.ParticipationEventType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ParticipationEventJpaRepository extends JpaRepository<ParticipationEventJpaEntity, Long> {
+
+    @Modifying
+    @Query("delete from ParticipationEventJpaEntity e where e.occurredAt < :cutoff")
+    int deleteOccurredBefore(LocalDateTime cutoff);
 
     long countByTypeAndOccurredAtGreaterThanEqualAndOccurredAtLessThan(ParticipationEventType type,
                                                                        LocalDateTime from, LocalDateTime to);

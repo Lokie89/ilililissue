@@ -61,7 +61,8 @@ public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort 
                 member.getNickname() == null ? null : member.getNickname().getValue(),
                 member.getEncodedPassword(),
                 member.getRole(),
-                member.getWithdrawnAt()
+                member.getWithdrawnAt(),
+                member.getTermsAgreedAt()
         ));
         return mapToDomain(saved);
     }
@@ -73,7 +74,8 @@ public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort 
                 entity.getNickname() == null ? null : Nickname.from(entity.getNickname()),
                 entity.getEncodedPassword(),
                 entity.getRole(),
-                entity.getWithdrawnAt()
+                entity.getWithdrawnAt(),
+                entity.getTermsAgreedAt()
         );
     }
 }

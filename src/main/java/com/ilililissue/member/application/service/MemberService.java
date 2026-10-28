@@ -43,7 +43,8 @@ public class MemberService implements RegisterMemberUseCase, GetMemberQuery, Wit
         Member member = Member.register(
                 command.getEmail(),
                 command.getNickname(),
-                passwordEncoder.encode(command.getRawPassword())
+                passwordEncoder.encode(command.getRawPassword()),
+                LocalDateTime.now(clock)
         );
         return saveMemberPort.save(member).getId();
     }

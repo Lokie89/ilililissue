@@ -8,7 +8,8 @@ const OPERATOR = "[운영자 이름 또는 상호]";
 const OFFICER = "[개인정보 보호책임자 이름]";
 const CONTACT = "[문의 이메일]";
 const HOSTING = "[클라우드 사업자 이름]";
-const EVENT_RETENTION = "[이용 기록 보관 기간, 예: 1년]";
+// 이용 기록 보관 기간은 application.yml의 metrics.event-retention(365d)과 맞춘다.
+const EVENT_RETENTION = "1년";
 const EFFECTIVE_DATE = "[시행일 YYYY-MM-DD]";
 
 export default function PrivacyPage() {
@@ -25,7 +26,8 @@ export default function PrivacyPage() {
         <h2>1. 처리하는 개인정보와 목적</h2>
         <ul>
           <li>
-            회원 가입·로그인: 이메일, 닉네임, 비밀번호. 비밀번호는 복원할 수 없는 방식(해시)으로만 저장합니다.
+            회원 가입·로그인: 이메일, 닉네임, 비밀번호, 이용약관·개인정보 처리방침 동의 시각. 비밀번호는 복원할 수 없는
+            방식(해시)으로만 저장합니다.
           </li>
           <li>
             서비스 이용 중 생성되는 정보: 투표, 의견, 추천, 신고, 차단 기록과 그 시각. 의견에는 닉네임이 함께 표시됩니다.
@@ -46,7 +48,8 @@ export default function PrivacyPage() {
             탈퇴하면 이메일·닉네임·비밀번호를 즉시 지우고 모든 로그인 토큰을 폐기합니다. 작성한 투표와 의견은 서비스 기록으로
             남으며, 의견의 작성자는 &lsquo;탈퇴한 회원&rsquo;으로 표시됩니다. 지우고 싶은 의견은 탈퇴 전에 직접 삭제할 수 있습니다.
           </li>
-          <li>이용 통계 기록은 {EVENT_RETENTION} 동안 보관한 뒤 지웁니다.</li>
+          <li>이용 통계 기록은 {EVENT_RETENTION} 동안 보관한 뒤 매일 자동으로 지웁니다.</li>
+          <li>약관 동의 시각은 동의 기록으로 탈퇴 후에도 남깁니다.</li>
           <li>장애 복구용 데이터베이스 백업은 14일이 지나면 자동으로 지웁니다.</li>
           <li>로그인 토큰은 만료(최대 14일)되거나 로그아웃·탈퇴하면 폐기합니다.</li>
         </ul>

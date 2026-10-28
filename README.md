@@ -57,7 +57,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 
 | 메서드 | 경로 | 권한 | 설명 |
 | --- | --- | --- | --- |
-| POST | `/api/members` | 누구나 | 회원가입 `{email, nickname, password}` |
+| POST | `/api/members` | 누구나 | 회원가입 `{email, nickname, password, agreedToTerms}` (`agreedToTerms`가 true가 아니면 400) |
 | GET | `/api/members/me` | 회원 | 내 정보 |
 | POST | `/api/members/me/withdrawal` | 회원 | 탈퇴 `{password}` (인증 쿠키 삭제, 의견은 '탈퇴한 회원'으로 남음) |
 | GET | `/api/members/me/blocks` | 회원 | 내가 차단한 회원 목록 `[{id, nickname, blockedAt}]` |

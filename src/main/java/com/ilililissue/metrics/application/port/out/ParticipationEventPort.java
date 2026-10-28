@@ -29,6 +29,11 @@ public interface ParticipationEventPort {
      */
     List<MemberActivity> findMemberActivities(LocalDateTime until);
 
+    /**
+     * @return 지운 이벤트 수
+     */
+    long deleteOccurredBefore(LocalDateTime cutoff);
+
     record MemberActivity(long memberId, LocalDateTime firstAt, LocalDateTime lastAt) {
     }
 }

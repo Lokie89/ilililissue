@@ -20,6 +20,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const [email, setEmail] = useState("");
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
+  const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,7 +30,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setError(null);
     try {
       if (mode === "signup") {
-        await api("/api/members", { method: "POST", body: { email, nickname, password } });
+        await api("/api/members", { method: "POST", body: { email, nickname, password, agreedToTerms: agreed } });
       }
       await api("/api/auth/login", { method: "POST", body: { email, password } });
       await reload();
@@ -76,13 +77,25 @@ export function AuthForm({ mode }: { mode: Mode }) {
         className="rounded border border-stone-300 p-2"
       />
       {mode === "signup" && (
-        <p className="text-xs text-stone-500">
-          가입하면{" "}
-          <Link href="/privacy" target="_blank" className="underline">
-            개인정보 처리방침
-          </Link>
-          에 따라 이메일·닉네임을 처리하는 데 동의하게 돼요.
-        </p>
+        <label className="flex items-start gap-2 text-xs text-stone-600">
+          <input
+            type="checkbox"
+            required
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            <Link href="/terms" target="_blank" className="underline">
+              이용약관
+            </Link>
+            과{" "}
+            <Link href="/privacy" target="_blank" className="underline">
+              개인정보 처리방침
+            </Link>
+            에 동의합니다. (필수)
+          </span>
+        </label>
       )}
       {error && <p className="text-sm text-rose-600">{error}</p>}
       <button type="submit" disabled={submitting} className="rounded bg-stone-900 py-2 text-white disabled:opacity-40">

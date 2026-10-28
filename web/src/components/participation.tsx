@@ -156,10 +156,13 @@ function Results({ issueId, myStance }: { issueId: number; myStance: Stance }) {
           .map((s) => (
             <div
               key={s.stance}
-              className={`${STANCE_COLOR[s.stance]} flex items-center justify-center text-xs text-white`}
+              className={`${STANCE_COLOR[s.stance]} flex items-center justify-center overflow-hidden whitespace-nowrap text-xs text-white`}
               style={{ width: `${s.percentage}%` }}
             >
-              {s.percentage >= 10 && `${STANCE_LABEL[s.stance]} ${s.percentage}%`}
+              {/* 좁은 칸은 줄바꿈되지 않게 비율만 보여준다. 입장별 인원은 아래 목록에 있다. */}
+              {s.percentage >= 25
+                ? `${STANCE_LABEL[s.stance]} ${s.percentage}%`
+                : s.percentage >= 10 && `${s.percentage}%`}
             </div>
           ))}
       </div>

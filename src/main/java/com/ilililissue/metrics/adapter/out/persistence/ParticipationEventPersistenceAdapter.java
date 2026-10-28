@@ -50,6 +50,11 @@ public class ParticipationEventPersistenceAdapter implements ParticipationEventP
     }
 
     @Override
+    public long deleteOccurredBefore(LocalDateTime cutoff) {
+        return repository.deleteOccurredBefore(cutoff);
+    }
+
+    @Override
     public List<MemberActivity> findMemberActivities(LocalDateTime until) {
         return repository.findMemberActivities(until).stream()
                 .map(row -> new MemberActivity(row.getMemberId(), row.getFirstAt(), row.getLastAt()))
