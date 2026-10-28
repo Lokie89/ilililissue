@@ -112,4 +112,28 @@ public class ReportApiTest extends ApiTestSupport {
         report(member, opinionId).andExpect(status().isNotFound());
         report(member, 999_999).andExpect(status().isNotFound());
     }
+
+    @DisplayName("관리자는 숨긴 의견 목록을 보고 숨김을 되돌릴 수 있다")
+    @Test
+    void unhide() throws Exception {
+        Cookie admin = loginAsNewAdmin();
+        long issueId = createPublishedIssue(admin);
+        long opinionId = writeOpinion(issueId);
+        Cookie member = voter(issueId);
+        mockMvc.perform(post("/api/admin/opinions/{id}/hide", opinionId).cookie(admin))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/admin/opinions/hidden").cookie(admin).param("size", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[*].id", hasItem((int) opinionId)));
+        mockMvc.perform(post("/api/admin/opinions/{id}/unhide", opinionId).cookie(member))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/admin/opinions/{id}/unhide", opinionId).cookie(admin))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/admin/opinions/hidden").cookie(admin).param("size", "100"))
+                .andExpect(jsonPath("$.content[*].id", not(hasItem((int) opinionId))));
+        mockMvc.perform(get("/api/issues/{id}/opinions", issueId).cookie(member).param("stance", "AGREE"))
+                .andExpect(jsonPath("$.content[*].id", hasItem((int) opinionId)));
+    }
 }

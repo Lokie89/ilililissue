@@ -15,6 +15,8 @@ public interface OpinionJpaRepository extends JpaRepository<OpinionJpaEntity, Lo
 
     Page<OpinionJpaEntity> findByIssueIdAndStanceAndHiddenFalseAndDeletedFalse(Long issueId, Stance stance, Pageable pageable);
 
+    Page<OpinionJpaEntity> findByHiddenTrueAndDeletedFalse(Pageable pageable);
+
     @Modifying
     @Query("update OpinionJpaEntity o set o.recommendationCount = o.recommendationCount + 1 where o.id = :id")
     int incrementRecommendationCount(Long id);

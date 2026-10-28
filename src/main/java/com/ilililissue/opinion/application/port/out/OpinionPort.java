@@ -24,6 +24,8 @@ public interface OpinionPort {
      */
     PageResult<CountedOpinion> findVisible(IssueId issueId, Stance stance, OpinionSort sort, PageQuery pageQuery);
 
+    PageResult<Opinion> findHidden(PageQuery pageQuery);
+
     void incrementRecommendationCount(OpinionId id);
 
     void decrementRecommendationCount(OpinionId id);

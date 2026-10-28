@@ -156,6 +156,20 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
         opinionPort.save(opinion);
     }
 
+    @Transactional
+    @Override
+    public void unhide(OpinionId opinionId) {
+        Opinion opinion = getOpinion(opinionId);
+        opinion.unhide();
+        opinionPort.save(opinion);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PageResult<Opinion> getHiddenOpinions(PageQuery pageQuery) {
+        return opinionPort.findHidden(pageQuery);
+    }
+
     private Opinion loadNotDeleted(OpinionId opinionId) {
         return opinionPort.findById(opinionId)
                 .filter(opinion -> !opinion.isDeleted())

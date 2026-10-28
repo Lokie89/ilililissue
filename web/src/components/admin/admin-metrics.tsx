@@ -33,7 +33,7 @@ export function AdminMetrics() {
 
   const rates: { label: string; value: number; target: number; detail: string }[] = metrics
     ? [
-        { label: "투표율", value: metrics.voteRate, target: TARGETS.voteRate, detail: `투표 ${metrics.votes} / 이슈 조회 ${metrics.issueViews}` },
+        { label: "투표율", value: metrics.voteRate, target: TARGETS.voteRate, detail: `투표 ${metrics.votes} / 이슈별 고유 방문자 ${metrics.issueVisitors} (전체 조회 ${metrics.issueViews})` },
         { label: "의견 작성률", value: metrics.opinionRate, target: TARGETS.opinionRate, detail: `의견 ${metrics.opinions} / 투표 ${metrics.votes}` },
         { label: "반대 의견 열람률", value: metrics.opposingViewRate, target: TARGETS.opposingViewRate, detail: `다른 입장 열람 ${metrics.opposingViewers} / 투표자 ${metrics.voters}` },
         { label: "7일 재방문율", value: metrics.revisit7dRate, target: TARGETS.revisit7dRate, detail: `대상 회원 ${metrics.revisitCohort}명` },

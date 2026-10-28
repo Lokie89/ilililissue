@@ -1,6 +1,5 @@
 package com.ilililissue.issue.adapter.in.web;
 
-import com.ilililissue.common.adapter.in.web.LoginMember;
 import com.ilililissue.common.application.PageQuery;
 import com.ilililissue.common.application.PageResult;
 import com.ilililissue.issue.adapter.in.web.IssueResponses.CategoryResponse;
@@ -8,8 +7,6 @@ import com.ilililissue.issue.adapter.in.web.IssueResponses.IssueDetailResponse;
 import com.ilililissue.issue.adapter.in.web.IssueResponses.IssueSummaryResponse;
 import com.ilililissue.issue.application.port.in.IssueQuery;
 import com.ilililissue.issue.domain.vo.IssueId;
-import com.ilililissue.member.domain.vo.MemberId;
-import com.ilililissue.metrics.application.port.in.RecordEventUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +23,6 @@ import java.util.List;
 public class IssueController {
 
     private final IssueQuery issueQuery;
-    private final RecordEventUseCase recordEventUseCase;
 
     @GetMapping("/api/categories")
     public List<CategoryResponse> categories() {
@@ -40,10 +36,7 @@ public class IssueController {
     }
 
     @GetMapping("/api/issues/{issueId}")
-    public IssueDetailResponse issue(@PathVariable long issueId, @LoginMember(required = false) MemberId memberId) {
-        IssueId id = new IssueId(issueId);
-        IssueDetailResponse response = IssueDetailResponse.from(issueQuery.getPublicIssue(id));
-        recordEventUseCase.issueViewed(id, memberId);
-        return response;
+    public IssueDetailResponse issue(@PathVariable long issueId) {
+        return IssueDetailResponse.from(issueQuery.getPublicIssue(new IssueId(issueId)));
     }
 }

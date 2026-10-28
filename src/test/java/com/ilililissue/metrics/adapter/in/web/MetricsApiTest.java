@@ -14,6 +14,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -42,8 +43,19 @@ public class MetricsApiTest extends ApiTestSupport {
         Cookie member = loginAsNewUser();
         Map<String, Object> before = metrics(admin);
 
+        // 상세 조회 API는 지표에 기록하지 않는다.
         mockMvc.perform(get("/api/issues/{id}", issueId)).andExpect(status().isOk());
-        mockMvc.perform(get("/api/issues/{id}", issueId).cookie(member)).andExpect(status().isOk());
+        // 처음 온 방문자에게 쿠키를 발급하고, 같은 쿠키로 다시 보면 고유 방문자는 늘지 않는다.
+        Cookie anonymous = mockMvc.perform(post("/api/issues/{id}/views", issueId))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().exists(IssueViewController.VISITOR_ID))
+                .andReturn().getResponse().getCookie(IssueViewController.VISITOR_ID);
+        mockMvc.perform(post("/api/issues/{id}/views", issueId).cookie(anonymous))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().doesNotExist(IssueViewController.VISITOR_ID));
+        mockMvc.perform(post("/api/issues/{id}/views", issueId).cookie(member))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/issues/{id}/views", 999_999)).andExpect(status().isNotFound());
         mockMvc.perform(post("/api/issues/{id}/votes", issueId).cookie(member)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"stance\":\"AGREE\"}"))
                 .andExpect(status().isCreated());
@@ -59,7 +71,8 @@ public class MetricsApiTest extends ApiTestSupport {
                 .andExpect(status().isOk());
 
         Map<String, Object> after = metrics(admin);
-        assertThat(diff(before, after, "issueViews")).isEqualTo(2);
+        assertThat(diff(before, after, "issueViews")).isEqualTo(3);
+        assertThat(diff(before, after, "issueVisitors")).isEqualTo(2);
         assertThat(diff(before, after, "votes")).isEqualTo(1);
         assertThat(diff(before, after, "voters")).isEqualTo(1);
         assertThat(diff(before, after, "opinions")).isEqualTo(1);

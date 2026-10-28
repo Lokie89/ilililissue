@@ -22,6 +22,7 @@ public class ParticipationEventPersistenceAdapter implements ParticipationEventP
                 event.type(),
                 event.issueId().getValue(),
                 event.memberId() == null ? null : event.memberId().getValue(),
+                event.visitorId(),
                 event.stance(),
                 event.targetStance(),
                 event.occurredAt()
@@ -31,6 +32,11 @@ public class ParticipationEventPersistenceAdapter implements ParticipationEventP
     @Override
     public long count(ParticipationEventType type, LocalDateTime from, LocalDateTime to) {
         return repository.countByTypeAndOccurredAtGreaterThanEqualAndOccurredAtLessThan(type, from, to);
+    }
+
+    @Override
+    public long countDistinctIssueVisitors(LocalDateTime from, LocalDateTime to) {
+        return repository.countDistinctIssueVisitors(from, to);
     }
 
     @Override

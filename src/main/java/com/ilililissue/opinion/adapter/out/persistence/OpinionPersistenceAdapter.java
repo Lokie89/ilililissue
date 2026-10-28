@@ -80,6 +80,14 @@ public class OpinionPersistenceAdapter implements OpinionPort, RecommendationPor
     }
 
     @Override
+    public PageResult<Opinion> findHidden(PageQuery pageQuery) {
+        Page<OpinionJpaEntity> page = opinionJpaRepository.findByHiddenTrueAndDeletedFalse(
+                PageRequest.of(pageQuery.page(), pageQuery.size(), Sort.by(Sort.Order.desc("id"))));
+        return new PageResult<>(page.getContent().stream().map(this::mapToDomain).toList(),
+                pageQuery.page(), pageQuery.size(), page.getTotalElements());
+    }
+
+    @Override
     public void incrementRecommendationCount(OpinionId id) {
         opinionJpaRepository.incrementRecommendationCount(id.getValue());
     }

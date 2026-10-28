@@ -108,6 +108,10 @@ public class Opinion extends SelfValidating<Opinion> {
         this.hidden = true;
     }
 
+    public void unhide() {
+        this.hidden = false;
+    }
+
     private void requireAuthor(MemberId memberId) {
         if (!isWrittenBy(memberId)) {
             throw new NotOpinionAuthorException();

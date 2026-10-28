@@ -22,7 +22,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(name = "participation_event", indexes = {
         @Index(name = "idx_event_type_time", columnList = "type, occurredAt"),
-        @Index(name = "idx_event_member_time", columnList = "memberId, occurredAt")})
+        @Index(name = "idx_event_member_time", columnList = "memberId, occurredAt"),
+        @Index(name = "idx_event_visitor", columnList = "issueId, visitorId")})
 @Entity
 public class ParticipationEventJpaEntity {
 
@@ -38,6 +39,9 @@ public class ParticipationEventJpaEntity {
     private Long issueId;
 
     private Long memberId;
+
+    @Column(length = 36)
+    private String visitorId;
 
     @Enumerated(EnumType.STRING)
     @Column(length = 10)

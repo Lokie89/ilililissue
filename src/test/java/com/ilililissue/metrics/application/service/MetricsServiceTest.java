@@ -36,7 +36,8 @@ public class MetricsServiceTest {
     @DisplayName("비율은 분모 대비 백분율이고 분모가 0이면 0이다")
     @Test
     void rates() {
-        when(eventPort.count(eq(ParticipationEventType.ISSUE_VIEWED), any(), any())).thenReturn(200L);
+        when(eventPort.count(eq(ParticipationEventType.ISSUE_VIEWED), any(), any())).thenReturn(320L);
+        when(eventPort.countDistinctIssueVisitors(any(), any())).thenReturn(200L);
         when(eventPort.count(eq(ParticipationEventType.VOTED), any(), any())).thenReturn(50L);
         when(eventPort.count(eq(ParticipationEventType.OPINION_WRITTEN), any(), any())).thenReturn(8L);
         when(eventPort.countDistinctMembers(eq(ParticipationEventType.VOTED), any(), any())).thenReturn(40L);

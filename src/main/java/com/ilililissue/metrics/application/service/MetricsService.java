@@ -30,8 +30,9 @@ public class MetricsService implements RecordEventUseCase, MetricsQuery {
 
     @Transactional
     @Override
-    public void issueViewed(IssueId issueId, MemberId memberIdOrNull) {
-        record(ParticipationEventType.ISSUE_VIEWED, issueId, memberIdOrNull, null, null);
+    public void issueViewed(IssueId issueId, MemberId memberIdOrNull, String visitorId) {
+        eventPort.save(new ParticipationEvent(ParticipationEventType.ISSUE_VIEWED, issueId, memberIdOrNull, visitorId,
+                null, null, LocalDateTime.now(clock)));
     }
 
     @Transactional
@@ -59,6 +60,7 @@ public class MetricsService implements RecordEventUseCase, MetricsQuery {
         LocalDateTime end = to.plusDays(1).atStartOfDay();
 
         long issueViews = eventPort.count(ParticipationEventType.ISSUE_VIEWED, start, end);
+        long issueVisitors = eventPort.countDistinctIssueVisitors(start, end);
         long votes = eventPort.count(ParticipationEventType.VOTED, start, end);
         long opinions = eventPort.count(ParticipationEventType.OPINION_WRITTEN, start, end);
         long voters = eventPort.countDistinctMembers(ParticipationEventType.VOTED, start, end);
@@ -74,8 +76,8 @@ public class MetricsService implements RecordEventUseCase, MetricsQuery {
 
         return new ParticipationMetrics(
                 from, to,
-                issueViews, votes, opinions, voters, opposingViewers,
-                ParticipationMetrics.rate(votes, issueViews),
+                issueViews, issueVisitors, votes, opinions, voters, opposingViewers,
+                ParticipationMetrics.rate(votes, issueVisitors),
                 ParticipationMetrics.rate(opinions, votes),
                 ParticipationMetrics.rate(opposingViewers, voters),
                 cohort.size(),
@@ -85,7 +87,7 @@ public class MetricsService implements RecordEventUseCase, MetricsQuery {
 
     private void record(ParticipationEventType type, IssueId issueId, MemberId memberId, Stance stance,
                         Stance targetStance) {
-        eventPort.save(new ParticipationEvent(type, issueId, memberId, stance, targetStance,
+        eventPort.save(new ParticipationEvent(type, issueId, memberId, null, stance, targetStance,
                 LocalDateTime.now(clock)));
     }
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMe } from "@/components/me-provider";
+import { AdminHiddenOpinions } from "./admin-hidden-opinions";
 import { AdminIssues } from "./admin-issues";
 import { AdminMetrics } from "./admin-metrics";
 import { AdminReports } from "./admin-reports";
@@ -9,6 +10,7 @@ import { AdminReports } from "./admin-reports";
 const TABS = {
   issues: "이슈",
   reports: "신고",
+  hidden: "숨긴 의견",
   metrics: "지표",
 } as const;
 
@@ -45,6 +47,7 @@ export function AdminConsole() {
       </div>
       {tab === "issues" && <AdminIssues />}
       {tab === "reports" && <AdminReports />}
+      {tab === "hidden" && <AdminHiddenOpinions />}
       {tab === "metrics" && <AdminMetrics />}
     </div>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Participation } from "@/components/participation";
+import { ViewTracker } from "@/components/view-tracker";
 import { getIssue, getIssueTitle } from "@/lib/server-api";
 
 export async function generateMetadata({ params }: PageProps<"/issues/[id]">): Promise<Metadata> {
@@ -27,6 +28,7 @@ async function Issue({ params }: Pick<PageProps<"/issues/[id]">, "params">) {
 
   return (
     <article className="flex flex-col gap-8">
+      <ViewTracker issueId={issue.id} />
       <header>
         <div className="mb-2 flex gap-2 text-sm text-stone-500">
           {issue.category && <span>{issue.category.name}</span>}

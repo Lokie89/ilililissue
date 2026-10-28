@@ -65,6 +65,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | GET | `/api/categories` | 누구나 | 카테고리 목록 |
 | GET | `/api/issues?page&size` | 누구나 | 공개 이슈 목록 (게시·마감, 최신순) |
 | GET | `/api/issues/{id}` | 누구나 | 이슈 상세 (질문, 배경 설명, 원문 출처) |
+| POST | `/api/issues/{id}/views` | 누구나 | 조회 기록 (지표용, 없으면 `visitor_id` 쿠키 발급) |
 | GET | `/api/issues/{id}/participation` | 누구나 | 내 투표 입장·의견 (비회원은 `voted: false`) |
 | POST | `/api/issues/{id}/votes` | 회원 | 투표 `{stance: AGREE \| NEUTRAL \| DISAGREE}` (1회, 변경 불가) |
 | GET | `/api/issues/{id}/results` | 투표자 | 입장별 투표 수·비율 |
@@ -88,6 +89,8 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/admin/reports/{id}/hide` | 관리자 | 신고된 의견 숨김 |
 | POST | `/api/admin/reports/{id}/dismiss` | 관리자 | 신고 기각 |
 | POST | `/api/admin/opinions/{id}/hide` | 관리자 | 의견 직접 숨김 |
+| GET | `/api/admin/opinions/hidden?page&size` | 관리자 | 숨긴 의견 목록 |
+| POST | `/api/admin/opinions/{id}/unhide` | 관리자 | 숨김 해제 |
 | GET | `/api/admin/metrics?from&to` | 관리자 | 참여 지표 (날짜 `YYYY-MM-DD`) |
 
 이슈 상태: `DRAFT` → `REVIEWED` → `PUBLISHED` → `CLOSED`. 투표는 `PUBLISHED`에서만 가능합니다.

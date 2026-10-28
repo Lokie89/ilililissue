@@ -13,6 +13,7 @@ import com.ilililissue.report.domain.entity.Report;
 import com.ilililissue.report.domain.vo.ReportId;
 import com.ilililissue.report.domain.vo.ReportReason;
 import com.ilililissue.report.domain.vo.ReportStatus;
+import com.ilililissue.vote.domain.vo.Stance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -68,7 +69,28 @@ public class ReportController {
         moderateOpinionUseCase.hide(new OpinionId(opinionId));
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/api/admin/opinions/{opinionId}/unhide")
+    public void unhideOpinion(@PathVariable long opinionId) {
+        moderateOpinionUseCase.unhide(new OpinionId(opinionId));
+    }
+
+    @GetMapping("/api/admin/opinions/hidden")
+    public PageResult<HiddenOpinionResponse> hiddenOpinions(@RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "20") int size) {
+        return moderateOpinionUseCase.getHiddenOpinions(PageQuery.of(page, size)).map(HiddenOpinionResponse::from);
+    }
+
     public record ReportRequest(String reason) {
+    }
+
+    public record HiddenOpinionResponse(long id, long issueId, Stance stance, String content,
+                                        LocalDateTime writtenAt) {
+
+        static HiddenOpinionResponse from(Opinion opinion) {
+            return new HiddenOpinionResponse(opinion.getId().getValue(), opinion.getIssueId().getValue(),
+                    opinion.getStance(), opinion.getContent().getValue(), opinion.getWrittenAt());
+        }
     }
 
     public record ReportResponse(long id, long opinionId, ReportStatus status, LocalDateTime reportedAt) {

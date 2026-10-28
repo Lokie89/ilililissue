@@ -12,6 +12,11 @@ public interface ParticipationEventJpaRepository extends JpaRepository<Participa
     long countByTypeAndOccurredAtGreaterThanEqualAndOccurredAtLessThan(ParticipationEventType type,
                                                                        LocalDateTime from, LocalDateTime to);
 
+    @Query("select count(distinct concat(e.issueId, ':', e.visitorId)) from ParticipationEventJpaEntity e "
+            + "where e.type = com.ilililissue.metrics.domain.ParticipationEventType.ISSUE_VIEWED "
+            + "and e.occurredAt >= :from and e.occurredAt < :to and e.visitorId is not null")
+    long countDistinctIssueVisitors(LocalDateTime from, LocalDateTime to);
+
     @Query("select count(distinct e.memberId) from ParticipationEventJpaEntity e "
             + "where e.type = :type and e.occurredAt >= :from and e.occurredAt < :to and e.memberId is not null")
     long countDistinctMembers(ParticipationEventType type, LocalDateTime from, LocalDateTime to);

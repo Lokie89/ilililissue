@@ -48,7 +48,7 @@ import java.util.List;
  * <li>세션을 쓰지 않고 JWT 액세스 토큰으로 인증한다. 토큰은 {@code access_token} 쿠키(웹) 또는
  * {@code Authorization: Bearer} 헤더(앱)로 받는다.</li>
  * <li>CSRF 토큰은 쓰지 않는다. 쿠키는 SameSite=Lax, CORS는 허용 Origin만, 상태 변경 API는 JSON 본문만 받는다.</li>
- * <li>비회원은 이슈·카테고리 조회만 가능하다. {@code /api/admin/**}은 ADMIN만 접근한다.</li>
+ * <li>비회원은 이슈·카테고리 조회와 조회 기록만 가능하다. {@code /api/admin/**}은 ADMIN만 접근한다.</li>
  * </ul>
  */
 @Configuration
@@ -68,6 +68,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/members").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/issues/**", "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/issues/*/views").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())

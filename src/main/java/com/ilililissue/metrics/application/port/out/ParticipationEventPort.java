@@ -12,6 +12,11 @@ public interface ParticipationEventPort {
 
     long count(ParticipationEventType type, LocalDateTime from, LocalDateTime to);
 
+    /**
+     * (이슈, 방문자) 쌍의 수. 방문자 식별자가 없는 조회는 세지 않는다.
+     */
+    long countDistinctIssueVisitors(LocalDateTime from, LocalDateTime to);
+
     long countDistinctMembers(ParticipationEventType type, LocalDateTime from, LocalDateTime to);
 
     /**

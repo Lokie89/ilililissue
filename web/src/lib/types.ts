@@ -117,10 +117,19 @@ export type AdminReport = {
   resolvedAt: string | null;
 };
 
+export type HiddenOpinion = {
+  id: number;
+  issueId: number;
+  stance: Stance;
+  content: string;
+  writtenAt: string;
+};
+
 export type Metrics = {
   from: string;
   to: string;
   issueViews: number;
+  issueVisitors: number;
   votes: number;
   opinions: number;
   voters: number;
