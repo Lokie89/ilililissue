@@ -17,6 +17,9 @@
 | --- | --- | --- |
 | 로컬 DB | `docker compose up -d` | MySQL 8 |
 | 실행 | `JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew bootRun` | 로컬 DB 필요 |
+| 실행 (H2) | `JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew bootTestRun` | MySQL 불필요, 예시 데이터 생성 |
+| 웹 실행 | `cd web && npm run dev` | http://localhost:3000, `/api/*`는 8080으로 전달 |
+| 웹 검증 | `cd web && npm run lint && npm run build` | |
 | 테스트 | `JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew test` | H2 사용, DB 불필요 |
 | 빌드 | `JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew build` |  |
 | 린트 | 없음 |  |

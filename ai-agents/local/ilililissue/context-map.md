@@ -18,6 +18,13 @@
 - 설정 파일: `build.gradle`, `src/main/resources/application.yml`, `src/test/resources/application.yml`, `docker-compose.yml`
 - 환경변수 예시: `.env.example`
 
+## 웹 클라이언트
+
+- `web/README.md`: 실행, 구조, 화면 목록
+- `web/AGENTS.md`: Next.js 16.4 문서 확인 규칙 (`web/node_modules/next/dist/docs/`)
+- API 클라이언트: `web/src/lib/api.ts`, 타입: `web/src/lib/types.ts`, 서버 조회: `web/src/lib/server-api.ts`
+- 이슈 참여 화면: `web/src/components/participation.tsx`, 관리 화면: `web/src/components/admin/`
+
 ## 도메인 문서
 
 - `domain-policy.md`: 확정 결정, 개념별 정책, 미정 질문
@@ -44,4 +51,4 @@
 
 ## 결정되지 않은 질문
 
-- 클라이언트(웹/앱) 코드 위치
+- 앱(Expo) 코드 위치

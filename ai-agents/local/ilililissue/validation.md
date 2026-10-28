@@ -10,6 +10,9 @@
 | 빌드 | `./gradlew build` | 조건부 | 의존성·설정 변경 시 |
 | 실행 확인 | `./gradlew bootRun` | 조건부 | 로컬 MySQL 필요. 웹 계층 추가 후 health check 호출 |
 | 린트 | 없음 | 해당 없음 |  |
+| 웹 린트 | `cd web && npm run lint` | 웹 변경 시 필수 | ESLint (react-hooks 규칙 포함) |
+| 웹 빌드 | `cd web && npm run build` | 웹 변경 시 필수 | Cache Components 규칙 위반(Suspense 밖 동적 데이터)은 빌드 오류 |
+| 통합 수동 확인 | `./gradlew bootTestRun` + `cd web && npm run dev` | 조건부 | 프록시 경유 가입·로그인·투표·의견·관리자 흐름 |
 
 ## 테스트 기준
 
@@ -29,3 +32,4 @@
 - 실패한 명령은 핵심 오류와 다음 조치를 기록한다.
 - 실행하지 못한 검증은 이유를 기록한다.
 - 환경 문제(JDK 버전, Docker 미기동)와 코드 문제를 구분해 기록한다.
+- Windows Git Bash에서 curl 인자로 한글 JSON을 보내면 UTF-8이 아니어서 400이 날 수 있다. `--data-binary @파일`로 보낸다.

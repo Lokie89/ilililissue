@@ -1,6 +1,6 @@
 # 1일 1이슈 (ilililissue)
 
-매일 선정한 사회·경제·생활 이슈에 찬성·중립·반대로 투표하고, 서로 다른 입장의 의견을 비교하는 서비스의 API 서버입니다.
+매일 선정한 사회·경제·생활 이슈에 찬성·중립·반대로 투표하고, 서로 다른 입장의 의견을 비교하는 서비스입니다. 이 저장소에는 API 서버(루트)와 웹 클라이언트([`web/`](./web/))가 있습니다.
 
 > '누가 이겼는지 보여주는 서비스'가 아니라 '사람들이 왜 다르게 생각하는지 보여주는 서비스'.
 
@@ -22,6 +22,10 @@ docker compose up -d            # MySQL 8
 set -a; . ./.env; set +a        # 환경변수 로드 (bash)
 JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew bootRun
 ```
+
+MySQL 없이 H2와 예시 데이터(관리자 `admin@local.test`, 회원 `user@local.test`, 비밀번호 `password1234`)로 띄우려면 `./gradlew bootTestRun`을 씁니다. 개발 전용이며 운영 코드에 포함되지 않습니다(`src/test/java/com/ilililissue/TestIlililissueApplication.java`).
+
+웹 클라이언트 실행은 [`web/README.md`](./web/README.md)를 참고하세요.
 
 기본 프로필은 `local`입니다. 쿠키 `Secure`가 꺼져 있고 CORS 허용 Origin은 `http://localhost:3000`입니다.
 
