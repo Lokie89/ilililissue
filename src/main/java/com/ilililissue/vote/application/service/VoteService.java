@@ -4,6 +4,7 @@ import com.ilililissue.issue.application.port.in.IssueQuery;
 import com.ilililissue.issue.domain.entity.Issue;
 import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.member.domain.vo.MemberId;
+import com.ilililissue.metrics.application.port.in.RecordEventUseCase;
 import com.ilililissue.vote.application.VoteException;
 import com.ilililissue.vote.application.port.in.VoteResult;
 import com.ilililissue.vote.application.port.in.VoteUseCase;
@@ -24,6 +25,7 @@ public class VoteService implements VoteUseCase {
 
     private final IssueQuery issueQuery;
     private final VotePort votePort;
+    private final RecordEventUseCase recordEventUseCase;
     private final Clock clock;
 
     @Transactional
@@ -33,7 +35,9 @@ public class VoteService implements VoteUseCase {
         if (votePort.findByIssueIdAndMemberId(issueId, memberId).isPresent()) {
             throw VoteException.alreadyVoted();
         }
-        return votePort.save(Vote.cast(issue, memberId, stance, LocalDateTime.now(clock)));
+        Vote vote = votePort.save(Vote.cast(issue, memberId, stance, LocalDateTime.now(clock)));
+        recordEventUseCase.voted(issueId, memberId, stance);
+        return vote;
     }
 
     @Transactional(readOnly = true)

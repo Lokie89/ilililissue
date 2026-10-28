@@ -7,7 +7,9 @@ import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.member.application.port.out.LoadMemberPort;
 import com.ilililissue.member.domain.vo.MemberId;
 import com.ilililissue.member.domain.vo.Nickname;
+import com.ilililissue.metrics.application.port.in.RecordEventUseCase;
 import com.ilililissue.opinion.application.OpinionException;
+import com.ilililissue.opinion.application.port.in.ModerateOpinionUseCase;
 import com.ilililissue.opinion.application.port.in.OpinionItem;
 import com.ilililissue.opinion.application.port.in.OpinionSort;
 import com.ilililissue.opinion.application.port.in.OpinionUseCase;
@@ -34,13 +36,14 @@ import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
-public class OpinionService implements OpinionUseCase {
+public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
 
     private final IssueQuery issueQuery;
     private final VoteUseCase voteUseCase;
     private final OpinionPort opinionPort;
     private final RecommendationPort recommendationPort;
     private final LoadMemberPort loadMemberPort;
+    private final RecordEventUseCase recordEventUseCase;
     private final Clock clock;
 
     @Transactional
@@ -51,7 +54,9 @@ public class OpinionService implements OpinionUseCase {
         if (opinionPort.findByIssueIdAndAuthorId(issueId, authorId).isPresent()) {
             throw OpinionException.alreadyWritten();
         }
-        return opinionPort.save(Opinion.write(vote, content, now()));
+        Opinion opinion = opinionPort.save(Opinion.write(vote, content, now()));
+        recordEventUseCase.opinionWritten(issueId, authorId, opinion.getStance());
+        return opinion;
     }
 
     @Transactional
@@ -76,12 +81,16 @@ public class OpinionService implements OpinionUseCase {
         opinionPort.incrementRecommendationCount(opinionId);
     }
 
-    @Transactional(readOnly = true)
+    // 탭 열람 이벤트를 기록하므로 읽기 전용 트랜잭션을 쓰지 않는다.
+    @Transactional
     @Override
     public PageResult<OpinionItem> getOpinions(IssueId issueId, MemberId viewerId, Stance stance, OpinionSort sort,
                                                PageQuery pageQuery) {
         issueQuery.getPublicIssue(issueId);
-        voteUseCase.requireVote(issueId, viewerId);
+        Vote viewerVote = voteUseCase.requireVote(issueId, viewerId);
+        if (pageQuery.page() == 0) {
+            recordEventUseCase.opinionsViewed(issueId, viewerId, viewerVote.getStance(), stance);
+        }
 
         PageResult<CountedOpinion> page = opinionPort.findVisible(issueId, stance, sort, pageQuery);
         List<Opinion> opinions = page.content().stream().map(CountedOpinion::opinion).toList();
@@ -107,6 +116,20 @@ public class OpinionService implements OpinionUseCase {
     @Override
     public Optional<Opinion> findMyOpinion(IssueId issueId, MemberId memberId) {
         return opinionPort.findByIssueIdAndAuthorId(issueId, memberId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Opinion getOpinion(OpinionId opinionId) {
+        return opinionPort.findById(opinionId).orElseThrow(OpinionException::notFound);
+    }
+
+    @Transactional
+    @Override
+    public void hide(OpinionId opinionId) {
+        Opinion opinion = getOpinion(opinionId);
+        opinion.hide();
+        opinionPort.save(opinion);
     }
 
     private LocalDateTime now() {
