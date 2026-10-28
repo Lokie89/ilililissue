@@ -18,6 +18,21 @@
 
 ## 현재 기록
 
+### 2026-10-28 (5) — 숨김 해제, 방문자 쿠키, Flyway, 배포 구성
+
+- 목표: 사용자 결정(비회원 쿠키 식별, 숨긴 의견 되돌리기, 단일 서버 클라우드 배포, Flyway, push만·PR 보류) 반영
+- 변경:
+  - 관리자 숨긴 의견 목록 `GET /api/admin/opinions/hidden`, `POST /api/admin/opinions/{id}/unhide`, 관리 화면 "숨긴 의견" 탭
+  - 조회 기록을 `POST /api/issues/{id}/views`로 분리(브라우저의 `ViewTracker`가 호출), `visitor_id` 쿠키 발급, 투표율 분모 = 이슈별 고유 방문자 수. `GET /api/issues/{id}`는 더 이상 지표에 기록하지 않음(웹 서버 렌더링·메타데이터 조회가 조회수를 부풀리던 문제)
+  - Flyway: `V1__init.sql`, 운영·로컬 `ddl-auto: validate`, `FlywayMigrationTest`(H2 MySQL 모드)
+  - 배포: `Dockerfile`, `web/Dockerfile`(standalone), `docker-compose.prod.yml`(db·api·web·caddy), `deploy/Caddyfile`, `deploy/backup.sh`, `deploy/README.md`, `prod` 프로필(forward headers)
+- 검증: `./gradlew test` 68개 통과, 웹 lint·build 통과. 로컬 MySQL에 Flyway V1 적용 후 `bootRun` 스모크 41개 통과. 운영 구성을 로컬에서 `-p ilililissue-prodtest`로 빌드·기동해 HTTPS(Caddy 내부 인증서) 경유 스모크 41개, SSR 페이지, Secure 쿠키 확인 후 `down -v`로 정리
+- 남은 작업: 실제 클라우드 서버·도메인 준비 후 배포, 브라우저 화면 확인, PR(사용자 보류)
+- 주의 사항:
+  - 기존에 `ddl-auto: update`로 만든 로컬 DB는 Flyway 이력이 없어 실패한다. 로컬 `ilililissue` DB는 이번에 비우고 Flyway로 다시 만들었다
+  - 앱 클라이언트도 상세 화면에서 조회 기록 API를 호출해야 투표율이 맞다
+  - `next.config.ts`의 rewrite 대상은 빌드 시점에 고정된다(`BACKEND_URL` 빌드 인자)
+
 ### 2026-10-28 (4) — 미정 정책 반영, MySQL 실행 확인
 
 - 목표: 사용자 결정(추천 취소 허용·자기 추천 금지, 의견 삭제 허용·재작성 불가, 회원 탈퇴 포함·의견은 '탈퇴한 회원'으로 유지) 반영, MySQL 실기동 확인

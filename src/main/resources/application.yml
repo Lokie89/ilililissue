@@ -29,3 +29,18 @@ spring:
 auth:
   cookie-secure: false
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
+
+---
+# 운영: docker-compose.prod.yml에서 SPRING_PROFILES_ACTIVE=prod로 실행한다. 쿠키 Secure는 기본값(true)을 쓴다.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+# Caddy가 보낸 X-Forwarded-* 헤더로 원래 스킴·호스트를 인식한다.
+server:
+  forward-headers-strategy: framework

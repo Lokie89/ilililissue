@@ -25,7 +25,7 @@ JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew bootRun
 
 MySQL 없이 H2와 예시 데이터(관리자 `admin@local.test`, 회원 `user@local.test`, 비밀번호 `password1234`)로 띄우려면 `./gradlew bootTestRun`을 씁니다. 개발 전용이며 운영 코드에 포함되지 않습니다(`src/test/java/com/ilililissue/TestIlililissueApplication.java`).
 
-웹 클라이언트 실행은 [`web/README.md`](./web/README.md)를 참고하세요.
+웹 클라이언트 실행은 [`web/README.md`](./web/README.md), 운영 배포(단일 서버, Docker Compose + Caddy)는 [`deploy/README.md`](./deploy/README.md)를 참고하세요.
 
 기본 프로필은 `local`입니다. 쿠키 `Secure`가 꺼져 있고 CORS 허용 Origin은 `http://localhost:3000`입니다.
 

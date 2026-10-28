@@ -41,4 +41,6 @@ out/
 
 ### Local ###
 .env
+.env.prod
 db/
+backups/

@@ -5,6 +5,8 @@ import type { NextConfig } from "next";
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8080";
 
 const nextConfig: NextConfig = {
+  // Docker 이미지용 최소 실행 파일(.next/standalone)을 만든다.
+  output: "standalone",
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

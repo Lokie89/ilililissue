@@ -1,0 +1,10 @@
+.git
+.gradle
+build
+db
+web
+ai-agents
+deploy
+.env
+.env.*
+**/node_modules
