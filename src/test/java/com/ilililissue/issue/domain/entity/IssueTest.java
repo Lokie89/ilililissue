@@ -15,7 +15,7 @@ public class IssueTest {
     @DisplayName("이슈 생성 테스트")
     @Test
     void createIssue() {
-        User member = User.of(UserRole.GUEST);
+        User member = User.of(new Id(1), UserRole.GUEST);
         final String prefixImageFileName = "src/test/resources/";
         final String testImage = "R1280x0";
         final ImageExtension extension = ImageExtension.from("jpeg");
@@ -27,7 +27,7 @@ public class IssueTest {
     @DisplayName("이슈 동일성 테스트")
     @Test
     void equals() {
-        User originRegister = User.of(UserRole.ADMINISTRATOR);
+        User originRegister = User.of(new Id(1), UserRole.ADMINISTRATOR);
         Id originId = new Id(5);
 
         final String prefixImageFileName = "src/test/resources/";
@@ -44,7 +44,7 @@ public class IssueTest {
         Issue sameValueIdAndRegisterIssue = Issue.withId(sameValueId, issueImages, originRegister);
         Assertions.assertThat(originIssue).isEqualTo(sameValueIdAndRegisterIssue);
 
-        User sameRoleRegister = User.of(UserRole.ADMINISTRATOR);
+        User sameRoleRegister = User.of(new Id(1), UserRole.ADMINISTRATOR);
 
         Issue sameValueIdAndSameRoleRegisterIssue = Issue.withId(sameValueId, issueImages, sameRoleRegister);
         Assertions.assertThat(originIssue).isEqualTo(sameValueIdAndSameRoleRegisterIssue);
@@ -61,7 +61,7 @@ public class IssueTest {
         final String testImage = "R1280x0";
         final ImageExtension extension = ImageExtension.from("jpeg");
         final IssueImages issueImages = IssueImages.from(IssueImage.of(prefixImageFileName + testImage, extension));
-        final User register = User.of(UserRole.ADMINISTRATOR);
+        final User register = User.of(new Id(1), UserRole.ADMINISTRATOR);
 
         final Issue originIssue = Issue.of(issueImages, register);
 
@@ -72,7 +72,7 @@ public class IssueTest {
         final UpdateIssueDto updateIssueDto = UpdateIssueDto.from(updateIssueImages, register);
         originIssue.update(updateIssueDto);
 
-        final User notRegister = User.of(UserRole.GUEST);
+        final User notRegister = User.of(new Id(1), UserRole.GUEST);
         final UpdateIssueDto notRegisterUpdateIssueDto = UpdateIssueDto.from(updateIssueImages, notRegister);
         Assertions.assertThatThrownBy(() -> originIssue.update(notRegisterUpdateIssueDto));
 

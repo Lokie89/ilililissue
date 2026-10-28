@@ -23,7 +23,8 @@ public class IssueJpaEntity {
     @Id
     private Long id;
 
-    @OneToMany(mappedBy = "issue_id")
+    @OneToMany
+    @JoinColumn(name = "issueId", insertable = false, updatable = false)
     private List<IssueImageJpaEntity> issueImageJpaEntityList;
 
     @Column(nullable = false)

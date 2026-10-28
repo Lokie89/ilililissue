@@ -39,11 +39,6 @@ public class Issue extends SelfValidating<Issue> {
         this.validate();
     }
 
-    protected void validate() {
-        super.validate();
-        this.validateRegister();
-    }
-
     private void validateRegister() {
         if (!this.isAuthenticatedRegister()) {
             throw new UnauthorizedException();
@@ -59,12 +54,15 @@ public class Issue extends SelfValidating<Issue> {
     }
 
     public static Issue of(IssueImages images, User register) {
-        return new Issue(null, images, register);
+        Issue issue = new Issue(null, images, register);
+        issue.validateRegister();
+        return issue;
     }
 
     public void update(UpdateIssueDto updateIssue) {
         this.images = updateIssue.images();
         this.register = updateIssue.register();
         this.validate();
+        this.validateRegister();
     }
 }
