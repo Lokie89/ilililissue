@@ -18,6 +18,20 @@
 
 ## 현재 기록
 
+### 2026-10-28 (4) — 미정 정책 반영, MySQL 실행 확인
+
+- 목표: 사용자 결정(추천 취소 허용·자기 추천 금지, 의견 삭제 허용·재작성 불가, 회원 탈퇴 포함·의견은 '탈퇴한 회원'으로 유지) 반영, MySQL 실기동 확인
+- 변경:
+  - `DELETE /api/opinions/{id}/recommendations`, 자기 의견 추천 403
+  - `DELETE /api/opinions/{id}` (삭제 표시, 재작성·수정·추천·신고 불가, 참여 상태에 `deleted`)
+  - `POST /api/members/me/withdrawal {password}`: 이메일·닉네임·비밀번호 null + `withdrawnAt`, `MemberWithdrawnEvent`로 리프레시 토큰 폐기, JWT 변환 시 회원 활성 여부 확인
+  - 웹: 추천 토글, 내 의견 삭제, `/me` 내 정보·탈퇴
+- 검증: `./gradlew test` 66개 통과, `npm run lint`·`npm run build` 통과. Docker MySQL 8.0 + `bootRun`에서 스모크 스크립트 34개 항목(가입·관리자 이슈 게시·투표·의견·추천/취소·자기 추천·삭제·재작성·탈퇴·재가입·지표·로그아웃)을 직접 호출과 `next dev` 프록시 경유 양쪽에서 통과. 브라우저 화면 확인은 미실행
+- 남은 작업: Flyway(현재 `ddl-auto: update`), 배포 구성, 브라우저 화면 확인, 비회원 방문자 식별, 숨김 해제
+- 주의 사항:
+  - 인증된 요청마다 회원 활성 여부를 DB에서 한 번 조회한다(탈퇴 직후 액세스 토큰 차단용)
+  - 로컬 `.env`는 임의 값으로 생성되어 있다(커밋 안 됨). MySQL 컨테이너 `mysql-docker`는 `restart: always`라 Docker를 켜면 같이 뜬다
+
 ### 2026-10-28 (3) — 웹 클라이언트
 
 - 목표: Phase 6 웹 클라이언트로 MVP 핵심 흐름을 화면에서 사용 가능하게 만들기
