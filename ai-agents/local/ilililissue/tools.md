@@ -21,6 +21,14 @@
 | 빌드 | `JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew build` |  |
 | 린트 | 없음 |  |
 
+## 관리자 계정 지정
+
+가입 API는 항상 `USER`로 만든다. 관리자는 가입 후 DB에서 직접 지정한다.
+
+```sql
+UPDATE member SET role = 'ADMIN' WHERE email = '<관리자 이메일>';
+```
+
 ## 승인 필요한 작업
 
 - 네트워크 설치: Gradle 의존성 추가는 허용, 새 도구 설치는 확인

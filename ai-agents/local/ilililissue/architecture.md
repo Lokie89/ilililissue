@@ -18,10 +18,10 @@
 ## 기술 스택
 
 - 언어: Java 17
-- 프레임워크: Spring Boot 3.x, Spring Web, Spring Data JPA, Spring Security
+- 프레임워크: Spring Boot 4.1.x, Spring Web, Spring Data JPA, Spring Security
 - 런타임 버전: JDK 17
 - 패키지 관리자: Gradle (wrapper)
-- 주요 라이브러리: Lombok, Hibernate Validator, JWT 라이브러리(미정), H2(테스트)
+- 주요 라이브러리: Lombok, Hibernate Validator, Spring Security OAuth2 Resource Server(Nimbus JOSE), MySQL Connector/J, H2(테스트)
 
 ## 클라이언트 선택 (2026-10-28)
 
@@ -59,11 +59,16 @@
 
 ## 인증과 권한
 
-- 인증 방식: Spring Security + JWT. 웹은 토큰을 `HttpOnly`, `Secure`, `SameSite` 쿠키로 주고받고 서버가 쿠키의 JWT를 검증한다. 앱은 `Authorization: Bearer` 헤더를 함께 지원한다(앱 개발 시점).
-- 토큰: 짧은 수명의 access token + refresh token. 로그아웃 시 쿠키 삭제와 refresh token 무효화(서버 저장).
-- CSRF: 쿠키 기반 인증이므로 `SameSite` 설정과 CSRF 대응을 함께 적용한다 (구체 방식 미정).
-- 인가 모델: RBAC (`USER`, `ADMIN`)
-- 보안 고위험 영역: 비밀번호 저장(해시), JWT 서명 키, 개인정보(이메일)
+- 구현: Spring Security OAuth2 Resource Server(JWT 검증) + `NimbusJwtEncoder`(발급). 코드: `src/main/java/com/ilililissue/auth/`
+- 액세스 토큰: JWT HS256, `iss=ilililissue`, `sub=회원 id`, `role=USER|ADMIN`, 수명 30분. 웹은 `access_token` 쿠키, 앱은 `Authorization: Bearer` 헤더.
+- 리프레시 토큰: 32바이트 난수(불투명 토큰), 수명 14일. 서버(`refresh_token` 테이블)에는 SHA-256 해시만 저장. 재발급 시 기존 토큰을 삭제하고 새로 발급(rotation)하며, 삭제에 성공한 요청만 재발급한다. 쿠키 경로는 `/api/auth`.
+- 쿠키: `HttpOnly`, `SameSite=Lax`, `Secure`(운영 true, local false). 쿠키 Max-Age는 토큰 수명과 같다.
+- `/api/auth/**`는 액세스 토큰을 읽지 않는다 (만료 쿠키가 남아도 로그인·재발급·로그아웃 가능).
+- CSRF: CSRF 토큰은 쓰지 않는다. `SameSite=Lax` 쿠키 + CORS 허용 Origin(`auth.allowed-origins`) + 상태 변경 API의 JSON 본문으로 대응한다. 웹 클라이언트를 API와 다른 사이트(registrable domain)에 배포하면 이 결정을 재검토한다.
+- 로그인 실패: 이메일 없음과 비밀번호 불일치를 같은 401 응답·비슷한 처리 시간으로 응답한다.
+- 인가 모델: RBAC (`USER`, `ADMIN`). 비회원은 `GET /api/issues/**`, `GET /api/categories/**`만 허용. `/api/admin/**`은 `ADMIN`.
+- 관리자 계정: 가입 API는 항상 `USER`로 만든다. 관리자는 DB에서 직접 지정한다 (`tools.md` 참고).
+- 보안 고위험 영역: 비밀번호 저장(`DelegatingPasswordEncoder`, bcrypt), `JWT_SECRET`, 개인정보(이메일)
 
 ## 운영 요구
 
@@ -73,7 +78,7 @@
 
 ## 비밀값 이름
 
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET` — 실제 값은 저장소에 두지 않는다.
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
 
 ## 변경 가능성
 
@@ -85,4 +90,3 @@
 
 - 배포 인프라와 도메인
 - 클라이언트 저장소 구성 (모노레포 여부)
-- CSRF 대응 방식 상세
