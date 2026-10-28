@@ -1,0 +1,115 @@
+package com.ilililissue.opinion.application.service;
+
+import com.ilililissue.common.application.PageQuery;
+import com.ilililissue.common.application.PageResult;
+import com.ilililissue.issue.application.port.in.IssueQuery;
+import com.ilililissue.issue.domain.vo.IssueId;
+import com.ilililissue.member.application.port.out.LoadMemberPort;
+import com.ilililissue.member.domain.vo.MemberId;
+import com.ilililissue.member.domain.vo.Nickname;
+import com.ilililissue.opinion.application.OpinionException;
+import com.ilililissue.opinion.application.port.in.OpinionItem;
+import com.ilililissue.opinion.application.port.in.OpinionSort;
+import com.ilililissue.opinion.application.port.in.OpinionUseCase;
+import com.ilililissue.opinion.application.port.out.OpinionPort;
+import com.ilililissue.opinion.application.port.out.OpinionPort.CountedOpinion;
+import com.ilililissue.opinion.application.port.out.RecommendationPort;
+import com.ilililissue.opinion.domain.entity.Opinion;
+import com.ilililissue.opinion.domain.entity.Recommendation;
+import com.ilililissue.opinion.domain.vo.OpinionContent;
+import com.ilililissue.opinion.domain.vo.OpinionId;
+import com.ilililissue.vote.application.port.in.VoteUseCase;
+import com.ilililissue.vote.domain.entity.Vote;
+import com.ilililissue.vote.domain.vo.Stance;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+@RequiredArgsConstructor
+@Service
+public class OpinionService implements OpinionUseCase {
+
+    private final IssueQuery issueQuery;
+    private final VoteUseCase voteUseCase;
+    private final OpinionPort opinionPort;
+    private final RecommendationPort recommendationPort;
+    private final LoadMemberPort loadMemberPort;
+    private final Clock clock;
+
+    @Transactional
+    @Override
+    public Opinion write(IssueId issueId, MemberId authorId, OpinionContent content) {
+        issueQuery.getPublicIssue(issueId);
+        Vote vote = voteUseCase.requireVote(issueId, authorId);
+        if (opinionPort.findByIssueIdAndAuthorId(issueId, authorId).isPresent()) {
+            throw OpinionException.alreadyWritten();
+        }
+        return opinionPort.save(Opinion.write(vote, content, now()));
+    }
+
+    @Transactional
+    @Override
+    public Opinion edit(OpinionId opinionId, MemberId editorId, OpinionContent content) {
+        Opinion opinion = opinionPort.findById(opinionId).orElseThrow(OpinionException::notFound);
+        opinion.edit(editorId, content);
+        return opinionPort.save(opinion);
+    }
+
+    @Transactional
+    @Override
+    public void recommend(OpinionId opinionId, MemberId memberId) {
+        Opinion opinion = opinionPort.findById(opinionId)
+                .filter(found -> !found.isHidden())
+                .orElseThrow(OpinionException::notFound);
+        voteUseCase.requireVote(opinion.getIssueId(), memberId);
+        if (recommendationPort.exists(opinionId, memberId)) {
+            throw OpinionException.alreadyRecommended();
+        }
+        recommendationPort.save(Recommendation.of(opinionId, memberId, now()));
+        opinionPort.incrementRecommendationCount(opinionId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public PageResult<OpinionItem> getOpinions(IssueId issueId, MemberId viewerId, Stance stance, OpinionSort sort,
+                                               PageQuery pageQuery) {
+        issueQuery.getPublicIssue(issueId);
+        voteUseCase.requireVote(issueId, viewerId);
+
+        PageResult<CountedOpinion> page = opinionPort.findVisible(issueId, stance, sort, pageQuery);
+        List<Opinion> opinions = page.content().stream().map(CountedOpinion::opinion).toList();
+        Map<MemberId, Nickname> nicknames = loadMemberPort.findNicknames(
+                opinions.stream().map(Opinion::getAuthorId).toList());
+        Set<OpinionId> recommended = recommendationPort.findRecommendedOpinionIds(
+                viewerId, opinions.stream().map(Opinion::getId).toList());
+
+        return page.map(counted -> {
+            Opinion opinion = counted.opinion();
+            Nickname nickname = nicknames.get(opinion.getAuthorId());
+            return new OpinionItem(
+                    opinion,
+                    nickname == null ? null : nickname.getValue(),
+                    counted.recommendationCount(),
+                    recommended.contains(opinion.getId()),
+                    opinion.getAuthorId().equals(viewerId)
+            );
+        });
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<Opinion> findMyOpinion(IssueId issueId, MemberId memberId) {
+        return opinionPort.findByIssueIdAndAuthorId(issueId, memberId);
+    }
+
+    private LocalDateTime now() {
+        return LocalDateTime.now(clock);
+    }
+}

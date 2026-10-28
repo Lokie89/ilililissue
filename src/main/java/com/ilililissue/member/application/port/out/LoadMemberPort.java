@@ -5,6 +5,8 @@ import com.ilililissue.member.domain.vo.Email;
 import com.ilililissue.member.domain.vo.MemberId;
 import com.ilililissue.member.domain.vo.Nickname;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 public interface LoadMemberPort {
@@ -16,4 +18,6 @@ public interface LoadMemberPort {
     boolean existsByEmail(Email email);
 
     boolean existsByNickname(Nickname nickname);
+
+    Map<MemberId, Nickname> findNicknames(Collection<MemberId> ids);
 }

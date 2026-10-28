@@ -9,7 +9,10 @@ import com.ilililissue.member.domain.vo.Nickname;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
@@ -35,6 +38,13 @@ public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort 
     @Override
     public boolean existsByNickname(Nickname nickname) {
         return memberJpaRepository.existsByNickname(nickname.getValue());
+    }
+
+    @Override
+    public Map<MemberId, Nickname> findNicknames(Collection<MemberId> ids) {
+        return memberJpaRepository.findAllById(ids.stream().map(MemberId::getValue).distinct().toList()).stream()
+                .collect(Collectors.toMap(entity -> new MemberId(entity.getId()),
+                        entity -> Nickname.from(entity.getNickname())));
     }
 
     @Override
