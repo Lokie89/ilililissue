@@ -5,3 +5,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: create-drop
+
+auth:
+  jwt-secret: test-secret-key-for-ilililissue-at-least-32-bytes
+  access-token-ttl: 30m
+  refresh-token-ttl: 14d
+  cookie-secure: false
+  allowed-origins: http://localhost:3000

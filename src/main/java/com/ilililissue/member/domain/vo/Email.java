@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.Locale;
+
 @Getter
 @EqualsAndHashCode(callSuper = false)
 public class Email extends SelfValidating<Email> {
@@ -16,7 +18,7 @@ public class Email extends SelfValidating<Email> {
     private Email(
             String value
     ) {
-        this.value = value;
+        this.value = value == null ? null : value.trim().toLowerCase(Locale.ROOT);
         this.validate();
     }
 
