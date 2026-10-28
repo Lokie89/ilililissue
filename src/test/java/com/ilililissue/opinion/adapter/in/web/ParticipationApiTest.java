@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.hamcrest.Matchers.contains;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -174,6 +175,70 @@ public class ParticipationApiTest extends ApiTestSupport {
         mockMvc.perform(get("/api/issues/{id}/opinions", issueId).cookie(viewer).param("stance", "AGREE"))
                 .andExpect(jsonPath("$.totalElements").value(0));
         mockMvc.perform(post("/api/opinions/{id}/recommendations", hiddenId).cookie(viewer))
+                .andExpect(status().isNotFound());
+    }
+
+    @DisplayName("자기 의견은 추천할 수 없고, 추천은 취소한 뒤 다시 할 수 있다")
+    @Test
+    void selfRecommendAndCancel() throws Exception {
+        long issueId = createPublishedIssue(loginAsNewAdmin());
+        Cookie author = loginAsNewUser();
+        long opinionId = voteAndWrite(author, issueId, "AGREE", "추천받을 의견");
+        Cookie viewer = loginAsNewUser();
+        vote(viewer, issueId, "DISAGREE").andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/opinions/{id}/recommendations", opinionId).cookie(author))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("자기 의견은 추천할 수 없습니다."));
+
+        mockMvc.perform(post("/api/opinions/{id}/recommendations", opinionId).cookie(viewer))
+                .andExpect(status().isCreated());
+        mockMvc.perform(delete("/api/opinions/{id}/recommendations", opinionId).cookie(viewer))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/opinions/{id}/recommendations", opinionId).cookie(viewer))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/issues/{id}/opinions", issueId).cookie(viewer).param("stance", "AGREE"))
+                .andExpect(jsonPath("$.content[0].recommendationCount").value(0))
+                .andExpect(jsonPath("$.content[0].recommendedByMe").value(false));
+
+        mockMvc.perform(post("/api/opinions/{id}/recommendations", opinionId).cookie(viewer))
+                .andExpect(status().isCreated());
+        mockMvc.perform(get("/api/issues/{id}/opinions", issueId).cookie(viewer).param("stance", "AGREE"))
+                .andExpect(jsonPath("$.content[0].recommendationCount").value(1))
+                .andExpect(jsonPath("$.content[0].recommendedByMe").value(true));
+    }
+
+    @DisplayName("작성자는 의견을 삭제할 수 있고, 삭제한 뒤에는 다시 쓰거나 수정할 수 없다")
+    @Test
+    void deleteOpinion() throws Exception {
+        long issueId = createPublishedIssue(loginAsNewAdmin());
+        Cookie author = loginAsNewUser();
+        long opinionId = voteAndWrite(author, issueId, "AGREE", "지울 의견");
+        Cookie other = loginAsNewUser();
+        vote(other, issueId, "AGREE").andExpect(status().isCreated());
+
+        mockMvc.perform(delete("/api/opinions/{id}", opinionId).cookie(other))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/opinions/{id}", opinionId).cookie(author))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/opinions/{id}", opinionId).cookie(author))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/issues/{id}/opinions", issueId).cookie(other).param("stance", "AGREE"))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mockMvc.perform(get("/api/issues/{id}/participation", issueId).cookie(author))
+                .andExpect(jsonPath("$.opinion.deleted").value(true))
+                .andExpect(jsonPath("$.opinion.content").doesNotExist());
+
+        writeOpinion(author, issueId, "다시 쓰기").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("삭제한 의견은 다시 작성할 수 없습니다."));
+        mockMvc.perform(put("/api/opinions/{id}", opinionId).cookie(author)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"content\":\"수정\"}"))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/opinions/{id}/recommendations", opinionId).cookie(other))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/opinions/{id}/reports", opinionId).cookie(other)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"신고\"}"))
                 .andExpect(status().isNotFound());
     }
 }

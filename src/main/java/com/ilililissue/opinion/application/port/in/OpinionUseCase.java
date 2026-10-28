@@ -17,7 +17,17 @@ public interface OpinionUseCase {
 
     Opinion edit(OpinionId opinionId, MemberId editorId, OpinionContent content);
 
+    /**
+     * 작성자가 의견을 삭제한다. 삭제한 뒤에는 같은 이슈에 의견을 다시 작성할 수 없다.
+     */
+    void delete(OpinionId opinionId, MemberId memberId);
+
     void recommend(OpinionId opinionId, MemberId memberId);
+
+    /**
+     * 추천을 취소한다. 추천하지 않은 의견이면 아무 일도 하지 않는다.
+     */
+    void cancelRecommendation(OpinionId opinionId, MemberId memberId);
 
     /**
      * 투표한 회원에게만 입장별 의견 목록을 공개한다. 숨김 처리된 의견은 제외한다.

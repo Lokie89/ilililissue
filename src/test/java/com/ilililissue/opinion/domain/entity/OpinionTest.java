@@ -4,6 +4,8 @@ import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.member.domain.vo.MemberId;
 import com.ilililissue.opinion.domain.AlreadyEditedOpinionException;
 import com.ilililissue.opinion.domain.NotOpinionAuthorException;
+import com.ilililissue.opinion.domain.SelfRecommendationException;
+import com.ilililissue.opinion.domain.vo.OpinionId;
 import com.ilililissue.opinion.domain.vo.OpinionContent;
 import com.ilililissue.vote.domain.entity.Vote;
 import com.ilililissue.vote.domain.vo.Stance;
@@ -71,6 +73,30 @@ public class OpinionTest {
         Assertions.assertThatThrownBy(() -> OpinionContent.from(" "));
         Assertions.assertThatThrownBy(() -> OpinionContent.from("가".repeat(501)));
         Assertions.assertThat(OpinionContent.from("가".repeat(500)).getValue()).hasSize(500);
+    }
+
+    @DisplayName("작성자만 의견을 삭제할 수 있다")
+    @Test
+    void delete() {
+        Opinion opinion = Opinion.write(vote, OpinionContent.from("원래 의견"), NOW);
+
+        Assertions.assertThatThrownBy(() -> opinion.delete(new MemberId(99)))
+                .isInstanceOf(NotOpinionAuthorException.class);
+        opinion.delete(authorId);
+
+        Assertions.assertThat(opinion.isDeleted()).isTrue();
+    }
+
+    @DisplayName("자기 의견은 추천할 수 없다")
+    @Test
+    void selfRecommendation() {
+        Opinion opinion = Opinion.withId(new OpinionId(1), new IssueId(1), authorId, Stance.AGREE,
+                OpinionContent.from("의견"), false, false, false, NOW);
+
+        Assertions.assertThatThrownBy(() -> Recommendation.of(opinion, authorId, NOW))
+                .isInstanceOf(SelfRecommendationException.class);
+        Assertions.assertThat(Recommendation.of(opinion, new MemberId(99), NOW).getOpinionId())
+                .isEqualTo(opinion.getId());
     }
 
     @DisplayName("숨김 처리된 의견은 숨김 상태가 된다")

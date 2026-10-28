@@ -19,5 +19,13 @@ public interface LoadMemberPort {
 
     boolean existsByNickname(Nickname nickname);
 
+    /**
+     * 탈퇴한 회원은 결과에 포함하지 않는다.
+     */
     Map<MemberId, Nickname> findNicknames(Collection<MemberId> ids);
+
+    /**
+     * 가입되어 있고 탈퇴하지 않은 회원이면 true
+     */
+    boolean isActive(MemberId id);
 }

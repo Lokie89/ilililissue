@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
  * <li>투표한 회원만 작성할 수 있고, 의견의 입장은 투표 입장과 같다.</li>
  * <li>회원당 이슈별 1개이며 저장소의 (issueId, authorId) 유니크 제약으로 보장한다.</li>
  * <li>작성자만 최대 1회 수정할 수 있다.</li>
+ * <li>작성자는 의견을 삭제할 수 있다. 삭제해도 같은 이슈에 다시 작성할 수 없고, 삭제한 의견은 수정할 수 없다.</li>
  * <li>다른 의견에 대한 답글이 아닌 독립된 글이다.</li>
  * </ul>
  */
@@ -46,6 +47,8 @@ public class Opinion extends SelfValidating<Opinion> {
 
     private boolean hidden;
 
+    private boolean deleted;
+
     @NotNull
     private final LocalDateTime writtenAt;
 
@@ -57,6 +60,7 @@ public class Opinion extends SelfValidating<Opinion> {
             OpinionContent content,
             boolean edited,
             boolean hidden,
+            boolean deleted,
             LocalDateTime writtenAt
     ) {
         this.id = id;
@@ -66,23 +70,23 @@ public class Opinion extends SelfValidating<Opinion> {
         this.content = content;
         this.edited = edited;
         this.hidden = hidden;
+        this.deleted = deleted;
         this.writtenAt = writtenAt;
         this.validate();
     }
 
     public static Opinion write(Vote vote, OpinionContent content, LocalDateTime now) {
-        return new Opinion(null, vote.getIssueId(), vote.getMemberId(), vote.getStance(), content, false, false, now);
+        return new Opinion(null, vote.getIssueId(), vote.getMemberId(), vote.getStance(), content, false, false, false, now);
     }
 
     public static Opinion withId(OpinionId id, IssueId issueId, MemberId authorId, Stance stance,
-                                 OpinionContent content, boolean edited, boolean hidden, LocalDateTime writtenAt) {
-        return new Opinion(id, issueId, authorId, stance, content, edited, hidden, writtenAt);
+                                 OpinionContent content, boolean edited, boolean hidden, boolean deleted,
+                                 LocalDateTime writtenAt) {
+        return new Opinion(id, issueId, authorId, stance, content, edited, hidden, deleted, writtenAt);
     }
 
     public void edit(MemberId editorId, OpinionContent content) {
-        if (!this.authorId.equals(editorId)) {
-            throw new NotOpinionAuthorException();
-        }
+        requireAuthor(editorId);
         if (this.edited) {
             throw new AlreadyEditedOpinionException();
         }
@@ -91,7 +95,22 @@ public class Opinion extends SelfValidating<Opinion> {
         this.validate();
     }
 
+    public void delete(MemberId memberId) {
+        requireAuthor(memberId);
+        this.deleted = true;
+    }
+
+    public boolean isWrittenBy(MemberId memberId) {
+        return this.authorId.equals(memberId);
+    }
+
     public void hide() {
         this.hidden = true;
+    }
+
+    private void requireAuthor(MemberId memberId) {
+        if (!isWrittenBy(memberId)) {
+            throw new NotOpinionAuthorException();
+        }
     }
 }

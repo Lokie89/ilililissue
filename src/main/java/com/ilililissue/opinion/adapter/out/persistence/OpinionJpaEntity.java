@@ -26,8 +26,8 @@ import java.time.LocalDateTime;
 @Table(name = "opinion",
         uniqueConstraints = @UniqueConstraint(name = "uk_opinion_issue_author", columnNames = {"issueId", "authorId"}),
         indexes = {
-                @Index(name = "idx_opinion_recommended", columnList = "issueId, stance, hidden, recommendationCount"),
-                @Index(name = "idx_opinion_latest", columnList = "issueId, stance, hidden, writtenAt")})
+                @Index(name = "idx_opinion_recommended", columnList = "issueId, stance, hidden, deleted, recommendationCount"),
+                @Index(name = "idx_opinion_latest", columnList = "issueId, stance, hidden, deleted, writtenAt")})
 @Entity
 public class OpinionJpaEntity {
 
@@ -52,14 +52,17 @@ public class OpinionJpaEntity {
 
     private boolean hidden;
 
+    private boolean deleted;
+
     private long recommendationCount;
 
     @Column(nullable = false)
     private LocalDateTime writtenAt;
 
-    public void update(String content, boolean edited, boolean hidden) {
+    public void update(String content, boolean edited, boolean hidden, boolean deleted) {
         this.content = content;
         this.edited = edited;
         this.hidden = hidden;
+        this.deleted = deleted;
     }
 }

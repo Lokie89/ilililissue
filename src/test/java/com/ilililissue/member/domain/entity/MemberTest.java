@@ -1,5 +1,6 @@
 package com.ilililissue.member.domain.entity;
 
+import com.ilililissue.member.domain.AlreadyWithdrawnMemberException;
 import com.ilililissue.member.domain.vo.Email;
 import com.ilililissue.member.domain.vo.MemberId;
 import com.ilililissue.member.domain.vo.MemberRole;
@@ -7,6 +8,8 @@ import com.ilililissue.member.domain.vo.Nickname;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDateTime;
 
 public class MemberTest {
 
@@ -27,6 +30,31 @@ public class MemberTest {
         Assertions.assertThatThrownBy(() -> Nickname.from("열세글자를넘는아주긴닉네임입니다"));
         Assertions.assertThatThrownBy(
                 () -> Member.register(Email.from("user@example.com"), Nickname.from("토론러"), " "));
+    }
+
+    @DisplayName("탈퇴하면 이메일, 닉네임, 비밀번호를 지우고 다시 탈퇴할 수 없다")
+    @Test
+    void withdraw() {
+        Member member = Member.withId(new MemberId(1), Email.from("a@example.com"), Nickname.from("에이"),
+                "hash", MemberRole.USER);
+
+        member.withdraw(LocalDateTime.of(2026, 10, 28, 9, 0));
+
+        Assertions.assertThat(member.isWithdrawn()).isTrue();
+        Assertions.assertThat(member.getEmail()).isNull();
+        Assertions.assertThat(member.getNickname()).isNull();
+        Assertions.assertThat(member.getEncodedPassword()).isNull();
+        Assertions.assertThatThrownBy(() -> member.withdraw(LocalDateTime.of(2026, 10, 29, 9, 0)))
+                .isInstanceOf(AlreadyWithdrawnMemberException.class);
+    }
+
+    @DisplayName("탈퇴하지 않은 회원은 이메일, 닉네임이 있어야 한다")
+    @Test
+    void activeMemberRequiresProfile() {
+        Assertions.assertThatThrownBy(
+                () -> Member.withId(new MemberId(1), null, Nickname.from("에이"), "hash", MemberRole.USER));
+        Assertions.assertThatThrownBy(
+                () -> Member.withId(new MemberId(1), Email.from("a@example.com"), null, "hash", MemberRole.USER));
     }
 
     @DisplayName("회원 동일성은 id로 판단한다")

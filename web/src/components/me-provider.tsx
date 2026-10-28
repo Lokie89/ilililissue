@@ -9,6 +9,8 @@ type MeContext = {
   loading: boolean;
   reload: () => Promise<void>;
   logout: () => Promise<void>;
+  /** 서버가 인증 쿠키를 이미 지운 뒤(탈퇴 등) 화면의 로그인 상태만 비운다. */
+  clear: () => void;
 };
 
 const Context = createContext<MeContext | null>(null);
@@ -41,6 +43,8 @@ export function MeProvider({ children }: { children: React.ReactNode }) {
     setMe(null);
   }, []);
 
+  const clear = useCallback(() => setMe(null), []);
+
   useEffect(() => {
     let active = true;
     fetchMe().then((member) => {
@@ -54,7 +58,7 @@ export function MeProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const value = useMemo(() => ({ me, loading, reload, logout }), [me, loading, reload, logout]);
+  const value = useMemo(() => ({ me, loading, reload, logout, clear }), [me, loading, reload, logout, clear]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 

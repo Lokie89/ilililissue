@@ -43,18 +43,25 @@ public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort 
     @Override
     public Map<MemberId, Nickname> findNicknames(Collection<MemberId> ids) {
         return memberJpaRepository.findAllById(ids.stream().map(MemberId::getValue).distinct().toList()).stream()
+                .filter(entity -> entity.getWithdrawnAt() == null)
                 .collect(Collectors.toMap(entity -> new MemberId(entity.getId()),
                         entity -> Nickname.from(entity.getNickname())));
+    }
+
+    @Override
+    public boolean isActive(MemberId id) {
+        return memberJpaRepository.existsByIdAndWithdrawnAtIsNull(id.getValue());
     }
 
     @Override
     public Member save(Member member) {
         MemberJpaEntity saved = memberJpaRepository.save(new MemberJpaEntity(
                 member.getId() == null ? null : member.getId().getValue(),
-                member.getEmail().getValue(),
-                member.getNickname().getValue(),
+                member.getEmail() == null ? null : member.getEmail().getValue(),
+                member.getNickname() == null ? null : member.getNickname().getValue(),
                 member.getEncodedPassword(),
-                member.getRole()
+                member.getRole(),
+                member.getWithdrawnAt()
         ));
         return mapToDomain(saved);
     }
@@ -62,10 +69,11 @@ public class MemberPersistenceAdapter implements LoadMemberPort, SaveMemberPort 
     private Member mapToDomain(MemberJpaEntity entity) {
         return Member.withId(
                 new MemberId(entity.getId()),
-                Email.from(entity.getEmail()),
-                Nickname.from(entity.getNickname()),
+                entity.getEmail() == null ? null : Email.from(entity.getEmail()),
+                entity.getNickname() == null ? null : Nickname.from(entity.getNickname()),
                 entity.getEncodedPassword(),
-                entity.getRole()
+                entity.getRole(),
+                entity.getWithdrawnAt()
         );
     }
 }

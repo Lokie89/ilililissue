@@ -44,13 +44,14 @@ public class OpinionPersistenceAdapter implements OpinionPort, RecommendationPor
                     opinion.getContent().getValue(),
                     opinion.isEdited(),
                     opinion.isHidden(),
+                    opinion.isDeleted(),
                     0,
                     opinion.getWrittenAt()
             )));
         }
         // 추천 수는 별도 갱신하므로 수정 시 내용·상태만 반영한다.
         OpinionJpaEntity entity = opinionJpaRepository.findById(opinion.getId().getValue()).orElseThrow();
-        entity.update(opinion.getContent().getValue(), opinion.isEdited(), opinion.isHidden());
+        entity.update(opinion.getContent().getValue(), opinion.isEdited(), opinion.isHidden(), opinion.isDeleted());
         return mapToDomain(entity);
     }
 
@@ -69,7 +70,7 @@ public class OpinionPersistenceAdapter implements OpinionPort, RecommendationPor
     public PageResult<CountedOpinion> findVisible(IssueId issueId, Stance stance, OpinionSort sort,
                                                   PageQuery pageQuery) {
         Sort order = sort == OpinionSort.LATEST ? LATEST : RECOMMENDED;
-        Page<OpinionJpaEntity> page = opinionJpaRepository.findByIssueIdAndStanceAndHiddenFalse(
+        Page<OpinionJpaEntity> page = opinionJpaRepository.findByIssueIdAndStanceAndHiddenFalseAndDeletedFalse(
                 issueId.getValue(), stance, PageRequest.of(pageQuery.page(), pageQuery.size(), order));
         return new PageResult<>(
                 page.getContent().stream()
@@ -81,6 +82,11 @@ public class OpinionPersistenceAdapter implements OpinionPort, RecommendationPor
     @Override
     public void incrementRecommendationCount(OpinionId id) {
         opinionJpaRepository.incrementRecommendationCount(id.getValue());
+    }
+
+    @Override
+    public void decrementRecommendationCount(OpinionId id) {
+        opinionJpaRepository.decrementRecommendationCount(id.getValue());
     }
 
     @Override
@@ -96,6 +102,11 @@ public class OpinionPersistenceAdapter implements OpinionPort, RecommendationPor
     @Override
     public boolean exists(OpinionId opinionId, MemberId memberId) {
         return recommendationJpaRepository.existsByOpinionIdAndMemberId(opinionId.getValue(), memberId.getValue());
+    }
+
+    @Override
+    public boolean delete(OpinionId opinionId, MemberId memberId) {
+        return recommendationJpaRepository.deleteByOpinionIdAndMemberId(opinionId.getValue(), memberId.getValue()) > 0;
     }
 
     @Override
@@ -119,6 +130,7 @@ public class OpinionPersistenceAdapter implements OpinionPort, RecommendationPor
                 OpinionContent.from(entity.getContent()),
                 entity.isEdited(),
                 entity.isHidden(),
+                entity.isDeleted(),
                 entity.getWrittenAt()
         );
     }

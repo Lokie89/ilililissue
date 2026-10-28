@@ -20,11 +20,13 @@ public interface OpinionPort {
     Optional<Opinion> findByIssueIdAndAuthorId(IssueId issueId, MemberId authorId);
 
     /**
-     * 숨김 처리되지 않은 의견을 입장별로 조회한다.
+     * 숨김·삭제되지 않은 의견을 입장별로 조회한다.
      */
     PageResult<CountedOpinion> findVisible(IssueId issueId, Stance stance, OpinionSort sort, PageQuery pageQuery);
 
     void incrementRecommendationCount(OpinionId id);
+
+    void decrementRecommendationCount(OpinionId id);
 
     record CountedOpinion(Opinion opinion, long recommendationCount) {
     }

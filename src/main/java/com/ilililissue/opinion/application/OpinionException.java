@@ -16,6 +16,10 @@ public class OpinionException extends DomainException {
         return new OpinionException(ErrorType.CONFLICT, "이미 의견을 작성한 이슈입니다.");
     }
 
+    public static OpinionException deletedCannotRewrite() {
+        return new OpinionException(ErrorType.CONFLICT, "삭제한 의견은 다시 작성할 수 없습니다.");
+    }
+
     public static OpinionException alreadyRecommended() {
         return new OpinionException(ErrorType.CONFLICT, "이미 추천한 의견입니다.");
     }

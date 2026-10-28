@@ -58,6 +58,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | --- | --- | --- | --- |
 | POST | `/api/members` | 누구나 | 회원가입 `{email, nickname, password}` |
 | GET | `/api/members/me` | 회원 | 내 정보 |
+| POST | `/api/members/me/withdrawal` | 회원 | 탈퇴 `{password}` (인증 쿠키 삭제, 의견은 '탈퇴한 회원'으로 남음) |
 | POST | `/api/auth/login` | 누구나 | 로그인 `{email, password}` |
 | POST | `/api/auth/refresh` | 리프레시 쿠키 | 토큰 재발급 |
 | POST | `/api/auth/logout` | 누구나 | 로그아웃 (쿠키 삭제, 리프레시 토큰 폐기) |
@@ -70,7 +71,9 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | GET | `/api/issues/{id}/opinions?stance&sort&page&size` | 투표자 | 입장별 의견 (`sort`: `RECOMMENDED`(기본) \| `LATEST`) |
 | POST | `/api/issues/{id}/opinions` | 투표자 | 의견 작성 `{content}` (1개, 500자) |
 | PUT | `/api/opinions/{id}` | 작성자 | 의견 수정 `{content}` (1회) |
-| POST | `/api/opinions/{id}/recommendations` | 투표자 | 의견 추천 (1회) |
+| DELETE | `/api/opinions/{id}` | 작성자 | 의견 삭제 (삭제 후 같은 이슈에 다시 작성 불가) |
+| POST | `/api/opinions/{id}/recommendations` | 투표자 | 의견 추천 (1회, 자기 의견 불가) |
+| DELETE | `/api/opinions/{id}/recommendations` | 회원 | 추천 취소 |
 | POST | `/api/opinions/{id}/reports` | 회원 | 의견 신고 `{reason}` (1회) |
 | POST | `/api/admin/categories` | 관리자 | 카테고리 생성 `{name}` |
 | GET | `/api/admin/issues` | 관리자 | 전체 이슈 목록 (모든 상태) |

@@ -5,6 +5,7 @@ import com.ilililissue.common.application.PageResult;
 import com.ilililissue.issue.application.port.in.IssueQuery;
 import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.member.application.port.out.LoadMemberPort;
+import com.ilililissue.member.domain.entity.Member;
 import com.ilililissue.member.domain.vo.MemberId;
 import com.ilililissue.member.domain.vo.Nickname;
 import com.ilililissue.metrics.application.port.in.RecordEventUseCase;
@@ -51,8 +52,11 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
     public Opinion write(IssueId issueId, MemberId authorId, OpinionContent content) {
         issueQuery.getPublicIssue(issueId);
         Vote vote = voteUseCase.requireVote(issueId, authorId);
-        if (opinionPort.findByIssueIdAndAuthorId(issueId, authorId).isPresent()) {
-            throw OpinionException.alreadyWritten();
+        Optional<Opinion> existing = opinionPort.findByIssueIdAndAuthorId(issueId, authorId);
+        if (existing.isPresent()) {
+            throw existing.get().isDeleted()
+                    ? OpinionException.deletedCannotRewrite()
+                    : OpinionException.alreadyWritten();
         }
         Opinion opinion = opinionPort.save(Opinion.write(vote, content, now()));
         recordEventUseCase.opinionWritten(issueId, authorId, opinion.getStance());
@@ -62,23 +66,43 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
     @Transactional
     @Override
     public Opinion edit(OpinionId opinionId, MemberId editorId, OpinionContent content) {
-        Opinion opinion = opinionPort.findById(opinionId).orElseThrow(OpinionException::notFound);
+        Opinion opinion = loadNotDeleted(opinionId);
         opinion.edit(editorId, content);
         return opinionPort.save(opinion);
     }
 
     @Transactional
     @Override
+    public void delete(OpinionId opinionId, MemberId memberId) {
+        Opinion opinion = loadNotDeleted(opinionId);
+        opinion.delete(memberId);
+        opinionPort.save(opinion);
+    }
+
+    @Transactional
+    @Override
     public void recommend(OpinionId opinionId, MemberId memberId) {
-        Opinion opinion = opinionPort.findById(opinionId)
-                .filter(found -> !found.isHidden())
-                .orElseThrow(OpinionException::notFound);
+        Opinion opinion = loadNotDeleted(opinionId);
+        if (opinion.isHidden()) {
+            throw OpinionException.notFound();
+        }
         voteUseCase.requireVote(opinion.getIssueId(), memberId);
+        Recommendation recommendation = Recommendation.of(opinion, memberId, now());
         if (recommendationPort.exists(opinionId, memberId)) {
             throw OpinionException.alreadyRecommended();
         }
-        recommendationPort.save(Recommendation.of(opinionId, memberId, now()));
+        recommendationPort.save(recommendation);
         opinionPort.incrementRecommendationCount(opinionId);
+    }
+
+    @Transactional
+    @Override
+    public void cancelRecommendation(OpinionId opinionId, MemberId memberId) {
+        opinionPort.findById(opinionId).orElseThrow(OpinionException::notFound);
+        // 동시에 들어온 취소 요청 중 실제로 지운 요청만 추천 수를 줄인다.
+        if (recommendationPort.delete(opinionId, memberId)) {
+            opinionPort.decrementRecommendationCount(opinionId);
+        }
     }
 
     // 탭 열람 이벤트를 기록하므로 읽기 전용 트랜잭션을 쓰지 않는다.
@@ -104,7 +128,7 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
             Nickname nickname = nicknames.get(opinion.getAuthorId());
             return new OpinionItem(
                     opinion,
-                    nickname == null ? null : nickname.getValue(),
+                    nickname == null ? Member.WITHDRAWN_NICKNAME : nickname.getValue(),
                     counted.recommendationCount(),
                     recommended.contains(opinion.getId()),
                     opinion.getAuthorId().equals(viewerId)
@@ -130,6 +154,12 @@ public class OpinionService implements OpinionUseCase, ModerateOpinionUseCase {
         Opinion opinion = getOpinion(opinionId);
         opinion.hide();
         opinionPort.save(opinion);
+    }
+
+    private Opinion loadNotDeleted(OpinionId opinionId) {
+        return opinionPort.findById(opinionId)
+                .filter(opinion -> !opinion.isDeleted())
+                .orElseThrow(OpinionException::notFound);
     }
 
     private LocalDateTime now() {

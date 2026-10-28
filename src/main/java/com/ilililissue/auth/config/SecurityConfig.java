@@ -2,25 +2,31 @@ package com.ilililissue.auth.config;
 
 import com.ilililissue.auth.adapter.in.web.AuthCookies;
 import com.ilililissue.auth.adapter.out.jwt.JwtAccessTokenIssuer;
+import com.ilililissue.member.application.port.out.LoadMemberPort;
+import com.ilililissue.member.domain.vo.MemberId;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
@@ -49,7 +55,7 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, LoadMemberPort loadMemberPort) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> {
@@ -67,7 +73,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .bearerTokenResolver(bearerTokenResolver())
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(loadMemberPort)))
                         .authenticationEntryPoint((request, response, e) ->
                                 writeError(response, HttpServletResponse.SC_UNAUTHORIZED, "UNAUTHORIZED", "로그인이 필요합니다."))
                         .accessDeniedHandler((request, response, e) ->
@@ -138,13 +144,21 @@ public class SecurityConfig {
         return source;
     }
 
-    private JwtAuthenticationConverter jwtAuthenticationConverter() {
+    /**
+     * 탈퇴한 회원의 액세스 토큰은 만료 전이라도 거부한다. 인증된 요청마다 회원 상태를 한 번 조회한다.
+     */
+    private Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter(LoadMemberPort loadMemberPort) {
         JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
         authoritiesConverter.setAuthoritiesClaimName(JwtAccessTokenIssuer.ROLE_CLAIM);
         authoritiesConverter.setAuthorityPrefix("ROLE_");
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        return converter;
+        return jwt -> {
+            if (!loadMemberPort.isActive(new MemberId(Long.parseLong(jwt.getSubject())))) {
+                throw new InvalidBearerTokenException("탈퇴했거나 존재하지 않는 회원입니다.");
+            }
+            return converter.convert(jwt);
+        };
     }
 
     private static SecretKey secretKey(AuthProperties authProperties) {

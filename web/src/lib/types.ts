@@ -68,9 +68,11 @@ export type Opinion = {
   id: number;
   issueId: number;
   stance: Stance;
-  content: string;
+  /** 삭제한 의견은 null */
+  content: string | null;
   edited: boolean;
   hidden: boolean;
+  deleted: boolean;
   writtenAt: string;
 };
 

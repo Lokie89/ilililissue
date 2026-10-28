@@ -14,6 +14,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
+/**
+ * 탈퇴한 회원은 이메일·닉네임·비밀번호가 null이다. 유니크 제약은 null을 중복으로 보지 않는다.
+ */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,16 +32,17 @@ public class MemberJpaEntity {
     @Id
     private Long id;
 
-    @Column(nullable = false, length = 320)
+    @Column(length = 320)
     private String email;
 
-    @Column(nullable = false, length = 12)
+    @Column(length = 12)
     private String nickname;
 
-    @Column(nullable = false)
     private String encodedPassword;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private MemberRole role;
+
+    private LocalDateTime withdrawnAt;
 }

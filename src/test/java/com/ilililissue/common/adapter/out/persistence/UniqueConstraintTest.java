@@ -47,10 +47,10 @@ public class UniqueConstraintTest {
     @Test
     void opinion() {
         opinionJpaRepository.saveAndFlush(
-                new OpinionJpaEntity(null, 1L, 1L, Stance.AGREE, "의견", false, false, 0, NOW));
+                new OpinionJpaEntity(null, 1L, 1L, Stance.AGREE, "의견", false, false, false, 0, NOW));
 
         Assertions.assertThatThrownBy(() -> opinionJpaRepository.saveAndFlush(
-                        new OpinionJpaEntity(null, 1L, 1L, Stance.AGREE, "또 의견", false, false, 0, NOW)))
+                        new OpinionJpaEntity(null, 1L, 1L, Stance.AGREE, "또 의견", false, false, false, 0, NOW)))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 

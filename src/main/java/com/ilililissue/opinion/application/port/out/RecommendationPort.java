@@ -13,5 +13,10 @@ public interface RecommendationPort {
 
     boolean exists(OpinionId opinionId, MemberId memberId);
 
+    /**
+     * @return 삭제한 추천이 있으면 true
+     */
+    boolean delete(OpinionId opinionId, MemberId memberId);
+
     Set<OpinionId> findRecommendedOpinionIds(MemberId memberId, Collection<OpinionId> opinionIds);
 }

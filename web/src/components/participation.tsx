@@ -189,6 +189,17 @@ function MyOpinion({
   const [content, setContent] = useState(opinion?.content ?? "");
   const [error, setError] = useState<string | null>(null);
 
+  async function remove() {
+    if (!opinion || !window.confirm("의견을 삭제할까요? 삭제하면 이 이슈에는 다시 의견을 쓸 수 없어요.")) return;
+    setError(null);
+    try {
+      await api(`/api/opinions/${opinion.id}`, { method: "DELETE" });
+      onChange();
+    } catch (e) {
+      setError(errorMessage(e));
+    }
+  }
+
   async function submit() {
     setError(null);
     try {
@@ -204,6 +215,14 @@ function MyOpinion({
     }
   }
 
+  if (opinion?.deleted) {
+    return (
+      <section className="rounded-lg bg-stone-50 p-5 text-sm text-stone-500">
+        의견을 삭제했어요. 이 이슈에는 다시 의견을 쓸 수 없어요.
+      </section>
+    );
+  }
+
   if (opinion && !editing) {
     return (
       <section className="rounded-lg bg-stone-50 p-5">
@@ -212,15 +231,19 @@ function MyOpinion({
         </h2>
         {opinion.hidden && <p className="mb-2 text-sm text-rose-600">운영 정책에 따라 숨김 처리된 의견입니다.</p>}
         <p className="whitespace-pre-wrap">{opinion.content}</p>
-        <div className="mt-3 text-sm text-stone-500">
+        <div className="mt-3 flex gap-3 text-sm text-stone-500">
           {opinion.edited ? (
-            "수정 완료 (더 이상 수정할 수 없어요)"
+            <span>수정 완료 (더 이상 수정할 수 없어요)</span>
           ) : (
             <button type="button" onClick={() => setEditing(true)} className="underline">
               수정하기 (1회 가능)
             </button>
           )}
+          <button type="button" onClick={remove} className="underline">
+            삭제
+          </button>
         </div>
+        {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
       </section>
     );
   }
@@ -355,10 +378,17 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
 function OpinionCard({ item, onChange }: { item: OpinionItem; onChange: (change: Partial<OpinionItem>) => void }) {
   const [message, setMessage] = useState<string | null>(null);
 
-  async function recommend() {
+  // 추천했으면 취소, 아니면 추천한다.
+  async function toggleRecommendation() {
+    const path = `/api/opinions/${item.id}/recommendations`;
     try {
-      await api(`/api/opinions/${item.id}/recommendations`, { method: "POST" });
-      onChange({ recommendedByMe: true, recommendationCount: item.recommendationCount + 1 });
+      if (item.recommendedByMe) {
+        await api(path, { method: "DELETE" });
+        onChange({ recommendedByMe: false, recommendationCount: Math.max(0, item.recommendationCount - 1) });
+      } else {
+        await api(path, { method: "POST" });
+        onChange({ recommendedByMe: true, recommendationCount: item.recommendationCount + 1 });
+      }
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
         onChange({ recommendedByMe: true });
@@ -391,14 +421,19 @@ function OpinionCard({ item, onChange }: { item: OpinionItem; onChange: (change:
       </div>
       <p className="whitespace-pre-wrap">{item.content}</p>
       <div className="mt-3 flex items-center gap-3 text-sm">
-        <button
-          type="button"
-          onClick={recommend}
-          disabled={item.recommendedByMe}
-          className={`rounded border px-2 py-0.5 ${item.recommendedByMe ? "border-stone-900 font-semibold" : "border-stone-300"}`}
-        >
-          추천 {item.recommendationCount}
-        </button>
+        {item.mine ? (
+          <span className="rounded border border-stone-200 px-2 py-0.5 text-stone-500">추천 {item.recommendationCount}</span>
+        ) : (
+          <button
+            type="button"
+            onClick={toggleRecommendation}
+            aria-pressed={item.recommendedByMe}
+            title={item.recommendedByMe ? "추천 취소" : "추천"}
+            className={`rounded border px-2 py-0.5 ${item.recommendedByMe ? "border-stone-900 font-semibold" : "border-stone-300"}`}
+          >
+            추천 {item.recommendationCount}
+          </button>
+        )}
         {!item.mine && (
           <button type="button" onClick={report} className="text-stone-400 underline">
             신고

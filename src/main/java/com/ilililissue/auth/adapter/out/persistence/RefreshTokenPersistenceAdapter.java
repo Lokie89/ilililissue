@@ -38,4 +38,9 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenPort {
     public boolean deleteByTokenHash(String tokenHash) {
         return refreshTokenJpaRepository.deleteByTokenHash(tokenHash) > 0;
     }
+
+    @Override
+    public void deleteByMemberId(MemberId memberId) {
+        refreshTokenJpaRepository.deleteByMemberId(memberId.getValue());
+    }
 }

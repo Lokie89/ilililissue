@@ -26,7 +26,9 @@ export function UserMenu() {
   return (
     <nav className="flex items-center gap-3 text-sm">
       {me.role === "ADMIN" && <Link href="/admin">관리</Link>}
-      <span className="text-stone-500">{me.nickname}</span>
+      <Link href="/me" className="text-stone-500">
+        {me.nickname}
+      </Link>
       <button
         type="button"
         onClick={async () => {

@@ -34,7 +34,7 @@ public class ReportService implements ReportUseCase {
     @Override
     public Report report(OpinionId opinionId, MemberId reporterId, ReportReason reason) {
         Opinion opinion = moderateOpinionUseCase.getOpinion(opinionId);
-        if (opinion.isHidden()) {
+        if (opinion.isHidden() || opinion.isDeleted()) {
             throw OpinionException.notFound();
         }
         if (reportPort.exists(opinionId, reporterId)) {

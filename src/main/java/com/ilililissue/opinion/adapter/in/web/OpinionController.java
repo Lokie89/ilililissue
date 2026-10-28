@@ -17,6 +17,7 @@ import com.ilililissue.vote.domain.entity.Vote;
 import com.ilililissue.vote.domain.vo.Stance;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -83,10 +84,22 @@ public class OpinionController {
                 opinionUseCase.edit(new OpinionId(opinionId), memberId, OpinionContent.from(request.content())));
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/api/opinions/{opinionId}")
+    public void delete(@PathVariable long opinionId, @LoginMember MemberId memberId) {
+        opinionUseCase.delete(new OpinionId(opinionId), memberId);
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/api/opinions/{opinionId}/recommendations")
     public void recommend(@PathVariable long opinionId, @LoginMember MemberId memberId) {
         opinionUseCase.recommend(new OpinionId(opinionId), memberId);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/api/opinions/{opinionId}/recommendations")
+    public void cancelRecommendation(@PathVariable long opinionId, @LoginMember MemberId memberId) {
+        opinionUseCase.cancelRecommendation(new OpinionId(opinionId), memberId);
     }
 
     public record OpinionRequest(String content) {
@@ -95,17 +108,21 @@ public class OpinionController {
     public record ParticipationResponse(boolean voted, Stance stance, OpinionResponse opinion) {
     }
 
+    /**
+     * 삭제한 의견은 내용 없이 삭제 여부만 응답한다.
+     */
     public record OpinionResponse(long id, long issueId, Stance stance, String content, boolean edited,
-                                  boolean hidden, LocalDateTime writtenAt) {
+                                  boolean hidden, boolean deleted, LocalDateTime writtenAt) {
 
         static OpinionResponse from(Opinion opinion) {
             return new OpinionResponse(
                     opinion.getId().getValue(),
                     opinion.getIssueId().getValue(),
                     opinion.getStance(),
-                    opinion.getContent().getValue(),
+                    opinion.isDeleted() ? null : opinion.getContent().getValue(),
                     opinion.isEdited(),
                     opinion.isHidden(),
+                    opinion.isDeleted(),
                     opinion.getWrittenAt()
             );
         }
