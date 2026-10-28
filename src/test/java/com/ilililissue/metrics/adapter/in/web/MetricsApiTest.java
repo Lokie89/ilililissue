@@ -56,6 +56,13 @@ public class MetricsApiTest extends ApiTestSupport {
         mockMvc.perform(post("/api/issues/{id}/views", issueId).cookie(member))
                 .andExpect(status().isNoContent());
         mockMvc.perform(post("/api/issues/{id}/views", 999_999)).andExpect(status().isNotFound());
+        // 앱은 직접 만든 방문자 ID를 헤더로 보낸다. 쿠키를 발급하지 않고, 같은 ID는 한 방문자로 센다.
+        String appVisitor = java.util.UUID.randomUUID().toString();
+        for (int i = 0; i < 2; i++) {
+            mockMvc.perform(post("/api/issues/{id}/views", issueId).header(IssueViewController.VISITOR_HEADER, appVisitor))
+                    .andExpect(status().isNoContent())
+                    .andExpect(cookie().doesNotExist(IssueViewController.VISITOR_ID));
+        }
         mockMvc.perform(post("/api/issues/{id}/votes", issueId).cookie(member)
                         .contentType(MediaType.APPLICATION_JSON).content("{\"stance\":\"AGREE\"}"))
                 .andExpect(status().isCreated());
@@ -71,8 +78,8 @@ public class MetricsApiTest extends ApiTestSupport {
                 .andExpect(status().isOk());
 
         Map<String, Object> after = metrics(admin);
-        assertThat(diff(before, after, "issueViews")).isEqualTo(3);
-        assertThat(diff(before, after, "issueVisitors")).isEqualTo(2);
+        assertThat(diff(before, after, "issueViews")).isEqualTo(5);
+        assertThat(diff(before, after, "issueVisitors")).isEqualTo(3);
         assertThat(diff(before, after, "votes")).isEqualTo(1);
         assertThat(diff(before, after, "voters")).isEqualTo(1);
         assertThat(diff(before, after, "opinions")).isEqualTo(1);

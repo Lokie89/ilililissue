@@ -49,6 +49,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 
 - `POST /api/auth/login` 성공 시 `access_token`(30분), `refresh_token`(14일, 경로 `/api/auth`) 쿠키를 `HttpOnly`, `SameSite=Lax`로 발급합니다.
 - 웹은 쿠키로, 앱은 `Authorization: Bearer <access token>` 헤더로 인증합니다.
+- 앱은 로그인·재발급·로그아웃 요청에 `X-Client: app` 헤더를 붙입니다. 그러면 토큰을 쿠키 대신 응답 본문 `{member, accessToken, accessTokenExpiresIn, refreshToken, refreshTokenExpiresIn}`(만료는 초)으로 주고, 재발급·로그아웃은 본문 `{refreshToken}`을 받습니다.
 - 액세스 토큰이 만료되면 `POST /api/auth/refresh`로 재발급합니다. 리프레시 토큰은 1회용(rotation)입니다.
 - 오류 응답 형식: `{"code": "UNAUTHORIZED", "message": "로그인이 필요합니다."}`
 
@@ -65,7 +66,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | GET | `/api/categories` | 누구나 | 카테고리 목록 |
 | GET | `/api/issues?page&size` | 누구나 | 공개 이슈 목록 (게시·마감, 최신순) |
 | GET | `/api/issues/{id}` | 누구나 | 이슈 상세 (질문, 배경 설명, 원문 출처) |
-| POST | `/api/issues/{id}/views` | 누구나 | 조회 기록 (지표용, 없으면 `visitor_id` 쿠키 발급) |
+| POST | `/api/issues/{id}/views` | 누구나 | 조회 기록 (지표용, 없으면 `visitor_id` 쿠키 발급. 앱은 `X-Visitor-Id: <UUID>` 헤더) |
 | GET | `/api/issues/{id}/participation` | 누구나 | 내 투표 입장·의견 (비회원은 `voted: false`) |
 | POST | `/api/issues/{id}/votes` | 회원 | 투표 `{stance: AGREE \| NEUTRAL \| DISAGREE}` (1회, 변경 불가) |
 | GET | `/api/issues/{id}/results` | 투표자 | 입장별 투표 수·비율 |

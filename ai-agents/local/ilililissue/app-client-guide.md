@@ -2,27 +2,29 @@
 
 앱을 만들기 전에 이 문서를 먼저 읽는다. 백엔드 API는 웹과 같고(`README.md`의 API 표), 아래는 웹에서는 드러나지 않거나 웹이 대신 처리하던 부분이다. 앱 작업을 시작할 때 각 항목을 확인하고, 처리한 내용은 이 문서에 반영한다.
 
-## 1. 인증: 지금 상태로는 헤더 인증을 쓸 수 없다 (앱 착수 전 백엔드 작업 필요)
+## 1. 인증: 앱 모드 (`X-Client: app`)
 
-- 현재 로그인(`POST /api/auth/login`)과 재발급(`POST /api/auth/refresh`)은 토큰을 **쿠키로만** 준다. 응답 본문에는 회원 정보만 있다.
-- 재발급은 `refresh_token` 쿠키(경로 `/api/auth`)만 읽는다.
-- 서버는 `Authorization: Bearer` 헤더를 받을 수 있지만(`SecurityConfig.bearerTokenResolver`), 앱이 그 토큰을 얻을 방법이 없다.
-- 선택지:
-  1. **(권장) 앱 전용 토큰 응답 추가**: 예) 로그인·재발급 요청에 `X-Client: app` 헤더가 있으면 본문에 `accessToken`, `refreshToken`, 만료 시각을 주고, 재발급은 본문의 리프레시 토큰도 받는다. 앱은 토큰을 `expo-secure-store`에 저장하고 헤더로 보낸다. 리프레시 토큰은 지금처럼 해시 저장·1회용(rotation)을 유지한다.
-  2. 네이티브 쿠키 저장소에 맡기기: React Native `fetch`는 OS 쿠키 저장소를 쓰므로 쿠키 방식이 동작할 수는 있다. 다만 앱 재시작 후 유지, 기기별 차이, 로그아웃 시 정리를 직접 확인해야 해서 권장하지 않는다.
-- 어느 쪽이든 결정 후 `architecture.md` 인증 절과 `README.md` 인증 절을 고친다.
+- 로그인·재발급·로그아웃 요청에 `X-Client: app` 헤더를 붙인다. 붙이지 않으면 웹처럼 쿠키로 동작한다.
+- 로그인 `POST /api/auth/login {email, password}` → `{member, accessToken, accessTokenExpiresIn, refreshToken, refreshTokenExpiresIn}` (만료는 초). 쿠키는 주지 않는다.
+- 두 토큰은 `expo-secure-store`에 저장한다. AsyncStorage 같은 평문 저장소에 두지 않는다.
+- API 요청은 `Authorization: Bearer <accessToken>`으로 인증한다.
+- 재발급 `POST /api/auth/refresh {refreshToken}` → 로그인과 같은 형식. 받은 두 토큰으로 **모두** 바꿔 저장한다(리프레시 토큰도 새로 나온다).
+- 로그아웃 `POST /api/auth/logout {refreshToken}` → 204. 서버에서 리프레시 토큰을 폐기하므로 저장한 토큰도 지운다.
+- 탈퇴 `POST /api/members/me/withdrawal {password}`는 Bearer 헤더로 호출한다. 성공하면 저장한 토큰을 지운다(모든 기기의 리프레시 토큰이 폐기된다).
+- 코드: `auth/adapter/in/web/AuthController.java`, 테스트: `AuthApiTest.appAuthFlow`
 
 ## 2. 토큰 재발급
 
 - 액세스 토큰 30분, 리프레시 토큰 14일. 401을 받으면 재발급을 **한 번만** 하고 원래 요청을 다시 보낸다(`web/src/lib/api.ts`와 같은 방식).
 - 리프레시 토큰은 1회용이다. 여러 요청이 동시에 401을 받아도 재발급 요청은 하나만 보내고 나머지는 그 결과를 기다리게 한다. 동시에 두 번 보내면 하나는 실패해 로그아웃된다.
+- 재발급 응답을 저장하기 전에 앱이 종료되면 이전 리프레시 토큰은 이미 폐기된 상태라 다시 로그인해야 한다. 응답을 받으면 바로 저장한다.
 - 재발급이 실패하면 저장한 토큰을 지우고 로그인 화면으로 보낸다.
 - 탈퇴한 회원의 토큰은 만료 전이라도 401이다.
 
 ## 3. 조회 기록 (지표)
 
-- 이슈 상세 화면을 열 때 `POST /api/issues/{id}/views`를 **한 번** 호출한다. 웹은 `ViewTracker` 컴포넌트가 한다.
-- 처음 호출하면 서버가 `visitor_id` 쿠키(1년)를 준다. 앱은 이 값을 유지해서 다음 호출에 같은 쿠키를 보내야 한다. 쿠키 저장소를 쓰지 않으면 `Set-Cookie`에서 값을 꺼내 저장하고 `Cookie: visitor_id=...`로 보낸다.
+- 앱을 처음 실행할 때 UUID를 하나 만들어 저장하고(방문자 ID, 개인정보 아님), 이슈 상세 화면을 열 때마다 `POST /api/issues/{id}/views`를 `X-Visitor-Id: <UUID>` 헤더와 함께 **한 번** 호출한다. 로그인 상태면 Bearer 헤더도 같이 보낸다.
+- 헤더가 있으면 서버는 쿠키를 발급하지 않는다. 웹은 `ViewTracker` 컴포넌트가 쿠키(`visitor_id`)로 같은 일을 한다.
 - 이 호출을 빼먹으면 투표율(투표 수 / 이슈별 고유 방문자 수)이 실제보다 높게, 심하면 100%를 넘게 나온다.
 - `GET /api/issues/{id}`는 지표에 기록하지 않는다.
 

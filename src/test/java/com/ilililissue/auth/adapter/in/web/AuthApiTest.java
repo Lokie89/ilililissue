@@ -1,5 +1,6 @@
 package com.ilililissue.auth.adapter.in.web;
 
+import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -170,6 +171,64 @@ public class AuthApiTest {
         mockMvc.perform(get("/api/admin/issues").cookie(accessToken))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/members/me").cookie(new Cookie(AuthCookies.ACCESS_TOKEN, "forged.token.value")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("앱은 토큰을 응답 본문으로 받아 헤더로 인증하고, 본문의 리프레시 토큰으로 재발급·로그아웃한다")
+    @Test
+    void appAuthFlow() throws Exception {
+        String email = uniqueEmail();
+        signup(email, uniqueNickname());
+
+        MvcResult login = mockMvc.perform(post("/api/auth/login")
+                        .header(AuthController.CLIENT_HEADER, AuthController.APP_CLIENT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"%s","password":"%s"}
+                                """.formatted(email, PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(cookie().doesNotExist(AuthCookies.ACCESS_TOKEN))
+                .andExpect(cookie().doesNotExist(AuthCookies.REFRESH_TOKEN))
+                .andExpect(jsonPath("$.member.email").value(email))
+                .andExpect(jsonPath("$.accessTokenExpiresIn").value(1800))
+                .andExpect(jsonPath("$.refreshTokenExpiresIn").value(14 * 24 * 3600))
+                .andReturn();
+        assertThat(login.getResponse().getHeader(HttpHeaders.CACHE_CONTROL)).contains("no-store");
+        String accessToken = JsonPath.read(login.getResponse().getContentAsString(), "$.accessToken");
+        String refreshToken = JsonPath.read(login.getResponse().getContentAsString(), "$.refreshToken");
+
+        mockMvc.perform(get("/api/members/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(email));
+
+        MvcResult refreshed = mockMvc.perform(post("/api/auth/refresh")
+                        .header(AuthController.CLIENT_HEADER, AuthController.APP_CLIENT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"%s\"}".formatted(refreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").exists())
+                .andReturn();
+        String rotated = JsonPath.read(refreshed.getResponse().getContentAsString(), "$.refreshToken");
+        assertThat(rotated).isNotEqualTo(refreshToken);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .header(AuthController.CLIENT_HEADER, AuthController.APP_CLIENT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"%s\"}".formatted(refreshToken)))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").header(AuthController.CLIENT_HEADER, AuthController.APP_CLIENT))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .header(AuthController.CLIENT_HEADER, AuthController.APP_CLIENT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"%s\"}".formatted(rotated)))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().doesNotExist(AuthCookies.ACCESS_TOKEN));
+        mockMvc.perform(post("/api/auth/refresh")
+                        .header(AuthController.CLIENT_HEADER, AuthController.APP_CLIENT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"refreshToken\":\"%s\"}".formatted(rotated)))
                 .andExpect(status().isUnauthorized());
     }
 

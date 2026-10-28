@@ -28,7 +28,7 @@
 - 백엔드는 화면을 렌더링하지 않는 JSON REST API로만 만든다. 웹과 앱이 같은 API를 쓴다.
 - 웹: Next.js (React, TypeScript). 이슈 상세 페이지가 검색·공유 링크로 외부 유입되어야 하므로 서버 렌더링이 가능한 쪽을 택한다.
 - 앱: React Native (Expo). 웹과 언어·타입·API 클라이언트를 공유한다.
-- 순서: API → 웹 → 앱. 앱은 4주 검증 이후. 앱 착수 전 `app-client-guide.md`를 확인한다(앱용 토큰 전달 방식이 아직 없음).
+- 순서: API → 웹 → 앱. 앱은 4주 검증 이후. 앱 착수 전 `app-client-guide.md`를 확인한다.
 - 웹 구현 (2026-10-28): 저장소 내 `web/` (Next.js 16.4, Cache Components, Tailwind 4). 브라우저 요청은 Next.js rewrite로 `/api/*` → 백엔드(같은 출처라 CORS 불필요). 공개 이슈는 서버 컴포넌트가 백엔드를 직접 호출(Suspense 안, 요청마다 조회), 회원별 화면은 클라이언트 컴포넌트. 상세: `web/README.md`
 
 ## 애플리케이션 구조
@@ -62,6 +62,7 @@
 
 - 구현: Spring Security OAuth2 Resource Server(JWT 검증) + `NimbusJwtEncoder`(발급). 코드: `src/main/java/com/ilililissue/auth/`
 - 액세스 토큰: JWT HS256, `iss=ilililissue`, `sub=회원 id`, `role=USER|ADMIN`, 수명 30분. 웹은 `access_token` 쿠키, 앱은 `Authorization: Bearer` 헤더.
+- 앱 모드: 로그인·재발급 요청에 `X-Client: app` 헤더가 있으면 토큰을 응답 본문(`accessToken`, `refreshToken`, 만료 초)으로 주고 쿠키를 쓰지 않는다(`Cache-Control: no-store`). 재발급·로그아웃은 본문 `{refreshToken}`을 받는다. 코드: `auth/adapter/in/web/AuthController.java`
 - 리프레시 토큰: 32바이트 난수(불투명 토큰), 수명 14일. 서버(`refresh_token` 테이블)에는 SHA-256 해시만 저장. 재발급 시 기존 토큰을 삭제하고 새로 발급(rotation)하며, 삭제에 성공한 요청만 재발급한다. 쿠키 경로는 `/api/auth`.
 - 쿠키: `HttpOnly`, `SameSite=Lax`, `Secure`(운영 true, local false). 쿠키 Max-Age는 토큰 수명과 같다.
 - `/api/auth/**`는 액세스 토큰을 읽지 않는다 (만료 쿠키가 남아도 로그인·재발급·로그아웃 가능).
