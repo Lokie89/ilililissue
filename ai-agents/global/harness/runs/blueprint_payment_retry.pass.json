@@ -1,0 +1,19 @@
+{
+  "run_id": "run_blueprint_payment_retry_pass",
+  "request_id": "request_001",
+  "fixture_id": "blueprint_payment_retry",
+  "agent": "codex",
+  "started_at": "2026-08-09T10:00:00Z",
+  "ended_at": "2026-08-09T10:01:00Z",
+  "status": "completed",
+  "limits": {"max_turns": 8, "max_tool_calls": 20, "timeout_seconds": 300, "max_repeated_failures": 2},
+  "usage": {"turns": 2, "tool_calls": 4, "repeated_failures": 0},
+  "events": [
+    {"at": "2026-08-09T10:00:05Z", "type": "state_transition", "name": "received_to_planned", "status": "succeeded", "mutates_state": false},
+    {"at": "2026-08-09T10:00:20Z", "type": "tool", "name": "read_policy", "status": "succeeded", "mutates_state": false}
+  ],
+  "evidence": ["scope", "idempotency", "retry_limit", "side_effects", "validation"],
+  "validation": [{"name": "blueprint_boundary", "status": "passed"}],
+  "violations": [],
+  "summary": "Produced a read-only payment retry blueprint."
+}

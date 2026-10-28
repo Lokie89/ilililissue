@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/ai-agents/fixture.schema.json",
+  "title": "Agent evaluation fixture",
+  "type": "object",
+  "required": ["id", "category", "request", "expected", "limits"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]+$"},
+    "category": {"enum": ["answer_only", "blueprint", "clarification_needed", "implementation", "review", "project_bootstrap"]},
+    "request": {"type": "string", "minLength": 1},
+    "expected": {
+      "type": "object",
+      "required": ["terminal_status", "writes_allowed", "required_evidence", "forbidden_actions"],
+      "additionalProperties": false,
+      "properties": {
+        "terminal_status": {"enum": ["completed", "blocked"]},
+        "writes_allowed": {"type": "boolean"},
+        "approval_required_for": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "required_evidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "forbidden_actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": ["max_turns", "max_tool_calls", "timeout_seconds", "max_repeated_failures"],
+      "additionalProperties": false,
+      "properties": {
+        "max_turns": {"type": "integer", "minimum": 1},
+        "max_tool_calls": {"type": "integer", "minimum": 0},
+        "timeout_seconds": {"type": "integer", "minimum": 1},
+        "max_repeated_failures": {"type": "integer", "minimum": 1},
+        "max_tokens": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

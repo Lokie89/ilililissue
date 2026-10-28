@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/review-replan-check.sh",
+            "shell": "bash",
+            "statusMessage": "리뷰 재기획 필요 여부 확인 중..."
+          }
+        ]
+      }
+    ]
+  }
+}

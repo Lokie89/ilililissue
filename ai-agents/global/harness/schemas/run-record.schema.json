@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/ai-agents/run-record.schema.json",
+  "title": "Agent run record",
+  "type": "object",
+  "required": ["run_id", "request_id", "agent", "started_at", "status", "limits", "usage", "events", "validation", "violations"],
+  "additionalProperties": false,
+  "properties": {
+    "run_id": {"type": "string", "minLength": 1},
+    "request_id": {"type": "string", "minLength": 1},
+    "fixture_id": {"type": "string"},
+    "agent": {"type": "string", "minLength": 1},
+    "model": {"type": "string"},
+    "reasoning_effort": {"type": "string"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "ended_at": {"type": "string", "format": "date-time"},
+    "status": {"enum": ["received", "classified", "planned", "awaiting_approval", "running", "validating", "completed", "failed", "blocked", "cancelled", "budget_exhausted"]},
+    "limits": {"$ref": "#/$defs/limits"},
+    "usage": {
+      "type": "object",
+      "required": ["turns", "tool_calls", "repeated_failures"],
+      "properties": {
+        "turns": {"type": "integer", "minimum": 0},
+        "tool_calls": {"type": "integer", "minimum": 0},
+        "repeated_failures": {"type": "integer", "minimum": 0},
+        "input_tokens": {"type": "integer", "minimum": 0},
+        "output_tokens": {"type": "integer", "minimum": 0}
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "type", "status"],
+        "properties": {
+          "at": {"type": "string", "format": "date-time"},
+          "type": {"enum": ["state_transition", "model", "tool", "handoff", "approval", "checkpoint", "error"]},
+          "name": {"type": "string"},
+          "status": {"enum": ["started", "succeeded", "failed", "denied", "skipped"]},
+          "summary": {"type": "string"},
+          "mutates_state": {"type": "boolean"}
+        }
+      }
+    },
+    "evidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "validation": {"type": "array", "items": {"type": "object"}},
+    "violations": {"type": "array", "items": {"type": "string"}},
+    "summary": {"type": "string"}
+  },
+  "$defs": {
+    "limits": {
+      "type": "object",
+      "required": ["max_turns", "max_tool_calls", "timeout_seconds", "max_repeated_failures"],
+      "properties": {
+        "max_turns": {"type": "integer", "minimum": 1},
+        "max_tool_calls": {"type": "integer", "minimum": 0},
+        "timeout_seconds": {"type": "integer", "minimum": 1},
+        "max_repeated_failures": {"type": "integer", "minimum": 1},
+        "max_tokens": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+name: Validate agent docs and harness
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate document structure and cross-references
+        run: bash scripts/validate-docs.sh
+
+      - name: Validate shared harness contracts and fixtures
+        run: node scripts/validate-harness.mjs
+
+      - name: Run evaluator regression tests
+        run: node scripts/test-evaluator.mjs
