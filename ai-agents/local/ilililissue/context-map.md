@@ -25,6 +25,10 @@
 - API 클라이언트: `web/src/lib/api.ts`, 타입: `web/src/lib/types.ts`, 서버 조회: `web/src/lib/server-api.ts`
 - 이슈 참여 화면: `web/src/components/participation.tsx`, 관리 화면: `web/src/components/admin/`
 
+## 앱(Expo) 클라이언트
+
+- `app-client-guide.md`: 앱 착수 전 필독. 인증 토큰 전달 방식 미구현, 조회 기록, 참여 규칙, 스토어 심사(탈퇴·차단) 주의 사항
+
 ## 도메인 문서
 
 - `domain-policy.md`: 확정 결정, 개념별 정책, 미정 질문
