@@ -42,5 +42,6 @@ out/
 ### Local ###
 .env
 .env.prod
-db/
-backups/
+# 로컬 MySQL 데이터(docker-compose.yml). 루트만 무시한다: src/main/resources/db/migration은 커밋해야 한다.
+/db/
+/backups/
