@@ -24,6 +24,14 @@
 | 빌드 | `JAVA_HOME=~/.jdks/corretto-17.0.13 ./gradlew build` |  |
 | 린트 | 없음 |  |
 
+## DB 스키마 변경 (Flyway)
+
+- 스키마는 `src/main/resources/db/migration/V{번호}__{설명}.sql`로 관리한다. 앱이 시작할 때 Flyway가 적용하고 Hibernate는 `validate`만 한다.
+- 엔티티를 바꾸면 새 마이그레이션 파일을 추가한다. 이미 적용된(커밋된) 파일은 수정하지 않는다.
+- `FlywayMigrationTest`가 H2(MySQL 모드)에 마이그레이션을 적용하고 엔티티와 맞는지 검증한다. 마이그레이션을 빠뜨리면 이 테스트가 실패한다.
+- 다른 테스트와 `bootTestRun`은 Flyway를 끄고 Hibernate가 H2 스키마를 만든다.
+- MySQL 전용 문법이 H2에서 안 되면 해당 마이그레이션을 MySQL에서 `bootRun`으로 확인한다.
+
 ## 관리자 계정 지정
 
 가입 API는 항상 `USER`로 만든다. 관리자는 가입 후 DB에서 직접 지정한다.

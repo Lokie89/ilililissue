@@ -13,7 +13,7 @@ Java 17, Spring Boot 4.1, Spring Security(JWT, OAuth2 Resource Server), Spring D
 
 ## 실행
 
-JDK 17 이상이 필요합니다. 기본 `JAVA_HOME`이 JDK 8이면 아래처럼 지정합니다.
+DB 스키마는 Flyway 마이그레이션(`src/main/resources/db/migration`)으로 만들어지며, 앱이 시작할 때 자동 적용됩니다. JDK 17 이상이 필요합니다. 기본 `JAVA_HOME`이 JDK 8이면 아래처럼 지정합니다.
 
 ```sh
 cp .env.example .env            # 값 채우기 (DB_ROOT_PASSWORD, DB_PASSWORD, JWT_SECRET)
