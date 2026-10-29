@@ -18,6 +18,20 @@
 
 ## 현재 기록
 
+### 2026-10-29 (2) — 웹 디자인 정리
+
+- 목표: 웹 화면 디자인 손보기(사용자: "디자인 손좀봐줘")
+- 변경:
+  - 디자인 토큰(`web/src/app/globals.css` `@theme`): 바탕 `canvas`, 글자 `ink`/`muted`/`subtle`, 선 `line`, 입장 색 `stance-agree`·`stance-neutral`·`stance-disagree`(+`-soft`). 공통 클래스 `card`, `btn`(`btn-primary`·`btn-secondary`·`btn-ghost`·`btn-danger`·`btn-sm`), `field`, `chip`, `eyebrow`, `link`, `notice`, `error-text`
+  - 글꼴 Pretendard(npm `pretendard`, 동적 서브셋), 세 입장 점 로고(`components/logo.tsx`), 날짜 표시 `lib/format.ts`(서울 기준 "10월 28일"), 입장 색 `lib/stance.ts`
+  - 홈: 최신 이슈 강조 카드 + 지난 이슈 목록. 상세: 배경·원문 카드, 입장 선택 카드형 버튼, 결과 막대 + 입장별 수치 카드, 입장 색 탭과 의견 카드. 로그인·가입·내 정보·관리 화면을 같은 컴포넌트로 통일. 관리 화면 모바일 가로 스크롤(출처 입력 4열, 이슈 표) 해결
+  - 동작·문구는 그대로(추천 용어 유지), 스타일만 변경
+- 검증: 웹 lint·build 통과. Chrome(playwright-core) 1280px·390px로 홈·상세(비로그인·투표 전·투표 후)·로그인·가입·내 정보·관리 캡처 확인, 가로 스크롤 0, 페이지 오류 0
+- 남은 작업: 이전과 같음(키 발급 후 뉴스 초안 실제 실행, 약관·처리방침 기입, 보관 기간, 회원 정지, 배포, PR)
+- 주의 사항:
+  - `globals.css`에 `@import "tailwindcss"` 뒤로 다른 `@import`를 넣으면 이후 `@theme`·`@layer components`가 통째로 빠졌다(Next 16 Turbopack, 오류 없음). 외부 CSS는 `layout.tsx`에서 JS로 import한다
+  - 새 화면은 `stone-*` 같은 원색 클래스 대신 토큰 클래스를 쓴다. 입장 색은 `STANCE_STYLE`로만 쓴다
+
 ### 2026-10-29 — 뉴스 자동 초안(네이버 뉴스 검색 + Claude)
 
 - 목표: 매일 아침 7시에 여러 언론사 기사를 모아 내용을 추린 이슈 초안을 자동 등록(사용자: "응 진행해줘" — 네이버 뉴스 검색 API + Claude 요약 + 초안으로만 등록 안 승인). 세션 시작 시 서버 기동 요청은 Docker MySQL + `bootRun` + `next dev`로 처리
@@ -75,18 +89,4 @@
   - 기존에 `ddl-auto: update`로 만든 로컬 DB는 Flyway 이력이 없어 실패한다. 로컬 `ilililissue` DB는 이번에 비우고 Flyway로 다시 만들었다
   - 앱 클라이언트도 상세 화면에서 조회 기록 API를 호출해야 투표율이 맞다
   - `next.config.ts`의 rewrite 대상은 빌드 시점에 고정된다(`BACKEND_URL` 빌드 인자)
-
-### 2026-10-28 (4) — 미정 정책 반영, MySQL 실행 확인
-
-- 목표: 사용자 결정(추천 취소 허용·자기 추천 금지, 의견 삭제 허용·재작성 불가, 회원 탈퇴 포함·의견은 '탈퇴한 회원'으로 유지) 반영, MySQL 실기동 확인
-- 변경:
-  - `DELETE /api/opinions/{id}/recommendations`, 자기 의견 추천 403
-  - `DELETE /api/opinions/{id}` (삭제 표시, 재작성·수정·추천·신고 불가, 참여 상태에 `deleted`)
-  - `POST /api/members/me/withdrawal {password}`: 이메일·닉네임·비밀번호 null + `withdrawnAt`, `MemberWithdrawnEvent`로 리프레시 토큰 폐기, JWT 변환 시 회원 활성 여부 확인
-  - 웹: 추천 토글, 내 의견 삭제, `/me` 내 정보·탈퇴
-- 검증: `./gradlew test` 66개 통과, `npm run lint`·`npm run build` 통과. Docker MySQL 8.0 + `bootRun`에서 스모크 스크립트 34개 항목(가입·관리자 이슈 게시·투표·의견·추천/취소·자기 추천·삭제·재작성·탈퇴·재가입·지표·로그아웃)을 직접 호출과 `next dev` 프록시 경유 양쪽에서 통과. 브라우저 화면 확인은 미실행
-- 남은 작업: Flyway(현재 `ddl-auto: update`), 배포 구성, 브라우저 화면 확인, 비회원 방문자 식별, 숨김 해제
-- 주의 사항:
-  - 인증된 요청마다 회원 활성 여부를 DB에서 한 번 조회한다(탈퇴 직후 액세스 토큰 차단용)
-  - 로컬 `.env`는 임의 값으로 생성되어 있다(커밋 안 됨). MySQL 컨테이너 `mysql-docker`는 `restart: always`라 Docker를 켜면 같이 뜬다
 

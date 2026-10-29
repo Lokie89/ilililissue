@@ -24,22 +24,26 @@ export function AdminConsole() {
   const [tab, setTab] = useState<Tab>("issues");
 
   if (loading) {
-    return <p className="text-stone-500">확인 중…</p>;
+    return <div className="h-40 animate-pulse rounded-2xl bg-ink/5" />;
   }
   if (me?.role !== "ADMIN") {
-    return <p className="py-16 text-center text-stone-500">관리자만 볼 수 있는 페이지예요.</p>;
+    return <p className="card py-16 text-center text-muted">관리자만 볼 수 있는 페이지예요.</p>;
   }
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-bold">관리</h1>
-      <div className="mb-6 flex gap-4 border-b border-stone-200">
+      <h1 className="mb-4 text-2xl font-bold tracking-tight">관리</h1>
+      <div role="tablist" className="mb-6 flex gap-1 overflow-x-auto rounded-xl bg-ink/5 p-1">
         {(Object.keys(TABS) as Tab[]).map((key) => (
           <button
             key={key}
             type="button"
             onClick={() => setTab(key)}
-            className={`pb-2 ${tab === key ? "border-b-2 border-stone-900 font-semibold" : "text-stone-500"}`}
+            role="tab"
+            aria-selected={tab === key}
+            className={`flex-1 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors ${
+              tab === key ? "bg-surface font-semibold shadow-sm" : "text-muted hover:text-ink"
+            }`}
           >
             {TABS[key]}
           </button>

@@ -28,25 +28,25 @@ export function BlockedMembers() {
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-stone-200 p-5">
-      <h2 className="font-semibold">차단한 회원</h2>
-      <p className="text-sm text-stone-500">차단한 회원의 의견은 보이지 않아요. 상대에게는 알리지 않아요.</p>
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+    <section className="card flex flex-col gap-3">
+      <h2 className="font-bold">차단한 회원</h2>
+      <p className="text-sm text-muted">차단한 회원의 의견은 보이지 않아요. 상대에게는 알리지 않아요.</p>
+      {error && <p className="error-text">{error}</p>}
       {blocks === null ? (
-        !error && <p className="text-sm text-stone-500">불러오는 중…</p>
+        !error && <p className="text-sm text-subtle">불러오는 중…</p>
       ) : blocks.length === 0 ? (
-        <p className="text-sm text-stone-500">차단한 회원이 없어요.</p>
+        <p className="notice">차단한 회원이 없어요.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-stone-100 text-sm">
+        <ul className="flex flex-col divide-y divide-line text-sm">
           {blocks.map((block) => (
             <li key={block.id} className="flex items-center justify-between py-2">
               <span>
                 {block.nickname}
-                <span className="ml-2 text-xs text-stone-400">
+                <span className="ml-2 text-xs text-subtle">
                   {new Date(block.blockedAt).toLocaleDateString("ko-KR")}
                 </span>
               </span>
-              <button type="button" onClick={() => unblock(block)} className="rounded border px-2 py-0.5">
+              <button type="button" onClick={() => unblock(block)} className="btn btn-sm btn-secondary">
                 해제
               </button>
             </li>

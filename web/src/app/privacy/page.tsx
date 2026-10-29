@@ -14,10 +14,10 @@ const EFFECTIVE_DATE = "[시행일 YYYY-MM-DD]";
 
 export default function PrivacyPage() {
   return (
-    <article className="flex flex-col gap-6 text-sm leading-relaxed [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc">
+    <article className="card flex flex-col gap-6 text-sm leading-relaxed text-ink/85 sm:p-8 [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-ink [&_li]:ml-5 [&_li]:list-disc">
       <header>
-        <h1 className="mb-2 text-xl font-bold">개인정보 처리방침</h1>
-        <p className="text-stone-500">
+        <h1 className="mb-2 text-2xl font-bold tracking-tight text-ink">개인정보 처리방침</h1>
+        <p className="text-muted">
           {OPERATOR}(이하 &lsquo;운영자&rsquo;)는 1일 1이슈 서비스(웹·앱)를 운영하면서 아래와 같이 개인정보를 처리합니다.
         </p>
       </header>

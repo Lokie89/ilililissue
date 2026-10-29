@@ -11,10 +11,10 @@ const EFFECTIVE_DATE = "[시행일 YYYY-MM-DD]";
 
 export default function TermsPage() {
   return (
-    <article className="flex flex-col gap-6 text-sm leading-relaxed [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_li]:ml-5 [&_li]:list-disc">
+    <article className="card flex flex-col gap-6 text-sm leading-relaxed text-ink/85 sm:p-8 [&_h2]:mb-2 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-ink [&_li]:ml-5 [&_li]:list-disc">
       <header>
-        <h1 className="mb-2 text-xl font-bold">이용약관</h1>
-        <p className="text-stone-500">
+        <h1 className="mb-2 text-2xl font-bold tracking-tight text-ink">이용약관</h1>
+        <p className="text-muted">
           이 약관은 {OPERATOR}(이하 &lsquo;운영자&rsquo;)가 제공하는 1일 1이슈 서비스(웹·앱)의 이용 조건을 정합니다.
         </p>
       </header>
@@ -31,7 +31,7 @@ export default function TermsPage() {
       <section>
         <h2>2. 회원</h2>
         <ul>
-          <li>이 약관과 <Link href="/privacy" className="underline">개인정보 처리방침</Link>에 동의하면 가입할 수 있습니다.</li>
+          <li>이 약관과 <Link href="/privacy" className="link">개인정보 처리방침</Link>에 동의하면 가입할 수 있습니다.</li>
           <li>계정은 본인만 쓸 수 있습니다. 여러 계정으로 투표 결과를 조작하면 안 됩니다.</li>
           <li>언제든 내 정보 화면에서 탈퇴할 수 있습니다. 탈퇴 후에도 작성한 의견은 &lsquo;탈퇴한 회원&rsquo;으로 남습니다.</li>
         </ul>

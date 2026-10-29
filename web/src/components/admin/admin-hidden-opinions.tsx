@@ -35,19 +35,19 @@ export function AdminHiddenOpinions() {
 
   return (
     <section>
-      {message && <p className="mb-2 text-sm text-rose-600">{message}</p>}
+      {message && <p className="error-text mb-2">{message}</p>}
       {opinions.length === 0 ? (
-        <p className="py-6 text-center text-stone-500">숨긴 의견이 없습니다.</p>
+        <p className="card py-12 text-center text-muted">숨긴 의견이 없습니다.</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {opinions.map((opinion) => (
-            <li key={opinion.id} className="rounded-lg border border-stone-200 p-4 text-sm">
-              <div className="mb-1 text-stone-500">
+            <li key={opinion.id} className="card text-sm">
+              <div className="mb-2 text-xs text-subtle">
                 의견 #{opinion.id} · 이슈 #{opinion.issueId} · {STANCE_LABEL[opinion.stance]} ·{" "}
                 {new Date(opinion.writtenAt).toLocaleString("ko-KR")}
               </div>
-              <p className="mb-2 whitespace-pre-wrap rounded bg-stone-50 p-2">{opinion.content}</p>
-              <button type="button" onClick={() => unhide(opinion.id)} className="rounded border px-3 py-1">
+              <p className="mb-3 rounded-xl bg-ink/[0.03] p-3 leading-relaxed whitespace-pre-wrap">{opinion.content}</p>
+              <button type="button" onClick={() => unhide(opinion.id)} className="btn btn-sm btn-secondary">
                 숨김 해제
               </button>
             </li>

@@ -9,14 +9,16 @@ export function UserMenu() {
   const router = useRouter();
 
   if (loading) {
-    return <span className="text-sm text-stone-400">…</span>;
+    return <span className="h-8 w-24 animate-pulse rounded-lg bg-ink/5" />;
   }
 
   if (!me) {
     return (
-      <nav className="flex gap-3 text-sm">
-        <Link href="/login">로그인</Link>
-        <Link href="/signup" className="rounded bg-stone-900 px-3 py-1 text-white">
+      <nav className="flex items-center gap-1">
+        <Link href="/login" className="btn btn-sm btn-ghost">
+          로그인
+        </Link>
+        <Link href="/signup" className="btn btn-sm btn-primary">
           가입
         </Link>
       </nav>
@@ -24,10 +26,14 @@ export function UserMenu() {
   }
 
   return (
-    <nav className="flex items-center gap-3 text-sm">
-      {me.role === "ADMIN" && <Link href="/admin">관리</Link>}
-      <Link href="/me" className="text-stone-500">
-        {me.nickname}
+    <nav className="flex items-center gap-1">
+      {me.role === "ADMIN" && (
+        <Link href="/admin" className="btn btn-sm btn-ghost">
+          관리
+        </Link>
+      )}
+      <Link href="/me" className="btn btn-sm btn-ghost max-w-32">
+        <span className="truncate">{me.nickname}</span>
       </Link>
       <button
         type="button"
@@ -35,7 +41,7 @@ export function UserMenu() {
           await logout();
           router.refresh();
         }}
-        className="text-stone-500 underline"
+        className="btn btn-sm btn-ghost"
       >
         로그아웃
       </button>

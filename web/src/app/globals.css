@@ -1,5 +1,92 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans), "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+/*
+ * 디자인 토큰. 색은 세 입장(찬성·중립·반대)에만 쓰고 나머지는 잉크·회색 계열로 둔다.
+ * 세 입장 색은 밝기와 채도를 비슷하게 맞춰 어느 쪽도 '이긴 색'처럼 보이지 않게 한다.
+ */
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", sans-serif;
+
+  --color-canvas: #f6f5f2;
+  --color-surface: #ffffff;
+  --color-ink: #1d1b19;
+  --color-muted: #66615a;
+  --color-subtle: #9c968d;
+  --color-line: #e7e4de;
+
+  --color-stance-agree: #3068d4;
+  --color-stance-agree-soft: #eaf0fb;
+  --color-stance-neutral: #8b8377;
+  --color-stance-neutral-soft: #f1efeb;
+  --color-stance-disagree: #db6634;
+  --color-stance-disagree-soft: #fbede5;
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-ink;
+    word-break: keep-all;
+  }
+
+  ::selection {
+    @apply bg-ink text-white;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface p-5 sm:p-6;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors;
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink;
+    @apply disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-sm {
+    @apply rounded-lg px-3 py-1.5 text-[13px];
+  }
+
+  .btn-primary {
+    @apply bg-ink text-white hover:bg-black;
+  }
+
+  .btn-secondary {
+    @apply border border-line bg-surface text-ink hover:border-subtle;
+  }
+
+  .btn-ghost {
+    @apply text-muted hover:bg-ink/5 hover:text-ink;
+  }
+
+  .btn-danger {
+    @apply bg-rose-600 text-white hover:bg-rose-700;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[15px] transition-colors;
+    @apply placeholder:text-subtle focus:border-ink focus:ring-4 focus:ring-ink/5 focus:outline-none;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-ink/5 px-2.5 py-0.5 text-xs font-medium text-muted;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold tracking-wide text-subtle;
+  }
+
+  .link {
+    @apply underline decoration-line underline-offset-4 transition-colors hover:decoration-ink;
+  }
+
+  .notice {
+    @apply rounded-xl bg-ink/5 px-4 py-3 text-sm text-muted;
+  }
+
+  .error-text {
+    @apply text-sm text-rose-600;
+  }
 }

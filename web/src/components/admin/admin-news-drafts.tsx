@@ -60,9 +60,9 @@ export function AdminNewsDrafts({ onFinished }: { onFinished: () => Promise<void
   }
 
   return (
-    <section className="rounded-lg border border-stone-200 p-5">
-      <h2 className="mb-1 font-semibold">뉴스 자동 초안</h2>
-      <p className="mb-4 text-sm text-stone-500">
+    <section className="card">
+      <h2 className="mb-1 font-bold">뉴스 자동 초안</h2>
+      <p className="mb-4 text-sm text-muted">
         지난 24시간 뉴스를 모아 AI가 질문·배경 설명 초안을 &lsquo;작성 중&rsquo; 상태로 등록합니다. 설정하면 매일 오전 7시에
         자동으로 실행됩니다. 사실관계·중립성·출처를 확인한 뒤 검수·게시해 주세요.
       </p>
@@ -71,13 +71,13 @@ export function AdminNewsDrafts({ onFinished }: { onFinished: () => Promise<void
           type="button"
           onClick={start}
           disabled={running}
-          className="rounded border px-3 py-2 text-sm disabled:text-stone-400"
+          className="btn btn-sm btn-primary"
         >
           {running ? "만드는 중…" : "지금 초안 만들기"}
         </button>
-        {status?.lastRun && <span className="text-sm text-stone-600">최근 실행: {describe(status.lastRun)}</span>}
+        {status?.lastRun && <span className="text-xs text-muted">최근 실행: {describe(status.lastRun)}</span>}
       </div>
-      {message && <p className="mt-3 text-sm text-red-700">{message}</p>}
+      {message && <p className="error-text mt-3">{message}</p>}
     </section>
   );
 }

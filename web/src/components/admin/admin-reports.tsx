@@ -40,37 +40,37 @@ export function AdminReports() {
 
   return (
     <section>
-      <div className="mb-3 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-1.5">
         {(Object.keys(STATUS_LABEL) as ReportStatus[]).map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => setStatus(s)}
-            className={`rounded px-3 py-1 text-sm ${status === s ? "bg-stone-900 text-white" : "bg-stone-100"}`}
+            className={`btn btn-sm ${status === s ? "btn-primary" : "btn-secondary"}`}
           >
             {STATUS_LABEL[s]}
           </button>
         ))}
       </div>
-      {message && <p className="mb-2 text-sm text-rose-600">{message}</p>}
+      {message && <p className="error-text mb-2">{message}</p>}
       {reports.length === 0 ? (
-        <p className="py-6 text-center text-stone-500">신고가 없습니다.</p>
+        <p className="card py-12 text-center text-muted">신고가 없습니다.</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {reports.map((report) => (
-            <li key={report.id} className="rounded-lg border border-stone-200 p-4 text-sm">
-              <div className="mb-1 text-stone-500">
+            <li key={report.id} className="card text-sm">
+              <div className="mb-2 text-xs text-subtle">
                 신고 #{report.id} · 이슈 #{report.issueId} · 의견 #{report.opinionId} ·{" "}
                 {new Date(report.reportedAt).toLocaleString("ko-KR")}
               </div>
-              <p className="mb-2 whitespace-pre-wrap rounded bg-stone-50 p-2">{report.opinionContent}</p>
-              <p className="mb-2">사유: {report.reason}</p>
+              <p className="mb-3 rounded-xl bg-ink/[0.03] p-3 leading-relaxed whitespace-pre-wrap">{report.opinionContent}</p>
+              <p className="mb-3 text-muted">사유: {report.reason}</p>
               {report.status === "RECEIVED" && (
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => resolve(report.id, "hide")} className="rounded bg-rose-600 px-3 py-1 text-white">
+                  <button type="button" onClick={() => resolve(report.id, "hide")} className="btn btn-sm btn-danger">
                     의견 숨기기
                   </button>
-                  <button type="button" onClick={() => resolve(report.id, "dismiss")} className="rounded border px-3 py-1">
+                  <button type="button" onClick={() => resolve(report.id, "dismiss")} className="btn btn-sm btn-secondary">
                     기각
                   </button>
                 </div>

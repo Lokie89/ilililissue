@@ -43,8 +43,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <form onSubmit={submit} className="mx-auto flex max-w-sm flex-col gap-3">
-      <h1 className="mb-2 text-xl font-bold">{mode === "login" ? "로그인" : "가입"}</h1>
+    <form onSubmit={submit} className="card mx-auto flex max-w-sm flex-col gap-3 sm:p-8">
+      <h1 className="text-2xl font-bold tracking-tight">{mode === "login" ? "다시 만나서 반가워요" : "1일 1이슈 시작하기"}</h1>
+      <p className="mb-3 text-sm text-muted">
+        {mode === "login" ? "로그인하고 오늘의 이슈에 참여하세요." : "닉네임은 의견을 남길 때 표시돼요."}
+      </p>
       <input
         type="email"
         required
@@ -52,7 +55,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         onChange={(e) => setEmail(e.target.value)}
         placeholder="이메일"
         autoComplete="email"
-        className="rounded border border-stone-300 p-2"
+        className="field"
       />
       {mode === "signup" && (
         <input
@@ -62,7 +65,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           placeholder="닉네임 (2~12자, 의견에 표시돼요)"
-          className="rounded border border-stone-300 p-2"
+          className="field"
         />
       )}
       <input
@@ -74,40 +77,40 @@ export function AuthForm({ mode }: { mode: Mode }) {
         onChange={(e) => setPassword(e.target.value)}
         placeholder={mode === "signup" ? "비밀번호 (8자 이상)" : "비밀번호"}
         autoComplete={mode === "signup" ? "new-password" : "current-password"}
-        className="rounded border border-stone-300 p-2"
+        className="field"
       />
       {mode === "signup" && (
-        <label className="flex items-start gap-2 text-xs text-stone-600">
+        <label className="flex items-start gap-2 py-1 text-xs leading-relaxed text-muted">
           <input
             type="checkbox"
             required
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5"
+            className="mt-0.5 accent-ink"
           />
           <span>
-            <Link href="/terms" target="_blank" className="underline">
+            <Link href="/terms" target="_blank" className="link">
               이용약관
             </Link>
             과{" "}
-            <Link href="/privacy" target="_blank" className="underline">
+            <Link href="/privacy" target="_blank" className="link">
               개인정보 처리방침
             </Link>
             에 동의합니다. (필수)
           </span>
         </label>
       )}
-      {error && <p className="text-sm text-rose-600">{error}</p>}
-      <button type="submit" disabled={submitting} className="rounded bg-stone-900 py-2 text-white disabled:opacity-40">
+      {error && <p className="error-text">{error}</p>}
+      <button type="submit" disabled={submitting} className="btn btn-primary mt-1 w-full py-3">
         {mode === "login" ? "로그인" : "가입하고 시작하기"}
       </button>
-      <p className="text-center text-sm text-stone-500">
+      <p className="mt-1 text-center text-sm text-muted">
         {mode === "login" ? (
-          <Link href={`/signup?next=${encodeURIComponent(next)}`} className="underline">
+          <Link href={`/signup?next=${encodeURIComponent(next)}`} className="link">
             처음이신가요? 가입하기
           </Link>
         ) : (
-          <Link href={`/login?next=${encodeURIComponent(next)}`} className="underline">
+          <Link href={`/login?next=${encodeURIComponent(next)}`} className="link">
             이미 계정이 있어요
           </Link>
         )}

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, errorMessage } from "@/lib/api";
+import { formatDate } from "@/lib/format";
+import { STANCE_STYLE } from "@/lib/stance";
 import {
   type OpinionItem,
   type OpinionSort,
@@ -14,11 +16,9 @@ import {
 } from "@/lib/types";
 import { useMe } from "@/components/me-provider";
 
-const STANCE_COLOR: Record<Stance, string> = {
-  AGREE: "bg-sky-600",
-  NEUTRAL: "bg-stone-500",
-  DISAGREE: "bg-rose-600",
-};
+function StanceDot({ stance, className = "size-2" }: { stance: Stance; className?: string }) {
+  return <span aria-hidden className={`inline-block shrink-0 rounded-full ${className} ${STANCE_STYLE[stance].solid}`} />;
+}
 
 type Props = {
   issueId: number;
@@ -55,15 +55,21 @@ export function Participation({ issueId, open }: Props) {
   }, [meLoading, me, fetchState]);
 
   if (meLoading || state === null) {
-    return <p className="text-sm text-stone-500">{error ?? "불러오는 중…"}</p>;
+    return error ? <p className="error-text">{error}</p> : <div className="h-40 animate-pulse rounded-2xl bg-ink/5" />;
   }
 
   if (!me) {
     return (
-      <section className="rounded-lg border border-stone-200 p-5 text-center">
-        <p className="mb-3">로그인하면 투표하고 다른 사람들의 의견을 볼 수 있어요.</p>
-        <a href={`/login?next=/issues/${issueId}`} className="inline-block rounded bg-stone-900 px-4 py-2 text-white">
-          로그인
+      <section className="card text-center sm:py-8">
+        <div aria-hidden className="mb-4 flex justify-center gap-1.5">
+          {STANCES.map((stance) => (
+            <StanceDot key={stance} stance={stance} className="size-3" />
+          ))}
+        </div>
+        <h2 className="mb-1 text-lg font-bold">당신의 생각은 어떤가요?</h2>
+        <p className="mb-5 text-sm text-muted">로그인하면 투표하고 다른 사람들의 의견을 볼 수 있어요.</p>
+        <a href={`/login?next=/issues/${issueId}`} className="btn btn-primary">
+          로그인하고 참여하기
         </a>
       </section>
     );
@@ -73,12 +79,12 @@ export function Participation({ issueId, open }: Props) {
     return open ? (
       <VoteForm issueId={issueId} onVoted={reload} />
     ) : (
-      <p className="rounded-lg border border-stone-200 p-5 text-center text-stone-500">투표가 마감된 이슈입니다.</p>
+      <p className="card text-center text-muted">투표가 마감된 이슈입니다.</p>
     );
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <Results issueId={issueId} myStance={state.stance!} />
       <MyOpinion issueId={issueId} state={state} onChange={reload} />
       <Opinions issueId={issueId} myStance={state.stance!} />
@@ -106,31 +112,33 @@ function VoteForm({ issueId, onVoted }: { issueId: number; onVoted: () => void }
   }
 
   return (
-    <section className="rounded-lg border border-stone-200 p-5">
-      <h2 className="mb-1 font-semibold">당신의 입장은?</h2>
-      <p className="mb-4 text-sm text-stone-500">투표는 한 번만 할 수 있고 바꿀 수 없어요. 투표하면 결과와 의견을 볼 수 있어요.</p>
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        {STANCES.map((stance) => (
-          <button
-            key={stance}
-            type="button"
-            onClick={() => setSelected(stance)}
-            className={`rounded border py-3 font-medium ${
-              selected === stance ? `${STANCE_COLOR[stance]} border-transparent text-white` : "border-stone-300"
-            }`}
-          >
-            {STANCE_LABEL[stance]}
-          </button>
-        ))}
+    <section className="card">
+      <h2 className="mb-1 text-lg font-bold">당신의 입장은?</h2>
+      <p className="mb-5 text-sm text-muted">투표는 한 번만 할 수 있고 바꿀 수 없어요. 투표하면 결과와 의견을 볼 수 있어요.</p>
+      <div role="radiogroup" aria-label="입장" className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+        {STANCES.map((stance) => {
+          const active = selected === stance;
+          const style = STANCE_STYLE[stance];
+          return (
+            <button
+              key={stance}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setSelected(stance)}
+              className={`flex flex-col items-center gap-2 rounded-xl border-2 py-4 font-semibold transition-colors sm:py-5 ${
+                active ? `${style.border} ${style.soft} ${style.text}` : "border-line hover:border-subtle"
+              }`}
+            >
+              <StanceDot stance={stance} className="size-3" />
+              {STANCE_LABEL[stance]}
+            </button>
+          );
+        })}
       </div>
-      {error && <p className="mb-2 text-sm text-rose-600">{error}</p>}
-      <button
-        type="button"
-        disabled={!selected || submitting}
-        onClick={submit}
-        className="w-full rounded bg-stone-900 py-2 text-white disabled:opacity-40"
-      >
-        투표하기
+      {error && <p className="error-text mb-3">{error}</p>}
+      <button type="button" disabled={!selected || submitting} onClick={submit} className="btn btn-primary w-full py-3">
+        {selected ? `${STANCE_LABEL[selected]}에 투표하기` : "입장을 골라 주세요"}
       </button>
     </section>
   );
@@ -146,34 +154,37 @@ function Results({ issueId, myStance }: { issueId: number; myStance: Stance }) {
   if (!result) return null;
 
   return (
-    <section>
-      <h2 className="mb-3 font-semibold">
-        참여 결과 <span className="text-sm font-normal text-stone-500">· {result.total}명 참여 · 내 입장 {STANCE_LABEL[myStance]}</span>
-      </h2>
-      <div className="flex h-8 overflow-hidden rounded">
+    <section className="card">
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-bold">참여 결과</h2>
+        <p className="text-sm text-muted">
+          {result.total.toLocaleString("ko-KR")}명 참여 · 내 입장{" "}
+          <span className={`font-semibold ${STANCE_STYLE[myStance].text}`}>{STANCE_LABEL[myStance]}</span>
+        </p>
+      </div>
+      <div className="flex h-3 gap-0.5 overflow-hidden rounded-full bg-ink/5">
         {result.stances
           .filter((s) => s.count > 0)
           .map((s) => (
-            <div
-              key={s.stance}
-              className={`${STANCE_COLOR[s.stance]} flex items-center justify-center overflow-hidden whitespace-nowrap text-xs text-white`}
-              style={{ width: `${s.percentage}%` }}
-            >
-              {/* 좁은 칸은 줄바꿈되지 않게 비율만 보여준다. 입장별 인원은 아래 목록에 있다. */}
-              {s.percentage >= 25
-                ? `${STANCE_LABEL[s.stance]} ${s.percentage}%`
-                : s.percentage >= 10 && `${s.percentage}%`}
-            </div>
+            <div key={s.stance} className={STANCE_STYLE[s.stance].solid} style={{ width: `${s.percentage}%` }} />
           ))}
       </div>
-      <ul className="mt-2 flex gap-4 text-sm text-stone-600">
+      <ul className="mt-4 grid grid-cols-3 gap-2">
         {result.stances.map((s) => (
-          <li key={s.stance}>
-            {STANCE_LABEL[s.stance]} {s.count}명 ({s.percentage}%)
+          <li
+            key={s.stance}
+            className={`rounded-xl px-3 py-2.5 ${s.stance === myStance ? STANCE_STYLE[s.stance].soft : "bg-ink/[0.03]"}`}
+          >
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
+              <StanceDot stance={s.stance} />
+              {STANCE_LABEL[s.stance]}
+            </div>
+            <div className="mt-1 text-xl font-bold tabular-nums">{s.percentage}%</div>
+            <div className="text-xs text-subtle tabular-nums">{s.count.toLocaleString("ko-KR")}명</div>
           </li>
         ))}
       </ul>
-      <p className="mt-1 text-xs text-stone-400">{result.notice}</p>
+      <p className="mt-3 text-xs text-subtle">{result.notice}</p>
     </section>
   );
 }
@@ -219,42 +230,41 @@ function MyOpinion({
   }
 
   if (opinion?.deleted) {
-    return (
-      <section className="rounded-lg bg-stone-50 p-5 text-sm text-stone-500">
-        의견을 삭제했어요. 이 이슈에는 다시 의견을 쓸 수 없어요.
-      </section>
-    );
+    return <section className="notice">의견을 삭제했어요. 이 이슈에는 다시 의견을 쓸 수 없어요.</section>;
   }
 
   if (opinion && !editing) {
     return (
-      <section className="rounded-lg bg-stone-50 p-5">
-        <h2 className="mb-2 font-semibold">
-          내 의견 <span className="text-sm font-normal text-stone-500">({STANCE_LABEL[opinion.stance]})</span>
+      <section className={`rounded-2xl p-5 sm:p-6 ${STANCE_STYLE[opinion.stance].soft}`}>
+        <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+          <StanceDot stance={opinion.stance} />내 의견 · {STANCE_LABEL[opinion.stance]}
         </h2>
-        {opinion.hidden && <p className="mb-2 text-sm text-rose-600">운영 정책에 따라 숨김 처리된 의견입니다.</p>}
-        <p className="whitespace-pre-wrap">{opinion.content}</p>
-        <div className="mt-3 flex gap-3 text-sm text-stone-500">
+        {opinion.hidden && <p className="error-text mb-2">운영 정책에 따라 숨김 처리된 의견입니다.</p>}
+        <p className="leading-relaxed whitespace-pre-wrap">{opinion.content}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-1">
           {opinion.edited ? (
-            <span>수정 완료 (더 이상 수정할 수 없어요)</span>
+            <span className="mr-2 text-xs text-muted">수정 완료 (더 이상 수정할 수 없어요)</span>
           ) : (
-            <button type="button" onClick={() => setEditing(true)} className="underline">
+            <button type="button" onClick={() => setEditing(true)} className="btn btn-sm btn-ghost -ml-3">
               수정하기 (1회 가능)
             </button>
           )}
-          <button type="button" onClick={remove} className="underline">
+          <button type="button" onClick={remove} className="btn btn-sm btn-ghost">
             삭제
           </button>
         </div>
-        {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
+        {error && <p className="error-text mt-2">{error}</p>}
       </section>
     );
   }
 
   return (
-    <section className="rounded-lg border border-stone-200 p-5">
-      <h2 className="mb-1 font-semibold">{opinion ? "의견 수정" : "의견 남기기 (선택)"}</h2>
-      <p className="mb-3 text-sm text-stone-500">
+    <section className="card">
+      <h2 className="mb-1 text-lg font-bold">
+        {opinion ? "의견 수정" : "왜 그렇게 생각하나요?"}
+        {!opinion && <span className="ml-2 text-sm font-normal text-subtle">선택</span>}
+      </h2>
+      <p className="mb-4 text-sm text-muted">
         {opinion
           ? "수정은 한 번만 할 수 있어요."
           : "이 이슈에 의견은 하나만 남길 수 있고, 한 번 수정할 수 있어요. 다른 의견에 답글을 달 수는 없어요."}
@@ -264,28 +274,23 @@ function MyOpinion({
         onChange={(e) => setContent(e.target.value)}
         maxLength={500}
         rows={4}
-        className="w-full rounded border border-stone-300 p-2"
-        placeholder="왜 그렇게 생각하는지 들려주세요."
+        className="field resize-y leading-relaxed"
+        placeholder="내 입장의 이유를 들려주세요. 다른 입장의 사람도 읽게 돼요."
       />
-      <div className="mt-1 flex items-center justify-between text-sm">
-        <span className="text-stone-400">{content.length}/500</span>
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-xs text-subtle tabular-nums">{content.length}/500</span>
         <div className="flex gap-2">
           {opinion && (
-            <button type="button" onClick={() => setEditing(false)} className="rounded px-3 py-1">
+            <button type="button" onClick={() => setEditing(false)} className="btn btn-sm btn-ghost">
               취소
             </button>
           )}
-          <button
-            type="button"
-            onClick={submit}
-            disabled={!content.trim()}
-            className="rounded bg-stone-900 px-3 py-1 text-white disabled:opacity-40"
-          >
+          <button type="button" onClick={submit} disabled={!content.trim()} className="btn btn-sm btn-primary">
             {opinion ? "수정 완료" : "등록"}
           </button>
         </div>
       </div>
-      {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
+      {error && <p className="error-text mt-2">{error}</p>}
     </section>
   );
 }
@@ -341,33 +346,44 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
   }
 
   return (
-    <section>
-      <div className="mb-3 flex items-end justify-between border-b border-stone-200">
-        <div className="flex">
-          {STANCES.map((stance) => (
-            <button
-              key={stance}
-              type="button"
-              onClick={() => setTab(stance)}
-              className={`px-4 py-2 ${tab === stance ? "border-b-2 border-stone-900 font-semibold" : "text-stone-500"}`}
-            >
-              {STANCE_LABEL[stance]}
-              {stance === myStance && <span className="ml-1 text-xs text-stone-400">(내 입장)</span>}
-            </button>
-          ))}
-        </div>
+    <section className="mt-2">
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <h2 className="text-lg font-bold">입장별 의견</h2>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as OpinionSort)}
-          className="mb-1 rounded border border-stone-300 px-2 py-1 text-sm"
+          aria-label="정렬"
+          className="rounded-lg bg-transparent py-1 text-sm text-muted focus:outline-none"
         >
           <option value="RECOMMENDED">추천순</option>
           <option value="LATEST">최신순</option>
         </select>
       </div>
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+      <p className="mb-4 text-sm text-muted">다른 입장의 의견부터 보여드려요.</p>
+      <div role="tablist" className="mb-4 grid grid-cols-3 gap-1 rounded-xl bg-ink/5 p-1">
+        {STANCES.map((stance) => {
+          const active = tab === stance;
+          return (
+            <button
+              key={stance}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setTab(stance)}
+              className={`flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm transition-colors ${
+                active ? "bg-surface font-semibold shadow-sm" : "text-muted hover:text-ink"
+              }`}
+            >
+              <StanceDot stance={stance} />
+              {STANCE_LABEL[stance]}
+              {stance === myStance && <span className="hidden text-[11px] font-normal text-subtle sm:inline">내 입장</span>}
+            </button>
+          );
+        })}
+      </div>
+      {error && <p className="error-text">{error}</p>}
       {items.length === 0 ? (
-        <p className="py-8 text-center text-stone-500">아직 {STANCE_LABEL[tab]} 의견이 없어요.</p>
+        <p className="card py-12 text-center text-muted">아직 {STANCE_LABEL[tab]} 의견이 없어요.</p>
       ) : (
         <ul className="flex flex-col gap-3">
           {items.map((item) => (
@@ -381,7 +397,7 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
         </ul>
       )}
       {items.length < total && (
-        <button type="button" onClick={() => load(page + 1)} className="mt-3 w-full rounded border py-2 text-sm">
+        <button type="button" onClick={() => load(page + 1)} className="btn btn-secondary mt-3 w-full">
           더 보기
         </button>
       )}
@@ -447,41 +463,50 @@ function OpinionCard({
   }
 
   return (
-    <li className="rounded-lg border border-stone-200 p-4">
-      <div className="mb-2 flex justify-between text-sm text-stone-500">
-        <span>
-          {item.authorNickname ?? "알 수 없음"}
-          {item.mine && " (나)"}
-          {item.edited && " · 수정됨"}
+    <li className="card relative overflow-hidden py-4 sm:py-5">
+      <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${STANCE_STYLE[item.stance].solid}`} />
+      <div className="mb-2 flex items-center justify-between gap-2 text-sm">
+        <span className="flex min-w-0 items-center gap-2">
+          <span
+            aria-hidden
+            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink/5 text-xs font-semibold text-muted"
+          >
+            {(item.authorNickname ?? "?").slice(0, 1)}
+          </span>
+          <span className="truncate font-medium">{item.authorNickname ?? "알 수 없음"}</span>
+          {item.mine && <span className="chip">나</span>}
         </span>
-        <time dateTime={item.writtenAt}>{new Date(item.writtenAt).toLocaleDateString("ko-KR")}</time>
+        <span className="shrink-0 text-xs text-subtle">
+          {item.edited && "수정됨 · "}
+          <time dateTime={item.writtenAt}>{formatDate(item.writtenAt)}</time>
+        </span>
       </div>
-      <p className="whitespace-pre-wrap">{item.content}</p>
-      <div className="mt-3 flex items-center gap-3 text-sm">
+      <p className="leading-relaxed whitespace-pre-wrap">{item.content}</p>
+      <div className="mt-3 flex flex-wrap items-center gap-1">
         {item.mine ? (
-          <span className="rounded border border-stone-200 px-2 py-0.5 text-stone-500">추천 {item.recommendationCount}</span>
+          <span className="chip">추천 {item.recommendationCount}</span>
         ) : (
           <button
             type="button"
             onClick={toggleRecommendation}
             aria-pressed={item.recommendedByMe}
             title={item.recommendedByMe ? "추천 취소" : "추천"}
-            className={`rounded border px-2 py-0.5 ${item.recommendedByMe ? "border-stone-900 font-semibold" : "border-stone-300"}`}
+            className={`btn btn-sm ${item.recommendedByMe ? "btn-primary" : "btn-secondary"}`}
           >
             추천 {item.recommendationCount}
           </button>
         )}
         {!item.mine && (
-          <button type="button" onClick={report} className="text-stone-400 underline">
+          <button type="button" onClick={report} className="btn btn-sm btn-ghost ml-auto text-subtle">
             신고
           </button>
         )}
         {!item.mine && (
-          <button type="button" onClick={blockAuthor} className="text-stone-400 underline">
+          <button type="button" onClick={blockAuthor} className="btn btn-sm btn-ghost text-subtle">
             차단
           </button>
         )}
-        {message && <span className="text-stone-500">{message}</span>}
+        {message && <span className="w-full text-xs text-muted">{message}</span>}
       </div>
     </li>
   );

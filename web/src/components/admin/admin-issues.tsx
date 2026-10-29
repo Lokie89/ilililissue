@@ -104,14 +104,14 @@ export function AdminIssues() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      {message && <p className="rounded bg-stone-100 p-2 text-sm">{message}</p>}
+    <div className="flex flex-col gap-4">
+      {message && <p className="notice">{message}</p>}
 
       <AdminNewsDrafts onFinished={reload} />
 
-      <section className="rounded-lg border border-stone-200 p-5">
-        <h2 className="mb-1 font-semibold">{editingId ? `이슈 #${editingId} 수정` : "새 이슈 작성"}</h2>
-        <p className="mb-4 text-sm text-stone-500">
+      <section className="card">
+        <h2 className="mb-1 font-bold">{editingId ? `이슈 #${editingId} 수정` : "새 이슈 작성"}</h2>
+        <p className="mb-4 text-sm text-muted">
           기사 본문·사진을 복사하지 말고, 사실관계를 확인해 직접 쓴 중립적인 질문과 설명, 원문 링크만 넣어 주세요.
         </p>
         <div className="flex flex-col gap-3">
@@ -120,7 +120,7 @@ export function AdminIssues() {
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
             maxLength={100}
             placeholder="질문 (유도 문구 없이, 100자 이내)"
-            className="rounded border border-stone-300 p-2"
+            className="field"
           />
           <textarea
             value={draft.summary}
@@ -128,12 +128,12 @@ export function AdminIssues() {
             maxLength={1000}
             rows={5}
             placeholder="배경 설명과 사실관계 (1000자 이내)"
-            className="rounded border border-stone-300 p-2"
+            className="field"
           />
           <select
             value={draft.categoryId}
             onChange={(e) => setDraft({ ...draft, categoryId: e.target.value ? Number(e.target.value) : "" })}
-            className="rounded border border-stone-300 p-2"
+            className="field"
           >
             <option value="">카테고리 선택</option>
             {categories.map((c) => (
@@ -143,33 +143,33 @@ export function AdminIssues() {
             ))}
           </select>
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">원문 출처</span>
+            <span className="eyebrow mt-2">원문 출처</span>
             {draft.sources.map((source, index) => (
-              <div key={index} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2">
+              <div key={index} className="grid grid-cols-2 gap-2 rounded-xl border border-line p-2 sm:grid-cols-[2fr_1fr_1fr_auto] sm:border-0 sm:p-0">
                 <input
                   value={source.url}
                   onChange={(e) => updateSource(index, { url: e.target.value })}
                   placeholder="https://..."
-                  className="rounded border border-stone-300 p-2 text-sm"
+                  className="field col-span-2 text-sm sm:col-span-1"
                 />
                 <input
                   value={source.publisher}
                   onChange={(e) => updateSource(index, { publisher: e.target.value })}
                   placeholder="언론사"
-                  className="rounded border border-stone-300 p-2 text-sm"
+                  className="field text-sm"
                 />
                 <input
                   type="date"
                   value={source.publishedOn}
                   onChange={(e) => updateSource(index, { publishedOn: e.target.value })}
-                  className="rounded border border-stone-300 p-2 text-sm"
+                  className="field text-sm"
                 />
                 <button
                   type="button"
                   onClick={() =>
                     setDraft((prev) => ({ ...prev, sources: prev.sources.filter((_, i) => i !== index) }))
                   }
-                  className="px-2 text-stone-400"
+                  className="btn btn-sm btn-ghost col-span-2 sm:col-span-1"
                 >
                   삭제
                 </button>
@@ -178,17 +178,17 @@ export function AdminIssues() {
             <button
               type="button"
               onClick={() => setDraft((prev) => ({ ...prev, sources: [...prev.sources, { ...EMPTY_SOURCE }] }))}
-              className="self-start text-sm underline"
+              className="btn btn-sm btn-secondary self-start"
             >
               출처 추가
             </button>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={saveDraft} className="rounded bg-stone-900 px-4 py-2 text-white">
+            <button type="button" onClick={saveDraft} className="btn btn-primary">
               {editingId ? "수정 저장" : "작성"}
             </button>
             {editingId && (
-              <button type="button" onClick={resetDraft} className="rounded px-4 py-2">
+              <button type="button" onClick={resetDraft} className="btn btn-ghost">
                 취소
               </button>
             )}
@@ -196,11 +196,11 @@ export function AdminIssues() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-stone-200 p-5">
-        <h2 className="mb-3 font-semibold">카테고리</h2>
+      <section className="card">
+        <h2 className="mb-3 font-bold">카테고리</h2>
         <div className="mb-3 flex flex-wrap gap-2 text-sm">
           {categories.map((c) => (
-            <span key={c.id} className="rounded bg-stone-100 px-2 py-1">
+            <span key={c.id} className="chip">
               {c.name}
             </span>
           ))}
@@ -211,7 +211,7 @@ export function AdminIssues() {
             onChange={(e) => setNewCategory(e.target.value)}
             maxLength={20}
             placeholder="새 카테고리"
-            className="rounded border border-stone-300 p-2 text-sm"
+            className="field text-sm"
           />
           <button
             type="button"
@@ -221,35 +221,31 @@ export function AdminIssues() {
                 setNewCategory("");
               }, "카테고리를 추가했습니다.")
             }
-            className="rounded border px-3 text-sm"
+            className="btn btn-sm btn-secondary"
           >
             추가
           </button>
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-3 font-semibold">전체 이슈</h2>
-        <table className="w-full text-sm">
-          <thead className="border-b text-left text-stone-500">
-            <tr>
-              <th className="py-2">#</th>
-              <th>질문</th>
-              <th>카테고리</th>
-              <th>상태</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {issues.map((issue) => (
-              <tr key={issue.id} className="border-b border-stone-100">
-                <td className="py-2">{issue.id}</td>
-                <td>{issue.title}</td>
-                <td>{issue.category?.name}</td>
-                <td>{ISSUE_STATUS_LABEL[issue.status]}</td>
-                <td className="flex flex-wrap justify-end gap-2 py-2">
+      <section className="card p-0 sm:p-0">
+        <h2 className="px-5 pt-5 font-bold sm:px-6">전체 이슈</h2>
+        <ul className="mt-3 divide-y divide-line">
+          {issues.map((issue) => (
+            <li key={issue.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-subtle">
+                  <span>#{issue.id}</span>
+                  <span className={`chip ${issue.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : ""}`}>
+                    {ISSUE_STATUS_LABEL[issue.status]}
+                  </span>
+                  {issue.category && <span>{issue.category.name}</span>}
+                </div>
+                <p className="mt-1 font-medium">{issue.title}</p>
+              </div>
+              <div className="flex shrink-0 flex-wrap gap-1.5">
                   {(issue.status === "DRAFT" || issue.status === "REVIEWED") && (
-                    <button type="button" onClick={() => startEdit(issue.id)} className="underline">
+                    <button type="button" onClick={() => startEdit(issue.id)} className="btn btn-sm btn-secondary">
                       수정
                     </button>
                   )}
@@ -257,7 +253,7 @@ export function AdminIssues() {
                     <button
                       type="button"
                       onClick={() => run(() => api(`/api/admin/issues/${issue.id}/review`, { method: "POST" }), "검수 완료")}
-                      className="underline"
+                      className="btn btn-sm btn-secondary"
                     >
                       검수 완료
                     </button>
@@ -266,7 +262,7 @@ export function AdminIssues() {
                     <button
                       type="button"
                       onClick={() => run(() => api(`/api/admin/issues/${issue.id}/publish`, { method: "POST" }), "게시했습니다.")}
-                      className="font-semibold underline"
+                      className="btn btn-sm btn-primary"
                     >
                       게시
                     </button>
@@ -275,21 +271,20 @@ export function AdminIssues() {
                     <button
                       type="button"
                       onClick={() => run(() => api(`/api/admin/issues/${issue.id}/close`, { method: "POST" }), "마감했습니다.")}
-                      className="underline"
+                      className="btn btn-sm btn-secondary"
                     >
                       마감
                     </button>
                   )}
                   {(issue.status === "PUBLISHED" || issue.status === "CLOSED") && (
-                    <button type="button" onClick={() => correct(issue.id)} className="underline">
+                    <button type="button" onClick={() => correct(issue.id)} className="btn btn-sm btn-secondary">
                       정정
                     </button>
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );
