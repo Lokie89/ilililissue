@@ -409,6 +409,17 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...change } : item)));
   }
 
+  // 열린 '⋯' 메뉴는 바깥을 누르면 닫는다.
+  useEffect(() => {
+    function closeMenus(event: MouseEvent) {
+      document.querySelectorAll("details[data-opinion-menu][open]").forEach((menu) => {
+        if (!menu.contains(event.target as Node)) menu.removeAttribute("open");
+      });
+    }
+    document.addEventListener("click", closeMenus);
+    return () => document.removeEventListener("click", closeMenus);
+  }, []);
+
   // 의견은 이슈당 회원 1개이므로 차단한 작성자의 의견은 이 카드 하나뿐이다.
   function removeItem(id: number) {
     setItems((prev) => prev.filter((item) => item.id !== id));
@@ -535,9 +546,9 @@ function OpinionCard({
     }
   }
 
+  // 입장 색은 왼쪽 테두리로 낸다. overflow-hidden을 쓰면 '⋯' 메뉴가 카드 안에서 잘린다.
   return (
-    <li className="card relative overflow-hidden py-4 sm:py-5">
-      <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${STANCE_STYLE[item.stance].solid}`} />
+    <li className={`card border-l-4 py-4 sm:py-5 ${STANCE_STYLE[item.stance].borderLeft}`}>
       <div className="mb-2 flex items-center justify-between gap-2 text-sm">
         <span className="flex min-w-0 items-center gap-2">
           <span
@@ -570,7 +581,7 @@ function OpinionCard({
           </button>
         )}
         {!item.mine && (
-          <details className="group relative ml-auto">
+          <details data-opinion-menu className="group relative ml-auto">
             <summary
               aria-label="더 보기"
               className="flex size-9 cursor-pointer list-none items-center justify-center rounded-lg text-subtle hover:bg-ink/5 [&::-webkit-details-marker]:hidden"
