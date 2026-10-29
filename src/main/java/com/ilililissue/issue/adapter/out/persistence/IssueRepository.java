@@ -15,6 +15,8 @@ public interface IssueRepository extends JpaRepository<IssueJpaEntity, Long> {
 
     Page<IssueJpaEntity> findByStatusIn(Collection<IssueStatus> statuses, Pageable pageable);
 
+    Page<IssueJpaEntity> findByStatusInAndCategoryId(Collection<IssueStatus> statuses, Long categoryId, Pageable pageable);
+
     /**
      * 연장했으면 연장 시각, 아니면 게시 시각이 기준보다 이른 이슈.
      */

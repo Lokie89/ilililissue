@@ -6,6 +6,8 @@ import com.ilililissue.issue.adapter.in.web.IssueResponses.CategoryResponse;
 import com.ilililissue.issue.adapter.in.web.IssueResponses.IssueDetailResponse;
 import com.ilililissue.issue.adapter.in.web.IssueResponses.IssueSummaryResponse;
 import com.ilililissue.issue.application.port.in.IssueQuery;
+import com.ilililissue.issue.application.port.in.IssueView;
+import com.ilililissue.issue.domain.vo.CategoryId;
 import com.ilililissue.issue.domain.vo.IssueId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,8 +33,13 @@ public class IssueController {
 
     @GetMapping("/api/issues")
     public PageResult<IssueSummaryResponse> issues(@RequestParam(defaultValue = "0") int page,
-                                                   @RequestParam(defaultValue = "20") int size) {
-        return issueQuery.getPublicIssues(PageQuery.of(page, size)).map(IssueSummaryResponse::from);
+                                                   @RequestParam(defaultValue = "20") int size,
+                                                   @RequestParam(required = false) Long categoryId) {
+        PageQuery pageQuery = PageQuery.of(page, size);
+        PageResult<IssueView> issues = categoryId == null
+                ? issueQuery.getPublicIssues(pageQuery)
+                : issueQuery.getPublicIssues(new CategoryId(categoryId), pageQuery);
+        return issues.map(IssueSummaryResponse::from);
     }
 
     @GetMapping("/api/issues/{issueId}")

@@ -50,6 +50,12 @@ public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpire
 
     @Transactional(readOnly = true)
     @Override
+    public PageResult<IssueView> getPublicIssues(CategoryId categoryId, PageQuery pageQuery) {
+        return toViews(issuePort.findByStatusInAndCategory(PUBLIC_STATUSES, categoryId, pageQuery));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public IssueView getPublicIssue(IssueId id) {
         Issue issue = loadIssue(id);
         if (!PUBLIC_STATUSES.contains(issue.getStatus())) {

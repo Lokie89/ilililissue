@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cacheLife } from "next/cache";
-import type { IssueDetail, IssueSummary, Page } from "./types";
+import type { Category, IssueDetail, IssueSummary, Page } from "./types";
 
 // 서버 컴포넌트는 rewrite를 거치지 않고 백엔드를 직접 호출한다.
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:8080";
@@ -17,9 +17,15 @@ async function get<T>(path: string): Promise<T | null> {
   return (await response.json()) as T;
 }
 
-/** 공개 이슈 목록. 요청마다 조회한다(Suspense 안에서 호출). */
-export function getIssues(page = 0): Promise<Page<IssueSummary> | null> {
-  return get<Page<IssueSummary>>(`/api/issues?page=${page}&size=20`);
+/** 공개 이슈 목록. categoryId를 주면 그 분야만. 요청마다 조회한다(Suspense 안에서 호출). */
+export function getIssues(page = 0, categoryId?: number): Promise<Page<IssueSummary> | null> {
+  const category = categoryId === undefined ? "" : `&categoryId=${categoryId}`;
+  return get<Page<IssueSummary>>(`/api/issues?page=${page}&size=20${category}`);
+}
+
+/** 분야(카테고리) 목록. 요청마다 조회한다(Suspense 안에서 호출). */
+export async function getCategories(): Promise<Category[]> {
+  return (await get<Category[]>("/api/categories")) ?? [];
 }
 
 /** 공개 이슈 상세. 없거나 게시 전이면 null. 요청마다 조회한다(Suspense 안에서 호출). */

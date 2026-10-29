@@ -43,6 +43,18 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
     public PageResult<Issue> findByStatusIn(Collection<IssueStatus> statuses, PageQuery pageQuery) {
         Page<IssueJpaEntity> page = issueRepository.findByStatusIn(
                 statuses, PageRequest.of(pageQuery.page(), pageQuery.size(), LATEST));
+        return toPageResult(page, pageQuery);
+    }
+
+    @Override
+    public PageResult<Issue> findByStatusInAndCategory(Collection<IssueStatus> statuses, CategoryId categoryId,
+                                                       PageQuery pageQuery) {
+        Page<IssueJpaEntity> page = issueRepository.findByStatusInAndCategoryId(
+                statuses, categoryId.getValue(), PageRequest.of(pageQuery.page(), pageQuery.size(), LATEST));
+        return toPageResult(page, pageQuery);
+    }
+
+    private PageResult<Issue> toPageResult(Page<IssueJpaEntity> page, PageQuery pageQuery) {
         return new PageResult<>(page.getContent().stream().map(this::mapToDomain).toList(),
                 pageQuery.page(), pageQuery.size(), page.getTotalElements());
     }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Participation } from "@/components/participation";
@@ -32,7 +33,11 @@ async function Issue({ params }: Pick<PageProps<"/issues/[id]">, "params">) {
       <ViewTracker issueId={issue.id} />
       <header>
         <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-subtle">
-          {issue.category && <span className="chip">{issue.category.name}</span>}
+          {issue.category && (
+            <Link href={`/?category=${issue.category.id}`} className="chip hover:bg-ink/10">
+              {issue.category.name}
+            </Link>
+          )}
           {issue.publishedAt && <time dateTime={issue.publishedAt}>{formatDate(issue.publishedAt)}</time>}
           {issue.status === "CLOSED" && <span className="chip">투표 마감</span>}
         </div>

@@ -66,7 +66,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/auth/refresh` | 리프레시 쿠키 | 토큰 재발급 |
 | POST | `/api/auth/logout` | 누구나 | 로그아웃 (쿠키 삭제, 리프레시 토큰 폐기) |
 | GET | `/api/categories` | 누구나 | 카테고리 목록 |
-| GET | `/api/issues?page&size` | 누구나 | 공개 이슈 목록 (게시·마감, 최신순) |
+| GET | `/api/issues?page&size&categoryId` | 누구나 | 공개 이슈 목록 (게시·마감, 최신순, `categoryId`로 분야 필터) |
 | GET | `/api/issues/{id}` | 누구나 | 이슈 상세 (질문, 배경 설명, 원문 출처) |
 | POST | `/api/issues/{id}/views` | 누구나 | 조회 기록 (지표용, 없으면 `visitor_id` 쿠키 발급. 앱은 `X-Visitor-Id: <UUID>` 헤더) |
 | GET | `/api/issues/{id}/participation` | 누구나 | 내 투표 입장·의견 (비회원은 `voted: false`) |

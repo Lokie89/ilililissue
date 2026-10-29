@@ -50,6 +50,22 @@ public class IssueApiTest extends ApiTestSupport {
                 .andExpect(jsonPath("$[*].id", hasItem((int) categoryId)));
     }
 
+    @DisplayName("분야(카테고리)로 공개 이슈 목록을 거른다")
+    @Test
+    void filterByCategory() throws Exception {
+        Cookie admin = loginAsNewAdmin();
+        long published = createPublishedIssue(admin);
+        long categoryId = jdbcTemplate.queryForObject("SELECT category_id FROM issue WHERE id = ?", Long.class, published);
+        long otherPublished = createPublishedIssue(admin);
+        createDraftIssue(admin, categoryId);
+
+        mockMvc.perform(get("/api/issues").param("categoryId", String.valueOf(categoryId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(published))
+                .andExpect(jsonPath("$.content[*].id", not(hasItem((int) otherPublished))));
+    }
+
     @DisplayName("게시된 이슈는 수정할 수 없고 배경 설명만 정정한다")
     @Test
     void correction() throws Exception {
