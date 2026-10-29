@@ -8,15 +8,15 @@ import com.ilililissue.issue.domain.entity.Category;
 import com.ilililissue.newsdraft.application.NewsDraftException;
 import com.ilililissue.newsdraft.application.port.in.GenerateNewsDraftsUseCase;
 import com.ilililissue.newsdraft.application.port.out.IssueDraftWriterPort;
-import com.ilililissue.newsdraft.application.port.out.NewsSearchPort;
+import com.ilililissue.newsdraft.application.port.out.NewsFeedPort;
 import com.ilililissue.newsdraft.config.NewsDraftProperties;
+import com.ilililissue.newsdraft.config.NewsDraftProperties.Feed;
 import com.ilililissue.newsdraft.domain.IssueDraft;
 import com.ilililissue.newsdraft.domain.NewsArticle;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -35,8 +35,8 @@ import java.util.stream.Collectors;
 /**
  * <h2>뉴스 자동 초안</h2>
  * <ul>
- * <li>지난 24시간에 나온 기사를 검색어별로 모아 URL 기준으로 중복을 없앤다.</li>
- * <li>AI가 고른 초안 중 카테고리가 있고 출처가 수집한 기사 URL인 것만 DRAFT 이슈로 등록한다. 발행일은 검색 결과 값을 쓴다.</li>
+ * <li>언론사 RSS 피드에서 지난 24시간에 나온 기사를 모아 URL 기준으로 중복을 없앤다.</li>
+ * <li>AI가 고른 초안 중 카테고리가 있고 출처가 수집한 기사 URL인 것만 DRAFT 이슈로 등록한다. 언론사·발행일은 피드 값을 쓴다.</li>
  * <li>기사 제목·요약문은 저장하지 않는다. 게시는 관리자 검수 후에만 한다.</li>
  * <li>외부 호출이 길어 전체를 한 트랜잭션으로 묶지 않고, 초안마다 따로 등록한다. 서버 한 대 전제로 메모리에서 중복 실행을 막는다.</li>
  * </ul>
@@ -51,7 +51,7 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
     private static final int RECENT_ISSUE_COUNT = 30;
     private static final int PUBLISHER_MAX_LENGTH = 50;
 
-    private final NewsSearchPort newsSearchPort;
+    private final NewsFeedPort newsFeedPort;
     private final IssueDraftWriterPort issueDraftWriterPort;
     private final IssueQuery issueQuery;
     private final ManageIssueUseCase manageIssueUseCase;
@@ -124,35 +124,31 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
     }
 
     private void requireConfigured() {
-        if (!properties.hasNaverKey()) {
-            throw NewsDraftException.notConfigured("네이버 검색 API 키(NAVER_CLIENT_ID, NAVER_CLIENT_SECRET)가 설정되지 않았습니다.");
-        }
         if (!properties.hasAnthropicKey()) {
             throw NewsDraftException.notConfigured("Anthropic API 키(ANTHROPIC_API_KEY)가 설정되지 않았습니다.");
         }
-        if (properties.keywords().isEmpty()) {
-            throw NewsDraftException.notConfigured("뉴스 검색어(news-draft.keywords)가 없습니다.");
+        if (properties.feeds().isEmpty()) {
+            throw NewsDraftException.notConfigured("언론사 RSS 피드(news-draft.feeds)가 없습니다.");
         }
     }
 
     private List<NewsArticle> collect() {
         OffsetDateTime since = OffsetDateTime.now(clock).minus(COLLECT_WINDOW);
         Map<String, NewsArticle> byUrl = new LinkedHashMap<>();
-        int failedKeywords = 0;
-        for (String keyword : properties.keywords()) {
+        int failedFeeds = 0;
+        for (Feed feed : properties.feeds()) {
             try {
-                for (NewsArticle article : newsSearchPort.searchLatest(keyword, properties.articlesPerKeyword())) {
-                    if (article.publishedAt() != null && article.publishedAt().isAfter(since)) {
-                        byUrl.putIfAbsent(article.url(), article);
-                    }
-                }
+                newsFeedPort.fetch(feed).stream()
+                        .filter(article -> article.publishedAt() != null && article.publishedAt().isAfter(since))
+                        .limit(properties.articlesPerFeed())
+                        .forEach(article -> byUrl.putIfAbsent(article.url(), article));
             } catch (RuntimeException e) {
-                failedKeywords++;
-                log.warn("뉴스 초안: '{}' 검색 실패 - {}", keyword, e.getMessage());
+                failedFeeds++;
+                log.warn("뉴스 초안: {} 피드 읽기 실패 - {}", feed.publisher(), e.getMessage());
             }
         }
-        if (failedKeywords == properties.keywords().size()) {
-            throw NewsDraftException.externalFailure("뉴스 검색이 모두 실패했습니다. API 키와 네트워크를 확인하세요.");
+        if (failedFeeds == properties.feeds().size()) {
+            throw NewsDraftException.externalFailure("언론사 피드를 하나도 읽지 못했습니다. 네트워크와 피드 주소를 확인하세요.");
         }
         return byUrl.values().stream()
                 .sorted(Comparator.comparing(NewsArticle::publishedAt).reversed())
@@ -165,13 +161,13 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
             log.warn("뉴스 초안 제외: 없는 카테고리 {} - {}", draft.categoryId(), draft.title());
             return Optional.empty();
         }
-        // AI가 만든 URL은 믿지 않고, 수집한 기사 URL과 그 발행일만 출처로 쓴다.
-        List<IssueCommand.Source> sources = (draft.sources() == null ? List.<IssueDraft.Source>of() : draft.sources()).stream()
-                .filter(source -> articlesByUrl.containsKey(source.url()))
-                .collect(Collectors.toMap(IssueDraft.Source::url, s -> s, (a, b) -> a, LinkedHashMap::new))
-                .values().stream()
-                .map(source -> new IssueCommand.Source(source.url(), publisherOf(source),
-                        articlesByUrl.get(source.url()).publishedAt().atZoneSameInstant(SEOUL).toLocalDate()))
+        // AI가 만든 URL은 믿지 않고, 수집한 기사 URL과 그 언론사·발행일만 출처로 쓴다.
+        List<IssueCommand.Source> sources = (draft.sourceUrls() == null ? List.<String>of() : draft.sourceUrls()).stream()
+                .filter(articlesByUrl::containsKey)
+                .distinct()
+                .map(articlesByUrl::get)
+                .map(article -> new IssueCommand.Source(article.url(), publisherOf(article),
+                        article.publishedAt().atZoneSameInstant(SEOUL).toLocalDate()))
                 .toList();
         if (sources.isEmpty()) {
             log.warn("뉴스 초안 제외: 수집한 기사와 맞는 출처가 없음 - {}", draft.title());
@@ -186,11 +182,10 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
         }
     }
 
-    private static String publisherOf(IssueDraft.Source source) {
-        String publisher = source.publisher() == null ? "" : source.publisher().strip();
+    private static String publisherOf(NewsArticle article) {
+        String publisher = article.publisher() == null ? "" : article.publisher().strip();
         if (publisher.isEmpty()) {
-            String host = URI.create(source.url()).getHost();
-            publisher = host == null ? "알 수 없음" : host.replaceFirst("^www\\.", "");
+            publisher = "알 수 없음";
         }
         return publisher.length() > PUBLISHER_MAX_LENGTH ? publisher.substring(0, PUBLISHER_MAX_LENGTH) : publisher;
     }

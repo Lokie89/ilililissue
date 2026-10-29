@@ -20,16 +20,24 @@ auth:
 metrics:
   event-retention: 365d
 
-# 뉴스 자동 초안: 매일 07:00 네이버 뉴스 검색 → Claude가 이슈 초안 작성 → DRAFT로 등록(게시는 관리자가 검수 후).
-# 키가 없으면 스케줄은 꺼 두고, 관리자 수동 실행은 설정 오류로 응답한다.
+# 뉴스 자동 초안: 매일 07:00 언론사 RSS 수집 → Claude가 이슈 초안 작성 → DRAFT로 등록(게시는 관리자가 검수 후).
+# 키가 없으면 관리자 수동 실행은 설정 오류로 응답한다.
+# 피드 목록은 2026-10-29에 응답을 확인했다. 운영 전에 언론사별 RSS 이용 조건(상업적 이용, AI 입력)을 확인하거나 허락을 받는다.
+# 매일경제는 봇 차단(Cloudflare)이라 넣지 않았다. 차단을 우회하지 않는다.
 news-draft:
   enabled: ${NEWS_DRAFT_ENABLED:false}
-  keywords: ${NEWS_DRAFT_KEYWORDS:정부 정책,국회 법안,경제,물가,부동산,노동,교육,복지,환경,사회 논란}
-  articles-per-keyword: 30
+  feeds:
+    - { publisher: 연합뉴스, url: "https://www.yna.co.kr/rss/news.xml" }
+    - { publisher: 한겨레, url: "https://www.hani.co.kr/rss" }
+    - { publisher: 경향신문, url: "https://www.khan.co.kr/rss/rssdata/total_news.xml" }
+    - { publisher: 동아일보, url: "https://rss.donga.com/total.xml" }
+    - { publisher: 조선일보, url: "https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml" }
+    - { publisher: SBS, url: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=01&plink=RSSREADER" }
+    - { publisher: 한국경제, url: "https://www.hankyung.com/feed/all-news" }
+    - { publisher: 뉴시스, url: "https://www.newsis.com/RSS/sokbo.xml" }
+  articles-per-feed: 40
   max-articles: 200
   max-drafts: 3
-  naver-client-id: ${NAVER_CLIENT_ID:}
-  naver-client-secret: ${NAVER_CLIENT_SECRET:}
   anthropic-api-key: ${ANTHROPIC_API_KEY:}
   model: claude-opus-5-5
 

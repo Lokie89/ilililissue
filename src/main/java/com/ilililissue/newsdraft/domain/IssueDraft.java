@@ -8,18 +8,12 @@ import java.util.List;
  * @param title      찬성·중립·반대로 답할 수 있는 중립 질문
  * @param summary    기사 표현을 옮기지 않고 새로 쓴 배경 설명
  * @param categoryId 기존 카테고리 중 하나
- * @param sources    근거 기사. URL은 수집한 기사 중에서만 고른다
+ * @param sourceUrls 근거 기사 URL. 수집한 기사 URL과 같을 때만 출처로 쓴다
  */
 public record IssueDraft(
         String title,
         String summary,
         long categoryId,
-        List<Source> sources
+        List<String> sourceUrls
 ) {
-
-    /**
-     * @param publisher 언론사 이름(URL 도메인으로 추정)
-     */
-    public record Source(String url, String publisher) {
-    }
 }

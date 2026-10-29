@@ -18,6 +18,23 @@
 
 ## 현재 기록
 
+### 2026-10-29 (3) — 뉴스 수집원을 언론사 RSS로 교체, 더미 데이터 정리
+
+- 목표: 실제 이슈 가져오기(사용자: "실제 이슈들좀 가져와바", 네이버 개발자센터에 '검색' API가 없다는 제보)
+- 확인: 네이버 검색 API는 2026-07-30부터 개발자센터 신규 신청이 막혔고(NAVER API HUB로 이관), 2026-09-07 시행 약관이 검색 결과를 AI에 입력하는 것을 금지한다(뉴스 보도·블로그 근거, 공식 공지 원문은 미확인). 사용자 선택: 언론사 RSS로 교체
+- 변경:
+  - `NaverNewsSearchAdapter` 삭제 → `RssNewsFeedAdapter` + `RssFeedParser`(RSS 2.0·1.0·Atom, DOCTYPE 거부, 요약문 앞 200자, utm 제거, 항목 시각 없으면 `lastBuildDate`). 포트 `NewsFeedPort`
+  - 피드 8곳(`news-draft.feeds`): 연합뉴스, 한겨레, 경향신문, 동아일보, 조선일보, SBS, 한국경제, 뉴시스. 매일경제는 Cloudflare 봇 차단이라 제외
+  - 언론사 이름·발행일은 피드 값을 쓰고, AI 응답은 `sourceUrls`만 받는다. 프롬프트에 논조가 다른 언론사 기사를 함께 고르라고 지시
+  - 네이버 환경변수 제거. 필요한 키는 `ANTHROPIC_API_KEY` 하나
+  - 로컬 MySQL: 이슈·카테고리·의견·투표·추천·신고·이용 기록을 비우고(회원은 유지) 카테고리 정치·경제·사회·생활·국제 생성. `.env`에 `NEWS_DRAFT_ENABLED`, `ANTHROPIC_API_KEY` 빈 줄 추가
+- 검증: `./gradlew test` 84개 통과. 실제 피드 8곳 파싱 확인(총 529건, 임시 테스트로 확인 후 삭제). 재시작 후 수동 실행 → "Anthropic API 키가 설정되지 않았습니다" 확인. **Claude 호출은 키가 없어 미실행**
+- 남은 작업: `ANTHROPIC_API_KEY` 입력 후 실제 초안 생성·품질 확인, 언론사별 RSS 이용 조건 확인 또는 이용 허락(운영 전 필수), 이전 남은 작업
+- 주의 사항:
+  - 신문사 공동 「디지털 뉴스콘텐츠 이용규칙」은 RSS를 개인 열람용으로 보고 봇 대량 수집·영리 목적 링크 모음을 문제 삼는다. 본문 저장·게시는 하지 않지만 법적 확인이 필요하다
+  - 한겨레 피드는 항목 시각이 없어 피드 갱신 시각을 발행일로 쓴다(하루 이내 오차)
+  - 로컬 `.env`는 UTF-8이 아니다(CP949로 보임). 스크립트로 고칠 때 바이트 단위로 다룬다
+
 ### 2026-10-29 (2) — 웹 디자인 정리
 
 - 목표: 웹 화면 디자인 손보기(사용자: "디자인 손좀봐줘")
@@ -74,19 +91,4 @@
 - 주의 사항:
   - 처리방침(`web/src/app/privacy/page.tsx`)은 실제 수집 항목·쿠키·보관 기간을 그대로 적었다. 수집 항목이나 보관 기간을 바꾸면 함께 고친다
   - 로컬 `ilililissue` DB는 V2까지 적용된 상태다
-
-### 2026-10-28 (5) — 숨김 해제, 방문자 쿠키, Flyway, 배포 구성
-
-- 목표: 사용자 결정(비회원 쿠키 식별, 숨긴 의견 되돌리기, 단일 서버 클라우드 배포, Flyway, push만·PR 보류) 반영
-- 변경:
-  - 관리자 숨긴 의견 목록 `GET /api/admin/opinions/hidden`, `POST /api/admin/opinions/{id}/unhide`, 관리 화면 "숨긴 의견" 탭
-  - 조회 기록을 `POST /api/issues/{id}/views`로 분리(브라우저의 `ViewTracker`가 호출), `visitor_id` 쿠키 발급, 투표율 분모 = 이슈별 고유 방문자 수. `GET /api/issues/{id}`는 더 이상 지표에 기록하지 않음(웹 서버 렌더링·메타데이터 조회가 조회수를 부풀리던 문제)
-  - Flyway: `V1__init.sql`, 운영·로컬 `ddl-auto: validate`, `FlywayMigrationTest`(H2 MySQL 모드)
-  - 배포: `Dockerfile`, `web/Dockerfile`(standalone), `docker-compose.prod.yml`(db·api·web·caddy), `deploy/Caddyfile`, `deploy/backup.sh`, `deploy/README.md`, `prod` 프로필(forward headers)
-- 검증: `./gradlew test` 68개 통과, 웹 lint·build 통과. 로컬 MySQL에 Flyway V1 적용 후 `bootRun` 스모크 41개 통과. 운영 구성을 로컬에서 `-p ilililissue-prodtest`로 빌드·기동해 HTTPS(Caddy 내부 인증서) 경유 스모크 41개, SSR 페이지, Secure 쿠키 확인 후 `down -v`로 정리
-- 남은 작업: 실제 클라우드 서버·도메인 준비 후 배포, 브라우저 화면 확인, PR(사용자 보류)
-- 주의 사항:
-  - 기존에 `ddl-auto: update`로 만든 로컬 DB는 Flyway 이력이 없어 실패한다. 로컬 `ilililissue` DB는 이번에 비우고 Flyway로 다시 만들었다
-  - 앱 클라이언트도 상세 화면에서 조회 기록 API를 호출해야 투표율이 맞다
-  - `next.config.ts`의 rewrite 대상은 빌드 시점에 고정된다(`BACKEND_URL` 빌드 인자)
 

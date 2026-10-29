@@ -25,7 +25,7 @@ curl -fsSL https://get.docker.com | sh
 
 git clone <저장소 주소> /srv/ilililissue
 cd /srv/ilililissue
-cp .env.prod.example .env.prod      # DOMAIN, DB 비밀번호, JWT_SECRET 채우기 (뉴스 자동 초안을 쓰면 NEWS_DRAFT_*, NAVER_*, ANTHROPIC_API_KEY)
+cp .env.prod.example .env.prod      # DOMAIN, DB 비밀번호, JWT_SECRET 채우기 (뉴스 자동 초안을 쓰면 NEWS_DRAFT_ENABLED, ANTHROPIC_API_KEY)
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 ```
 
