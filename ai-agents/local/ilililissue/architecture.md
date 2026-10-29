@@ -31,6 +31,12 @@
 - 순서: API → 웹 → 앱. 앱은 4주 검증 이후. 앱 착수 전 `app-client-guide.md`를 확인한다.
 - 웹 구현 (2026-10-28): 저장소 내 `web/` (Next.js 16.4, Cache Components, Tailwind 4). 브라우저 요청은 Next.js rewrite로 `/api/*` → 백엔드(같은 출처라 CORS 불필요). 공개 이슈는 서버 컴포넌트가 백엔드를 직접 호출(Suspense 안, 요청마다 조회), 회원별 화면은 클라이언트 컴포넌트. 상세: `web/README.md`
 
+## 웹 디자인 토큰 (2026-10-29)
+
+- `web/src/app/globals.css` `@theme`: 바탕 `canvas`·`surface`, 글자 `ink`·`muted`·`subtle`, 선 `line`. 색은 세 입장에만 쓴다.
+- 입장색은 용도별로 나눈다: 점·막대·강조 바탕용 `stance-*`(+`-soft`)와 글자용 `stance-*-ink`. 글자용은 흰 바탕 5.6:1 이상, 연한 입장 바탕 4.8:1 이상으로 세 색 대비를 맞춰 어느 입장도 더 또렷해 보이지 않게 한다(찬성 `#2d5fc2`, 중립 `#6b6459`, 반대 `#ad4a1c`). 앱 클라이언트도 같은 값을 쓴다.
+- 코드에서는 `web/src/lib/stance.ts`의 `STANCE_STYLE`로만 입장색을 쓴다.
+
 ## 애플리케이션 구조
 
 - 구조 유형: 모듈러 모놀리스, 헥사고날 아키텍처

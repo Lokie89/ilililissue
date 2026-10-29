@@ -21,6 +21,11 @@
   --color-stance-neutral-soft: #f1efeb;
   --color-stance-disagree: #db6634;
   --color-stance-disagree-soft: #fbede5;
+
+  /* 글자용 진한 입장색. 흰 바탕 5.6:1 이상, 연한 입장 바탕 4.8:1 이상으로 세 색의 대비를 맞춘다(점·막대는 위 색). */
+  --color-stance-agree-ink: #2d5fc2;
+  --color-stance-neutral-ink: #6b6459;
+  --color-stance-disagree-ink: #ad4a1c;
 }
 
 @layer base {

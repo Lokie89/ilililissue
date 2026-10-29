@@ -20,6 +20,11 @@ function StanceDot({ stance, className = "size-2" }: { stance: Stance; className
   return <span aria-hidden className={`inline-block shrink-0 rounded-full ${className} ${STANCE_STYLE[stance].solid}`} />;
 }
 
+// 의견 목록에서 먼저 여는 탭: 나와 반대되는 입장. 중립 투표자는 찬성부터 본다.
+const WHY: Record<Stance, string> = { AGREE: "왜 찬성했나요?", NEUTRAL: "왜 중립을 골랐나요?", DISAGREE: "왜 반대했나요?" };
+
+const OPPOSITE: Record<Stance, Stance> = { AGREE: "DISAGREE", DISAGREE: "AGREE", NEUTRAL: "AGREE" };
+
 type Props = {
   issueId: number;
   open: boolean;
@@ -60,26 +65,42 @@ export function Participation({ issueId, open }: Props) {
 
   if (!me) {
     return (
-      <section className="card text-center sm:py-8">
-        <div aria-hidden className="mb-4 flex justify-center gap-1.5">
-          {STANCES.map((stance) => (
-            <StanceDot key={stance} stance={stance} className="size-3" />
-          ))}
-        </div>
-        <h2 className="mb-1 text-lg font-bold">당신의 생각은 어떤가요?</h2>
-        <p className="mb-5 text-sm text-muted">로그인하면 투표하고 다른 사람들의 의견을 볼 수 있어요.</p>
-        <a href={`/login?next=/issues/${issueId}`} className="btn btn-primary">
-          로그인하고 참여하기
-        </a>
-      </section>
+      <>
+        <section id="vote" className="card scroll-mt-20">
+          <h2 className="mb-1 text-lg font-bold">당신의 입장은?</h2>
+          <p className="mb-5 text-sm text-muted">입장을 고르고 가입하면 투표하고, 사람들이 왜 다르게 생각하는지 볼 수 있어요.</p>
+          <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
+            {STANCES.map((stance) => (
+              <a
+                key={stance}
+                href={`/signup?next=/issues/${issueId}`}
+                className="flex flex-col items-center gap-2 rounded-xl border-2 border-line py-4 font-semibold transition-colors hover:border-subtle sm:py-5"
+              >
+                <StanceDot stance={stance} className="size-3" />
+                {STANCE_LABEL[stance]}
+              </a>
+            ))}
+          </div>
+          <p className="text-center text-sm text-muted">
+            이미 계정이 있어요 ·{" "}
+            <a href={`/login?next=/issues/${issueId}`} className="link font-semibold text-ink">
+              로그인
+            </a>
+          </p>
+        </section>
+        {open && <VoteBar />}
+      </>
     );
   }
 
   if (!state.voted) {
     return open ? (
-      <VoteForm issueId={issueId} onVoted={reload} />
+      <>
+        <VoteForm issueId={issueId} onVoted={reload} />
+        <VoteBar />
+      </>
     ) : (
-      <p className="card text-center text-muted">투표가 마감된 이슈입니다.</p>
+      <p className="card text-center text-muted">투표가 마감된 이슈입니다. 아래에서 다른 이슈에 참여해 보세요.</p>
     );
   }
 
@@ -88,6 +109,32 @@ export function Participation({ issueId, open }: Props) {
       <Results issueId={issueId} myStance={state.stance!} />
       <MyOpinion issueId={issueId} state={state} onChange={reload} />
       <Opinions issueId={issueId} myStance={state.stance!} />
+    </div>
+  );
+}
+
+/**
+ * 모바일에서 투표 카드가 화면 아래에 있을 때만 보이는 하단 고정 버튼. 투표 카드가 보이거나 지나가면 숨긴다.
+ */
+function VoteBar() {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const target = document.getElementById("vote");
+    if (!target) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      setHidden(entry.isIntersecting || entry.boundingClientRect.top < 0);
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
+  if (hidden) return null;
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-surface/95 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)] backdrop-blur sm:hidden">
+      <a href="#vote" className="btn btn-primary w-full py-3">
+        내 입장 고르기
+      </a>
     </div>
   );
 }
@@ -112,7 +159,7 @@ function VoteForm({ issueId, onVoted }: { issueId: number; onVoted: () => void }
   }
 
   return (
-    <section className="card">
+    <section id="vote" className="card scroll-mt-20">
       <h2 className="mb-1 text-lg font-bold">당신의 입장은?</h2>
       <p className="mb-5 text-sm text-muted">투표는 한 번만 할 수 있고 바꿀 수 없어요. 투표하면 결과와 의견을 볼 수 있어요.</p>
       <div role="radiogroup" aria-label="입장" className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
@@ -200,6 +247,8 @@ function MyOpinion({
 }) {
   const opinion = state.opinion;
   const [editing, setEditing] = useState(false);
+  // 의견은 선택이라 처음에는 한 줄로 접어 두고, 다른 입장 의견이 결과 바로 아래에 보이게 한다.
+  const [writing, setWriting] = useState(false);
   const [content, setContent] = useState(opinion?.content ?? "");
   const [error, setError] = useState<string | null>(null);
 
@@ -258,6 +307,25 @@ function MyOpinion({
     );
   }
 
+  if (!opinion && !writing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setWriting(true)}
+        className={`flex w-full items-center justify-between gap-3 rounded-2xl px-5 py-4 text-left transition-colors hover:brightness-[0.98] ${STANCE_STYLE[state.stance!].soft}`}
+      >
+        <span className="flex items-center gap-2 font-semibold">
+          <StanceDot stance={state.stance!} />
+          {WHY[state.stance!]}
+          <span className="text-sm font-normal text-muted">이유 남기기 (선택)</span>
+        </span>
+        <span aria-hidden className="text-subtle">
+          ＋
+        </span>
+      </button>
+    );
+  }
+
   return (
     <section className="card">
       <h2 className="mb-1 text-lg font-bold">
@@ -280,11 +348,13 @@ function MyOpinion({
       <div className="mt-3 flex items-center justify-between">
         <span className="text-xs text-subtle tabular-nums">{content.length}/500</span>
         <div className="flex gap-2">
-          {opinion && (
-            <button type="button" onClick={() => setEditing(false)} className="btn btn-sm btn-ghost">
-              취소
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => (opinion ? setEditing(false) : setWriting(false))}
+            className="btn btn-sm btn-ghost"
+          >
+            취소
+          </button>
           <button type="button" onClick={submit} disabled={!content.trim()} className="btn btn-sm btn-primary">
             {opinion ? "수정 완료" : "등록"}
           </button>
@@ -296,8 +366,8 @@ function MyOpinion({
 }
 
 function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) {
-  // 다른 입장의 의견을 먼저 보여준다.
-  const [tab, setTab] = useState<Stance>(STANCES.find((s) => s !== myStance) ?? "AGREE");
+  // 다른 입장의 의견을 먼저 보여준다. 찬성↔반대, 중립은 찬성부터.
+  const [tab, setTab] = useState<Stance>(OPPOSITE[myStance]);
   const [sort, setSort] = useState<OpinionSort>("RECOMMENDED");
   const [items, setItems] = useState<OpinionItem[]>([]);
   const [page, setPage] = useState(0);
@@ -359,7 +429,7 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
           <option value="LATEST">최신순</option>
         </select>
       </div>
-      <p className="mb-4 text-sm text-muted">다른 입장의 의견부터 보여드려요.</p>
+      <p className="mb-4 text-sm text-muted">나와 다른 입장의 의견부터 보여드려요.</p>
       <div role="tablist" className="mb-4 grid grid-cols-3 gap-1 rounded-xl bg-ink/5 p-1">
         {STANCES.map((stance) => {
           const active = tab === stance;
@@ -376,7 +446,7 @@ function Opinions({ issueId, myStance }: { issueId: number; myStance: Stance }) 
             >
               <StanceDot stance={stance} />
               {STANCE_LABEL[stance]}
-              {stance === myStance && <span className="hidden text-[11px] font-normal text-subtle sm:inline">내 입장</span>}
+              {stance === myStance && <span className="text-[11px] font-normal text-subtle">나</span>}
             </button>
           );
         })}
@@ -415,6 +485,8 @@ function OpinionCard({
   onBlocked: () => void;
 }) {
   const [message, setMessage] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
+  const [reason, setReason] = useState("");
 
   // 추천했으면 취소, 아니면 추천한다.
   async function toggleRecommendation() {
@@ -437,10 +509,11 @@ function OpinionCard({
   }
 
   async function report() {
-    const reason = window.prompt("신고 사유를 적어 주세요. (300자 이내)");
-    if (!reason?.trim()) return;
+    if (!reason.trim()) return;
     try {
       await api(`/api/opinions/${item.id}/reports`, { method: "POST", body: { reason } });
+      setReporting(false);
+      setReason("");
       setMessage("신고가 접수되었어요.");
     } catch (e) {
       setMessage(errorMessage(e));
@@ -497,17 +570,59 @@ function OpinionCard({
           </button>
         )}
         {!item.mine && (
-          <button type="button" onClick={report} className="btn btn-sm btn-ghost ml-auto text-subtle">
-            신고
-          </button>
-        )}
-        {!item.mine && (
-          <button type="button" onClick={blockAuthor} className="btn btn-sm btn-ghost text-subtle">
-            차단
-          </button>
+          <details className="group relative ml-auto">
+            <summary
+              aria-label="더 보기"
+              className="flex size-9 cursor-pointer list-none items-center justify-center rounded-lg text-subtle hover:bg-ink/5 [&::-webkit-details-marker]:hidden"
+            >
+              ⋯
+            </summary>
+            <div className="absolute right-0 z-10 mt-1 flex w-32 flex-col rounded-xl border border-line bg-surface p-1 shadow-lg">
+              <button
+                type="button"
+                onClick={(e) => {
+                  setReporting(true);
+                  e.currentTarget.closest("details")?.removeAttribute("open");
+                }}
+                className="rounded-lg px-3 py-2.5 text-left text-sm hover:bg-ink/5"
+              >
+                신고
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.currentTarget.closest("details")?.removeAttribute("open");
+                  blockAuthor();
+                }}
+                className="rounded-lg px-3 py-2.5 text-left text-sm hover:bg-ink/5"
+              >
+                이 회원 차단
+              </button>
+            </div>
+          </details>
         )}
         {message && <span className="w-full text-xs text-muted">{message}</span>}
       </div>
+      {reporting && (
+        <div className="mt-3 flex flex-col gap-2 rounded-xl bg-ink/[0.03] p-3">
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            maxLength={300}
+            rows={2}
+            placeholder="신고 사유를 적어 주세요. (300자 이내)"
+            className="field text-sm"
+          />
+          <div className="flex justify-end gap-1">
+            <button type="button" onClick={() => setReporting(false)} className="btn btn-sm btn-ghost">
+              취소
+            </button>
+            <button type="button" onClick={report} disabled={!reason.trim()} className="btn btn-sm btn-primary">
+              신고하기
+            </button>
+          </div>
+        </div>
+      )}
     </li>
   );
 }

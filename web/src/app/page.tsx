@@ -7,14 +7,13 @@ import { type Category, ISSUE_STATUS_LABEL, type IssueSummary } from "@/lib/type
 
 export default function Home({ searchParams }: PageProps<"/">) {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6 sm:gap-8">
       <section>
-        <h1 className="mb-3 text-[28px] leading-tight font-bold tracking-tight sm:text-3xl">
-          하나의 질문,
-          <br />
+        <h1 className="text-[22px] leading-tight font-bold tracking-tight sm:mb-3 sm:text-3xl">
+          하나의 질문, <br className="hidden sm:block" />
           서로 다른 생각
         </h1>
-        <p className="max-w-xl text-muted">
+        <p className="hidden max-w-xl text-muted sm:block">
           찬성·중립·반대 중 하나를 고르고, 다른 입장의 사람들은 왜 그렇게 생각하는지 읽어 보세요. 답글 싸움은 없어요.
         </p>
       </section>
@@ -73,43 +72,54 @@ function IssueList({ issues, category }: { issues: IssueSummary[]; category?: Ca
       </p>
     );
   }
-  const [latest, ...rest] = issues;
+  // 투표 중(게시)인 이슈는 오늘의 이슈, 마감된 이슈는 지난 이슈로 나눈다.
+  const open = issues.filter((issue) => issue.status === "PUBLISHED");
+  const closed = issues.filter((issue) => issue.status !== "PUBLISHED");
+  const [featured, ...restOpen] = open.length > 0 ? open : closed;
+  const past = open.length > 0 ? closed : closed.slice(1);
   return (
     <div className="flex flex-col gap-10">
-      <FeaturedIssue issue={latest} category={category} />
-      {rest.length > 0 && (
+      <div className="flex flex-col gap-3">
+        <FeaturedIssue issue={featured} />
+        {restOpen.length > 0 && <IssueRows issues={restOpen} />}
+      </div>
+      {past.length > 0 && (
         <section>
           <h2 className="eyebrow mb-3">{category ? `${category.name} 지난 이슈` : "지난 이슈"}</h2>
-          <ul className="card divide-y divide-line p-0 sm:p-0">
-            {rest.map((issue) => (
-              <li key={issue.id}>
-                <Link
-                  href={`/issues/${issue.id}`}
-                  className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-ink/[0.02] sm:px-6"
-                >
-                  {issue.imageKey && (
-                    <IssueImage issueId={issue.id} imageKey={issue.imageKey} className="w-20 shrink-0 rounded-lg sm:w-28" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <IssueMeta issue={issue} />
-                    <h3 className="mt-1 font-semibold group-hover:underline group-hover:underline-offset-4">
-                      {issue.title}
-                    </h3>
-                  </div>
-                  <span aria-hidden className="text-subtle transition-transform group-hover:translate-x-0.5">
-                    →
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <IssueRows issues={past} />
         </section>
       )}
     </div>
   );
 }
 
-function FeaturedIssue({ issue, category }: { issue: IssueSummary; category?: Category }) {
+function IssueRows({ issues }: { issues: IssueSummary[] }) {
+  return (
+    <ul className="card divide-y divide-line p-0 sm:p-0">
+      {issues.map((issue) => (
+        <li key={issue.id}>
+          <Link
+            href={`/issues/${issue.id}`}
+            className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-ink/[0.02] sm:px-6"
+          >
+            {issue.imageKey && (
+              <IssueImage issueId={issue.id} imageKey={issue.imageKey} className="w-20 shrink-0 rounded-lg sm:w-28" />
+            )}
+            <div className="min-w-0 flex-1">
+              <IssueMeta issue={issue} />
+              <h3 className="mt-1 font-semibold group-hover:underline group-hover:underline-offset-4">{issue.title}</h3>
+            </div>
+            <span aria-hidden className="text-subtle transition-transform group-hover:translate-x-0.5">
+              →
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FeaturedIssue({ issue }: { issue: IssueSummary }) {
   const open = issue.status === "PUBLISHED";
   const label = open ? "오늘의 이슈" : "최근 이슈";
   return (
@@ -124,7 +134,7 @@ function FeaturedIssue({ issue, category }: { issue: IssueSummary; category?: Ca
       </span>
       {issue.imageKey && <IssueImage issueId={issue.id} imageKey={issue.imageKey} className="w-full" priority />}
       <div className="p-5 sm:p-8">
-        <p className="eyebrow mb-3">{category ? `${category.name} · ${label}` : label}</p>
+        <p className="eyebrow mb-3">{label}</p>
         <IssueMeta issue={issue} />
         <h2 className="mt-2 text-2xl leading-snug font-bold tracking-tight sm:text-[28px]">{issue.title}</h2>
         <span className="btn btn-primary mt-6">{open ? "내 입장 고르기" : "결과 보기"} →</span>
