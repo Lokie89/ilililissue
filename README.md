@@ -96,5 +96,15 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | GET | `/api/admin/opinions/hidden?page&size` | 관리자 | 숨긴 의견 목록 |
 | POST | `/api/admin/opinions/{id}/unhide` | 관리자 | 숨김 해제 |
 | GET | `/api/admin/metrics?from&to` | 관리자 | 참여 지표 (날짜 `YYYY-MM-DD`) |
+| POST | `/api/admin/news-drafts` | 관리자 | 뉴스 자동 초안 수동 실행 (백그라운드, 202. 실행 중이면 409) |
+| GET | `/api/admin/news-drafts/status` | 관리자 | 실행 중 여부와 마지막 실행 결과 `{running, lastRun}` |
 
 이슈 상태: `DRAFT` → `REVIEWED` → `PUBLISHED` → `CLOSED`. 투표는 `PUBLISHED`에서만 가능합니다.
+
+## 뉴스 자동 초안
+
+매일 07:00(Asia/Seoul)에 지난 24시간 뉴스를 네이버 뉴스 검색 API로 모으고, Claude(`claude-opus-5-5`)가 토론할 만한 주제를 골라 질문·배경 설명 초안을 씁니다. 초안은 `DRAFT`로만 등록되고, 관리자가 검수·게시합니다. 관리 화면의 "지금 초안 만들기"로 바로 실행할 수도 있습니다.
+
+- 환경변수: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`([네이버 개발자센터](https://developers.naver.com) 검색 API), `ANTHROPIC_API_KEY`. 매일 자동 실행은 `NEWS_DRAFT_ENABLED=true`일 때만 합니다.
+- 검색어·건수: `application.yml`의 `news-draft` (`NEWS_DRAFT_KEYWORDS`로 쉼표 구분 검색어 변경).
+- 기사 제목·요약문은 초안 작성에만 쓰고 저장하지 않습니다. 출처는 수집한 기사 URL만 인정하고, 발행일은 검색 결과 값을 씁니다.

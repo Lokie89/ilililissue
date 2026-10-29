@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, errorMessage } from "@/lib/api";
+import { AdminNewsDrafts } from "./admin-news-drafts";
 import {
   type Category,
   type IssueDetail,
@@ -105,6 +106,8 @@ export function AdminIssues() {
   return (
     <div className="flex flex-col gap-8">
       {message && <p className="rounded bg-stone-100 p-2 text-sm">{message}</p>}
+
+      <AdminNewsDrafts onFinished={reload} />
 
       <section className="rounded-lg border border-stone-200 p-5">
         <h2 className="mb-1 font-semibold">{editingId ? `이슈 #${editingId} 수정` : "새 이슈 작성"}</h2>

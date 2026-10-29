@@ -151,3 +151,18 @@ export type ApiErrorBody = {
   code: string;
   message: string;
 };
+
+// 뉴스 자동 초안 실행 결과. 시각은 서버 기준 LocalDateTime 문자열
+export type NewsDraftRun = {
+  startedAt: string;
+  finishedAt: string;
+  articleCount: number;
+  createdIssueIds: number[];
+  skippedDrafts: number;
+  error: string | null;
+};
+
+export type NewsDraftStatus = {
+  running: boolean;
+  lastRun: NewsDraftRun | null;
+};

@@ -34,7 +34,7 @@
 ## 애플리케이션 구조
 
 - 구조 유형: 모듈러 모놀리스, 헥사고날 아키텍처
-- 주요 모듈: `member`, `issue`, `vote`, `opinion`(기존 `comment`), `report`, `common`
+- 주요 모듈: `member`, `issue`, `vote`, `opinion`(기존 `comment`), `report`, `metrics`, `newsdraft`(뉴스 자동 초안), `common`
 - 모듈 내부 패키지: `domain` / `application`(port.in, port.out, service) / `adapter.in.web` / `adapter.out.persistence`
 - 도메인 모델과 JPA 엔티티는 분리한다. 모듈 간 참조는 id 값으로 한다.
 
@@ -46,7 +46,16 @@
 
 ## 외부 연동 인터페이스 문서
 
-- 해당 없음 (MVP에서는 외부 연동 없음. 뉴스 API·RSS 수집은 MVP 이후)
+뉴스 자동 초안(2026-10-29, 모듈 `newsdraft`). 실패해도 서비스 핵심 흐름에는 영향이 없다.
+
+| 연동 | 방향·방식 | 계약 | 비밀값 | 실패 처리 |
+| --- | --- | --- | --- | --- |
+| 네이버 검색 API(뉴스) | 아웃바운드 HTTPS, `RestClient` | `GET https://openapi.naver.com/v1/search/news.json?query&display(≤100)&sort=date`, 헤더 `X-Naver-Client-Id`·`X-Naver-Client-Secret`. 응답 `items[{title, originallink, link, description, pubDate(RFC 1123)}]`, 제목·요약에 `<b>` 태그와 HTML 엔티티 포함. 하루 25,000회 | `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` | 타임아웃 10초. 검색어별 실패는 건너뛰고, 모두 실패하면 실행 실패 |
+| Claude Messages API | 아웃바운드 HTTPS, 공식 Java SDK `com.anthropic:anthropic-java` | 모델 `news-draft.model`(기본 `claude-opus-5-5`), 구조화 출력(`outputConfig(DraftList.class)`) `{drafts[{title, summary, categoryId, sources[{url, publisher}]}]}`. 입력은 카테고리·최근 이슈 질문·기사 메타데이터(URL·발행 시각·제목·요약문) | `ANTHROPIC_API_KEY` | 거절(`refusal`)이면 초안 0건, 길이 초과·API 오류면 실행 실패. SDK 기본 재시도 2회 |
+
+- 실행: `NewsDraftScheduler`(매일 07:00, `news-draft.enabled=true`일 때) 또는 `POST /api/admin/news-drafts`(백그라운드 `applicationTaskExecutor`). 서버 한 대 전제로 메모리 플래그로 중복 실행을 막고, 마지막 결과도 메모리에만 둔다(재시작하면 사라짐).
+- 신뢰 경계: AI 응답의 출처 URL은 수집한 기사 URL과 일치할 때만 쓰고, 발행일은 검색 결과 값을 쓴다. 카테고리 id가 없거나 이슈 검증(제목 100자 등)에 실패한 초안은 건너뛴다. 기사 텍스트는 프롬프트에서 데이터로만 취급하도록 지시한다.
+- 비용: 기사 최대 200건(약 수만 토큰) 입력, 하루 1회 기준.
 
 ## 데이터와 저장소
 
@@ -80,7 +89,7 @@
 
 ## 비밀값 이름
 
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS`, 선택: `NEWS_DRAFT_ENABLED`, `NEWS_DRAFT_KEYWORDS`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `ANTHROPIC_API_KEY` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
 
 ## 변경 가능성
 
