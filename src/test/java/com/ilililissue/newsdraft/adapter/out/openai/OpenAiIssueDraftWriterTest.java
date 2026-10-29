@@ -13,7 +13,7 @@ import java.util.List;
 class OpenAiIssueDraftWriterTest {
 
     private final OpenAiIssueDraftWriter writer = new OpenAiIssueDraftWriter(
-            new NewsDraftProperties(false, List.of(), 0, 0, 0, "key", null), JsonMapper.builder().build());
+            new NewsDraftProperties(false, List.of(), 0, 0, 0, "key", null, null, null, null), JsonMapper.builder().build());
 
     @DisplayName("output_text의 JSON을 초안으로 바꾸고, 추론(reasoning) 항목은 건너뛴다")
     @Test

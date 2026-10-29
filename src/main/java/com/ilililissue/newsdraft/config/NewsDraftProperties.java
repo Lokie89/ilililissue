@@ -12,7 +12,11 @@ import java.util.List;
  * @param articlesPerFeed 피드마다 쓸 최신 기사 수 상한
  * @param maxArticles     AI에 넘길 기사 수 상한(중복 제거 후)
  * @param maxDrafts       한 번에 만들 이슈 초안 수 상한
- * @param model           OpenAI 모델 ID
+ * @param openaiApiKey    {@code writer=openai-api}일 때 필요한 OpenAI API 키
+ * @param model           OpenAI API 모델 ID
+ * @param writer          초안 작성 방식. {@code openai-api}(기본, 운영) 또는 {@code codex-cli}(로컬 테스트, ChatGPT 로그인)
+ * @param codexCommand    {@code codex-cli}일 때 실행할 명령
+ * @param codexModel      {@code codex-cli}일 때 모델. 비우면 Codex 설정(~/.codex/config.toml)의 기본 모델
  */
 @ConfigurationProperties("news-draft")
 public record NewsDraftProperties(
@@ -22,8 +26,14 @@ public record NewsDraftProperties(
         int maxArticles,
         int maxDrafts,
         String openaiApiKey,
-        String model
+        String model,
+        String writer,
+        String codexCommand,
+        String codexModel
 ) {
+
+    public static final String WRITER_OPENAI_API = "openai-api";
+    public static final String WRITER_CODEX_CLI = "codex-cli";
 
     public NewsDraftProperties {
         feeds = feeds == null ? List.of() : feeds.stream()
@@ -33,10 +43,16 @@ public record NewsDraftProperties(
         maxArticles = maxArticles <= 0 ? 200 : maxArticles;
         maxDrafts = maxDrafts <= 0 ? 3 : maxDrafts;
         model = model == null || model.isBlank() ? "gpt-6.1-sol" : model;
+        writer = writer == null || writer.isBlank() ? WRITER_OPENAI_API : writer.strip();
+        codexCommand = codexCommand == null || codexCommand.isBlank() ? "codex" : codexCommand;
     }
 
     public boolean hasOpenaiKey() {
         return openaiApiKey != null && !openaiApiKey.isBlank();
+    }
+
+    public boolean usesOpenaiApi() {
+        return WRITER_OPENAI_API.equals(writer);
     }
 
     /**

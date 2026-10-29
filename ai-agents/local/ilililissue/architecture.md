@@ -56,6 +56,7 @@
 - 실행: `NewsDraftScheduler`(매일 07:00, `news-draft.enabled=true`일 때) 또는 `POST /api/admin/news-drafts`(백그라운드 `applicationTaskExecutor`). 서버 한 대 전제로 메모리 플래그로 중복 실행을 막고, 마지막 결과도 메모리에만 둔다(재시작하면 사라짐).
 - 신뢰 경계: AI 응답의 출처 URL은 수집한 기사 URL과 일치할 때만 쓰고, 언론사·발행일은 피드 값을 쓴다. 카테고리 id가 없거나 이슈 검증(제목 100자 등)에 실패한 초안은 건너뛴다. 기사 텍스트는 프롬프트에서 데이터로만 취급하도록 지시한다.
 - 비용: 기사 최대 200건(약 수만 토큰) 입력, 하루 1회 기준.
+- 로컬 테스트용 Codex CLI(`news-draft.writer=codex-cli`, `CodexCliIssueDraftWriter`): `codex exec --skip-git-repo-check --ephemeral --sandbox read-only -C <빈 임시 폴더> --output-schema <스키마> -o <결과 파일> -`(프롬프트는 표준 입력 UTF-8, Windows는 `cmd.exe /c`). ChatGPT 로그인을 쓰므로 키가 없고 요금제 한도를 쓴다. 타임아웃 10분, 실행 후 임시 폴더 삭제. 운영 자동 실행에는 쓰지 않는다
 - 초안 작성 모델 변경(2026-10-29): 처음엔 Claude(Anthropic Java SDK)였으나 사용자 요청으로 OpenAI API 키 방식으로 바꿨다. Codex CLI(ChatGPT 로그인)를 서버에서 호출하는 방식은 운영 서버 자동 실행에 맞지 않아 쓰지 않는다.
 - 수집원 변경(2026-10-29): 처음엔 네이버 검색 API(뉴스)를 썼으나, 2026-07-30부터 개발자센터 신규 신청이 막히고(NAVER API HUB로 이관) 2026-09-07 시행 약관이 검색 결과를 AI에 입력하는 것을 금지해 언론사 RSS로 바꿨다.
 - 법적 확인 필요: 신문사들이 공동으로 게시한 「디지털 뉴스콘텐츠 이용규칙」은 RSS를 개인 열람용으로 보고, 무단 재배포·봇 대량 수집·영리 목적 링크 모음을 문제 삼는다. 이 서비스는 기사 본문을 저장·게시하지 않고 자체 작성 설명과 원문 링크만 쓰지만, 운영 전에 언론사별 조건을 확인하거나 이용 허락을 받는다.
@@ -92,7 +93,7 @@
 
 ## 비밀값 이름
 
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS`, 선택: `NEWS_DRAFT_ENABLED`, `NEWS_DRAFT_MODEL`, `OPENAI_API_KEY` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS`, 선택: `NEWS_DRAFT_ENABLED`, `NEWS_DRAFT_MODEL`, `OPENAI_API_KEY`, `NEWS_DRAFT_WRITER`(`openai-api`|`codex-cli`), `NEWS_DRAFT_CODEX_COMMAND`, `NEWS_DRAFT_CODEX_MODEL` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
 
 ## 변경 가능성
 

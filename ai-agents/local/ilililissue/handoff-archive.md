@@ -100,3 +100,17 @@
 - 주의 사항:
   - 처리방침(`web/src/app/privacy/page.tsx`)은 실제 수집 항목·쿠키·보관 기간을 그대로 적었다. 수집 항목이나 보관 기간을 바꾸면 함께 고친다
   - 로컬 `ilililissue` DB는 V2까지 적용된 상태다
+
+### 2026-10-28 (7) — 이용약관 동의, 이용 기록 보관, 브라우저 확인
+
+- 목표: 앱 제출 전 남은 항목 이어서 진행(사용자: "이어서 진행해줘")
+- 변경:
+  - 이용약관 초안 `/terms`, 가입 시 필수 동의(`agreedToTerms`, 서버 검증 400), 동의 시각 `member.terms_agreed_at`(Flyway V3)
+  - 이용 기록 보관 1년(가안): `metrics.event-retention`, `EventRetentionScheduler` 매일 04:00 삭제, `@EnableScheduling`
+  - 처리방침에 동의 시각·보관 기간 반영, 결과 막대의 좁은 칸 줄바꿈 수정
+- 검증: `./gradlew test` 74개 통과, 웹 lint·build 통과, MySQL V3 적용 후 스모크 50개 통과. Chrome(playwright-core, 스크래치패드 설치)으로 데스크톱 1280px·모바일 390px에서 가입(약관 미동의 차단)·투표·의견 탭·차단·내 정보 해제·약관/처리방침 페이지 18개 항목 확인, 가로 스크롤·페이지 오류 없음
+- 남은 작업: 약관·처리방침 대괄호 항목 기입과 법률 검토, 보관 기간 확정, 회원 이용 제한(정지) 기능 여부, 실제 배포, PR(사용자 보류)
+- 주의 사항:
+  - 기존 회원(동의 절차 이전 가입)은 `terms_agreed_at`이 null이다. 운영 데이터가 없으므로 별도 재동의 절차는 만들지 않았다
+  - 검증 오류 메시지는 `필드: 메시지` 형식이다(`GlobalExceptionHandler`). 앱이 그대로 보여주면 필드명이 보인다
+  - `.gitignore`의 `db/` 규칙이 `src/main/resources/db/migration`까지 무시해 V1·V2가 커밋되지 않았었다. `/db/`로 고치고 V1~V3을 커밋했다(`b8cad2b`). 새 파일이 `git status`에 안 보이면 `git check-ignore -v <경로>`로 확인한다

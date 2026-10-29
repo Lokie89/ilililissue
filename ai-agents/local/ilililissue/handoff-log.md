@@ -18,6 +18,19 @@
 
 ## 현재 기록
 
+### 2026-10-29 (5) — Codex CLI로 실제 초안 생성
+
+- 목표: "지금은 테스트니까 그냥 해보자" — API 키 없이 이 PC의 Codex(ChatGPT 로그인)로 실제 초안 만들기
+- 변경:
+  - `CodexCliIssueDraftWriter`(`news-draft.writer=codex-cli`), 프롬프트·스키마를 `IssueDraftPrompt`로 분리해 OpenAI API 방식과 공유. 기본값은 `openai-api`
+  - 설정 `writer`, `codex-command`, `codex-model`. 로컬 `.env`에 `NEWS_DRAFT_WRITER=codex-cli`
+  - 로컬 DB 카테고리 이름이 깨져 있던 것 수정(이전 세션에 `docker exec mysql`로 넣을 때 클라이언트 문자셋 미지정)
+- 검증: `./gradlew test` 88개 통과. MySQL `bootRun`에서 관리자 수동 실행 → 기사 200건으로 26초 만에 DRAFT 3건(#1 다문화가족 산후조리 지원 기준, #2 수능 스마트안경 부정행위 응시 제한, #3 수도권 신규 택지·개발제한구역) 생성, 출처는 수집 URL만
+- 남은 작업: 초안 3건 사실관계 검수(특히 #3은 후보지가 개발제한구역인지 원문 확인 필요, #1은 출처 2건이 한겨레), 배경 설명이 목표(300~600자)보다 짧음(약 280자) → 프롬프트 조정 검토, 운영용 OpenAI API 키, 언론사 RSS 이용 조건 확인
+- 주의 사항:
+  - `docker exec ... mysql`로 한글을 넣을 때는 `--default-character-set=utf8mb4`를 붙인다
+  - Codex CLI 방식은 서버 PC에 codex 설치·ChatGPT 로그인이 필요하고 요금제 한도를 쓴다. 운영 자동 실행에는 OpenAI API 키 방식을 쓴다
+
 ### 2026-10-29 (4) — 초안 작성 AI를 OpenAI API로 교체
 
 - 목표: "코덱스로 할래 코덱스키로 돌아가게해줘". 이 PC의 Codex는 ChatGPT 로그인(API 키 아님)이라 방식을 물었고, 사용자가 OpenAI API 키 방식을 골랐다
@@ -77,18 +90,4 @@
   - Claude 서버 측 거절 대체 모델(`fallbacks`)은 쓰지 않았다. 거절되면 그날 초안 0건으로 끝나고 마지막 실행 결과에 남는다
   - 실행 중 플래그와 마지막 결과는 메모리에만 있다. 서버를 여러 대로 늘리면 중복 실행 방지(DB 잠금 등)가 필요하다
   - 네이버 검색 API는 검색어가 필수라 분야 단어 10개로 넓게 모은다. 주제가 치우치면 `NEWS_DRAFT_KEYWORDS`를 조정한다
-
-### 2026-10-28 (7) — 이용약관 동의, 이용 기록 보관, 브라우저 확인
-
-- 목표: 앱 제출 전 남은 항목 이어서 진행(사용자: "이어서 진행해줘")
-- 변경:
-  - 이용약관 초안 `/terms`, 가입 시 필수 동의(`agreedToTerms`, 서버 검증 400), 동의 시각 `member.terms_agreed_at`(Flyway V3)
-  - 이용 기록 보관 1년(가안): `metrics.event-retention`, `EventRetentionScheduler` 매일 04:00 삭제, `@EnableScheduling`
-  - 처리방침에 동의 시각·보관 기간 반영, 결과 막대의 좁은 칸 줄바꿈 수정
-- 검증: `./gradlew test` 74개 통과, 웹 lint·build 통과, MySQL V3 적용 후 스모크 50개 통과. Chrome(playwright-core, 스크래치패드 설치)으로 데스크톱 1280px·모바일 390px에서 가입(약관 미동의 차단)·투표·의견 탭·차단·내 정보 해제·약관/처리방침 페이지 18개 항목 확인, 가로 스크롤·페이지 오류 없음
-- 남은 작업: 약관·처리방침 대괄호 항목 기입과 법률 검토, 보관 기간 확정, 회원 이용 제한(정지) 기능 여부, 실제 배포, PR(사용자 보류)
-- 주의 사항:
-  - 기존 회원(동의 절차 이전 가입)은 `terms_agreed_at`이 null이다. 운영 데이터가 없으므로 별도 재동의 절차는 만들지 않았다
-  - 검증 오류 메시지는 `필드: 메시지` 형식이다(`GlobalExceptionHandler`). 앱이 그대로 보여주면 필드명이 보인다
-  - `.gitignore`의 `db/` 규칙이 `src/main/resources/db/migration`까지 무시해 V1·V2가 커밋되지 않았었다. `/db/`로 고치고 V1~V3을 커밋했다(`b8cad2b`). 새 파일이 `git status`에 안 보이면 `git check-ignore -v <경로>`로 확인한다
 

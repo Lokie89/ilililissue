@@ -38,6 +38,10 @@ news-draft:
   articles-per-feed: 40
   max-articles: 200
   max-drafts: 3
+  # 초안 작성 방식: openai-api(기본, OPENAI_API_KEY 필요) 또는 codex-cli(로컬 테스트, 이 PC의 codex ChatGPT 로그인 사용)
+  writer: ${NEWS_DRAFT_WRITER:openai-api}
+  codex-command: ${NEWS_DRAFT_CODEX_COMMAND:codex}
+  codex-model: ${NEWS_DRAFT_CODEX_MODEL:}
   openai-api-key: ${OPENAI_API_KEY:}
   # gpt-6-astra(최상위, 5배 비싸다)로 바꿀 수 있다
   model: ${NEWS_DRAFT_MODEL:gpt-6.1-sol}

@@ -67,7 +67,7 @@ class NewsDraftServiceTest {
     }
 
     private static NewsDraftProperties properties(Feed... feeds) {
-        return new NewsDraftProperties(true, List.of(feeds), 40, 200, 3, "key", null);
+        return new NewsDraftProperties(true, List.of(feeds), 40, 200, 3, "key", null, null, null, null);
     }
 
     private static NewsArticle article(String publisher, String url, OffsetDateTime publishedAt) {
@@ -135,13 +135,27 @@ class NewsDraftServiceTest {
     @DisplayName("API 키가 없으면 피드를 읽지 않고 설정 오류로 끝나며, 마지막 실행 결과에 사유를 남긴다")
     @Test
     void requiresKey() {
-        NewsDraftService service = service(new NewsDraftProperties(false, List.of(YNA), 0, 0, 0, "", null));
+        NewsDraftService service = service(new NewsDraftProperties(false, List.of(YNA), 0, 0, 0, "", null, null, null, null));
 
         Assertions.assertThatThrownBy(service::generate).isInstanceOf(NewsDraftException.class);
 
         verify(newsFeedPort, never()).fetch(any());
         Assertions.assertThat(service.isRunning()).isFalse();
         Assertions.assertThat(service.lastRun()).get().extracting(NewsDraftRun::error).asString().contains("OPENAI_API_KEY");
+    }
+
+    @DisplayName("Codex CLI 방식은 OpenAI API 키 없이 실행한다")
+    @Test
+    void codexCliNeedsNoKey() {
+        givenCategoryAndNoIssues();
+        when(newsFeedPort.fetch(YNA)).thenReturn(List.of(article("연합뉴스", "https://yna.example.com/a", NOW.minusHours(1))));
+        when(issueDraftWriterPort.write(anyList(), anyList(), anyList(), anyInt())).thenReturn(List.of());
+
+        NewsDraftRun run = service(new NewsDraftProperties(false, List.of(YNA), 0, 0, 0, "", null,
+                NewsDraftProperties.WRITER_CODEX_CLI, null, null)).generate();
+
+        Assertions.assertThat(run.error()).isNull();
+        Assertions.assertThat(run.articleCount()).isEqualTo(1);
     }
 
     @DisplayName("피드를 하나도 읽지 못하면 초안을 만들지 않고 오류로 끝난다")

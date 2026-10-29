@@ -124,7 +124,7 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
     }
 
     private void requireConfigured() {
-        if (!properties.hasOpenaiKey()) {
+        if (properties.usesOpenaiApi() && !properties.hasOpenaiKey()) {
             throw NewsDraftException.notConfigured("OpenAI API 키(OPENAI_API_KEY)가 설정되지 않았습니다.");
         }
         if (properties.feeds().isEmpty()) {
