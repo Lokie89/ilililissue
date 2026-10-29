@@ -15,7 +15,7 @@ class RssFeedParserTest {
     private static final ZoneOffset KST = ZoneOffset.ofHours(9);
 
     private static List<NewsArticle> parse(String xml) {
-        return RssFeedParser.parse(xml.getBytes(StandardCharsets.UTF_8), "예시일보");
+        return RssFeedParser.parse(xml.getBytes(StandardCharsets.UTF_8), "예시일보", "사회");
     }
 
     @DisplayName("RSS 2.0: CDATA·HTML을 걷어내고, 요약문은 앞부분만 쓰며, 여러 날짜 형식과 utm 파라미터를 처리한다")
@@ -53,7 +53,7 @@ class RssFeedParserTest {
         OffsetDateTime expected = OffsetDateTime.of(2026, 10, 28, 9, 30, 0, 0, KST);
         Assertions.assertThat(articles).hasSize(3);
         Assertions.assertThat(articles.get(0)).isEqualTo(new NewsArticle(
-                "예시일보", "주 4일제 \"도입\" 논의", "https://press.example.com/a/1?id=7", "정부가 & 노동계가 논의", expected));
+                "예시일보", "사회", "주 4일제 \"도입\" 논의", "https://press.example.com/a/1?id=7", "정부가 & 노동계가 논의", expected));
         Assertions.assertThat(articles.get(1).publishedAt()).isEqualTo(expected);
         Assertions.assertThat(articles.get(1).description()).hasSize(RssFeedParser.DESCRIPTION_MAX_LENGTH + 1).endsWith("…");
         Assertions.assertThat(articles.get(2).url()).isEqualTo("https://press.example.com/a/3");

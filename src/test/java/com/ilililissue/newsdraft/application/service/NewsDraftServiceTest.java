@@ -47,8 +47,8 @@ class NewsDraftServiceTest {
     // 2026-10-29 07:00 KST
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-10-28T22:00:00Z"), ZoneId.of("Asia/Seoul"));
     private static final OffsetDateTime NOW = OffsetDateTime.now(CLOCK);
-    private static final Feed YNA = new Feed("연합뉴스", "https://yna.example.com/rss");
-    private static final Feed HANI = new Feed("한겨레", "https://hani.example.com/rss");
+    private static final Feed YNA = new Feed("연합뉴스", "사회", "https://yna.example.com/rss");
+    private static final Feed HANI = new Feed("한겨레", "사회", "https://hani.example.com/rss");
 
     @Mock
     NewsFeedPort newsFeedPort;
@@ -71,7 +71,7 @@ class NewsDraftServiceTest {
     }
 
     private static NewsArticle article(String publisher, String url, OffsetDateTime publishedAt) {
-        return new NewsArticle(publisher, "제목", url, "요약문", publishedAt);
+        return new NewsArticle(publisher, "사회", "제목", url, "요약문", publishedAt);
     }
 
     private void givenCategoryAndNoIssues() {
@@ -101,7 +101,7 @@ class NewsDraftServiceTest {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<NewsArticle>> articles = ArgumentCaptor.forClass(List.class);
         verify(issueDraftWriterPort).write(articles.capture(), anyList(), anyList(), eq(3));
-        Assertions.assertThat(articles.getValue()).containsExactly(fresh, other);
+        Assertions.assertThat(articles.getValue()).containsExactly(other, fresh);
 
         ArgumentCaptor<IssueCommand> command = ArgumentCaptor.forClass(IssueCommand.class);
         verify(manageIssueUseCase).create(command.capture());
@@ -113,6 +113,16 @@ class NewsDraftServiceTest {
         Assertions.assertThat(run.articleCount()).isEqualTo(2);
         Assertions.assertThat(run.createdIssueIds()).containsExactly(10L);
         Assertions.assertThat(run.error()).isNull();
+    }
+
+    @DisplayName("상한을 넘으면 최신순으로 자르지 않고 처음부터 끝까지 고르게 뽑는다")
+    @Test
+    void evenlySpaced() {
+        List<Integer> hours = java.util.stream.IntStream.range(0, 24).boxed().toList();
+
+        Assertions.assertThat(NewsDraftService.evenlySpaced(hours, 4)).containsExactly(0, 8, 15, 23);
+        Assertions.assertThat(NewsDraftService.evenlySpaced(hours, 30)).isEqualTo(hours);
+        Assertions.assertThat(NewsDraftService.evenlySpaced(hours, 1)).containsExactly(23);
     }
 
     @DisplayName("없는 카테고리, 수집하지 않은 출처, 검증에 실패한 초안은 건너뛴다")

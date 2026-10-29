@@ -130,3 +130,17 @@
   - Claude 서버 측 거절 대체 모델(`fallbacks`)은 쓰지 않았다. 거절되면 그날 초안 0건으로 끝나고 마지막 실행 결과에 남는다
   - 실행 중 플래그와 마지막 결과는 메모리에만 있다. 서버를 여러 대로 늘리면 중복 실행 방지(DB 잠금 등)가 필요하다
   - 네이버 검색 API는 검색어가 필수라 분야 단어 10개로 넓게 모은다. 주제가 치우치면 `NEWS_DRAFT_KEYWORDS`를 조정한다
+
+### 2026-10-29 (2) — 웹 디자인 정리
+
+- 목표: 웹 화면 디자인 손보기(사용자: "디자인 손좀봐줘")
+- 변경:
+  - 디자인 토큰(`web/src/app/globals.css` `@theme`): 바탕 `canvas`, 글자 `ink`/`muted`/`subtle`, 선 `line`, 입장 색 `stance-agree`·`stance-neutral`·`stance-disagree`(+`-soft`). 공통 클래스 `card`, `btn`(`btn-primary`·`btn-secondary`·`btn-ghost`·`btn-danger`·`btn-sm`), `field`, `chip`, `eyebrow`, `link`, `notice`, `error-text`
+  - 글꼴 Pretendard(npm `pretendard`, 동적 서브셋), 세 입장 점 로고(`components/logo.tsx`), 날짜 표시 `lib/format.ts`(서울 기준 "10월 28일"), 입장 색 `lib/stance.ts`
+  - 홈: 최신 이슈 강조 카드 + 지난 이슈 목록. 상세: 배경·원문 카드, 입장 선택 카드형 버튼, 결과 막대 + 입장별 수치 카드, 입장 색 탭과 의견 카드. 로그인·가입·내 정보·관리 화면을 같은 컴포넌트로 통일. 관리 화면 모바일 가로 스크롤(출처 입력 4열, 이슈 표) 해결
+  - 동작·문구는 그대로(추천 용어 유지), 스타일만 변경
+- 검증: 웹 lint·build 통과. Chrome(playwright-core) 1280px·390px로 홈·상세(비로그인·투표 전·투표 후)·로그인·가입·내 정보·관리 캡처 확인, 가로 스크롤 0, 페이지 오류 0
+- 남은 작업: 이전과 같음(키 발급 후 뉴스 초안 실제 실행, 약관·처리방침 기입, 보관 기간, 회원 정지, 배포, PR)
+- 주의 사항:
+  - `globals.css`에 `@import "tailwindcss"` 뒤로 다른 `@import`를 넣으면 이후 `@theme`·`@layer components`가 통째로 빠졌다(Next 16 Turbopack, 오류 없음). 외부 CSS는 `layout.tsx`에서 JS로 import한다
+  - 새 화면은 `stone-*` 같은 원색 클래스 대신 토큰 클래스를 쓴다. 입장 색은 `STANCE_STYLE`로만 쓴다

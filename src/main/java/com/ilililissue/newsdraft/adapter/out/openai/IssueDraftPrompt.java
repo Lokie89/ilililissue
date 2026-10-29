@@ -24,7 +24,10 @@ final class IssueDraftPrompt {
             주어진 최근 기사 목록에서 오늘 다룰 이슈 후보를 고르고, 각 후보의 초안을 씁니다. 초안은 관리자가 검수한 뒤 게시합니다.
 
             고르는 기준:
-            - 여러 언론사가 다룬 주제, 일반 시민이 찬성·반대 이유를 각자 말할 수 있는 정책·제도·사회적 쟁점을 우선합니다.
+            - 관심도: 기사 목록에는 조회수가 없으므로 같은 주제를 다룬 언론사 수(보도량)로 관심도를 판단합니다.
+              여러 언론사(가능하면 3곳 이상)가 함께 다룬 주제를 우선하고, 한 곳만 다룬 주제는 다른 후보가 없을 때만 고릅니다.
+            - 일반 시민이 찬성·반대 이유를 각자 말할 수 있는 정책·제도·사회적 쟁점을 우선합니다.
+            - 후보가 여럿이면 정치·경제·사회·국제 중 한 분야로 몰리지 않게 고릅니다.
             - 단순 사건·사고, 인물 동정, 연예, 스포츠 결과, 주가 등락처럼 입장이 갈리지 않는 기사는 고르지 않습니다.
             - 특정 개인을 비난하거나 사생활을 다루는 주제, 수사·재판 중인 개인의 유무죄를 묻는 주제는 고르지 않습니다.
             - 최근 이슈 목록과 같은 주제는 고르지 않습니다. 후보끼리도 주제가 겹치지 않게 합니다.
@@ -76,6 +79,7 @@ final class IssueDraftPrompt {
                 .collect(Collectors.joining("\n"));
         String articleLines = articles.stream()
                 .map(article -> "<article>\npublisher: " + article.publisher()
+                        + (article.section() == null ? "" : "\nsection: " + article.section())
                         + "\nurl: " + article.url()
                         + "\npublished: " + article.publishedAt().atZoneSameInstant(SEOUL).format(PUBLISHED_FORMAT)
                         + "\ntitle: " + article.title()

@@ -35,7 +35,9 @@ import java.util.stream.Collectors;
 /**
  * <h2>뉴스 자동 초안</h2>
  * <ul>
- * <li>언론사 RSS 피드에서 지난 24시간에 나온 기사를 모아 URL 기준으로 중복을 없앤다.</li>
+ * <li>언론사 면별 RSS 피드에서 지난 24시간에 나온 기사를 모아 URL 기준으로 중복을 없앤다.
+ * 피드마다 상한을 넘으면 최신순으로 자르지 않고 24시간에 고르게 뽑아, 밤사이 기사나 기사가 많은 언론사로 쏠리지 않게 한다.</li>
+ * <li>RSS에는 조회수가 없어 '인기'는 보도량(같은 주제를 다룬 언론사 수)으로 판단하도록 AI에 맡긴다.</li>
  * <li>AI가 고른 초안 중 카테고리가 있고 출처가 수집한 기사 URL인 것만 DRAFT 이슈로 등록한다. 언론사·발행일은 피드 값을 쓴다.</li>
  * <li>기사 제목·요약문은 저장하지 않는다. 게시는 관리자 검수 후에만 한다.</li>
  * <li>외부 호출이 길어 전체를 한 트랜잭션으로 묶지 않고, 초안마다 따로 등록한다. 서버 한 대 전제로 메모리에서 중복 실행을 막는다.</li>
@@ -138,9 +140,11 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
         int failedFeeds = 0;
         for (Feed feed : properties.feeds()) {
             try {
-                newsFeedPort.fetch(feed).stream()
+                List<NewsArticle> recent = newsFeedPort.fetch(feed).stream()
                         .filter(article -> article.publishedAt() != null && article.publishedAt().isAfter(since))
-                        .limit(properties.articlesPerFeed())
+                        .sorted(Comparator.comparing(NewsArticle::publishedAt))
+                        .toList();
+                evenlySpaced(recent, properties.articlesPerFeed())
                         .forEach(article -> byUrl.putIfAbsent(article.url(), article));
             } catch (RuntimeException e) {
                 failedFeeds++;
@@ -150,10 +154,27 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
         if (failedFeeds == properties.feeds().size()) {
             throw NewsDraftException.externalFailure("언론사 피드를 하나도 읽지 못했습니다. 네트워크와 피드 주소를 확인하세요.");
         }
-        return byUrl.values().stream()
-                .sorted(Comparator.comparing(NewsArticle::publishedAt).reversed())
-                .limit(properties.maxArticles())
+        List<NewsArticle> collected = byUrl.values().stream()
+                .sorted(Comparator.comparing(NewsArticle::publishedAt))
                 .toList();
+        return evenlySpaced(collected, properties.maxArticles());
+    }
+
+    /**
+     * 시간순 목록에서 최대 limit개를 같은 간격으로 고른다(처음과 끝 포함).
+     */
+    static <T> List<T> evenlySpaced(List<T> items, int limit) {
+        if (items.size() <= limit) {
+            return items;
+        }
+        if (limit <= 1) {
+            return items.subList(items.size() - 1, items.size());
+        }
+        List<T> picked = new ArrayList<>(limit);
+        for (int i = 0; i < limit; i++) {
+            picked.add(items.get((int) Math.round((double) i * (items.size() - 1) / (limit - 1))));
+        }
+        return picked;
     }
 
     private Optional<Long> register(IssueDraft draft, Map<String, NewsArticle> articlesByUrl, Set<Long> categoryIds) {

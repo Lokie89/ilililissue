@@ -45,6 +45,6 @@ public class RssNewsFeedAdapter implements NewsFeedPort {
         if (body == null || body.length == 0) {
             return List.of();
         }
-        return RssFeedParser.parse(body, feed.publisher());
+        return RssFeedParser.parse(body, feed.publisher(), feed.section());
     }
 }

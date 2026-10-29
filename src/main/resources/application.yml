@@ -22,21 +22,46 @@ metrics:
 
 # 뉴스 자동 초안: 매일 07:00 언론사 RSS 수집 → OpenAI가 이슈 초안 작성 → DRAFT로 등록(게시는 관리자가 검수 후).
 # 키가 없으면 관리자 수동 실행은 설정 오류로 응답한다.
-# 피드 목록은 2026-10-29에 응답을 확인했다. 운영 전에 언론사별 RSS 이용 조건(상업적 이용, AI 입력)을 확인하거나 허락을 받는다.
+# 언론사 8곳 × 정치·경제·사회·국제 면 피드. 2026-10-29에 응답을 확인했다. 운영 전에 언론사별 RSS 이용 조건(상업적 이용, AI 입력)을 확인하거나 허락을 받는다.
 # 매일경제는 봇 차단(Cloudflare)이라 넣지 않았다. 차단을 우회하지 않는다.
 news-draft:
   enabled: ${NEWS_DRAFT_ENABLED:false}
   feeds:
-    - { publisher: 연합뉴스, url: "https://www.yna.co.kr/rss/news.xml" }
-    - { publisher: 한겨레, url: "https://www.hani.co.kr/rss" }
-    - { publisher: 경향신문, url: "https://www.khan.co.kr/rss/rssdata/total_news.xml" }
-    - { publisher: 동아일보, url: "https://rss.donga.com/total.xml" }
-    - { publisher: 조선일보, url: "https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml" }
-    - { publisher: SBS, url: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=01&plink=RSSREADER" }
-    - { publisher: 한국경제, url: "https://www.hankyung.com/feed/all-news" }
-    - { publisher: 뉴시스, url: "https://www.newsis.com/RSS/sokbo.xml" }
-  articles-per-feed: 40
-  max-articles: 200
+    - { publisher: 연합뉴스, section: 정치, url: "https://www.yna.co.kr/rss/politics.xml" }
+    - { publisher: 연합뉴스, section: 경제, url: "https://www.yna.co.kr/rss/economy.xml" }
+    - { publisher: 연합뉴스, section: 사회, url: "https://www.yna.co.kr/rss/society.xml" }
+    - { publisher: 연합뉴스, section: 국제, url: "https://www.yna.co.kr/rss/international.xml" }
+    - { publisher: 한겨레, section: 정치, url: "https://www.hani.co.kr/rss/politics" }
+    - { publisher: 한겨레, section: 경제, url: "https://www.hani.co.kr/rss/economy" }
+    - { publisher: 한겨레, section: 사회, url: "https://www.hani.co.kr/rss/society" }
+    - { publisher: 한겨레, section: 국제, url: "https://www.hani.co.kr/rss/international" }
+    - { publisher: 경향신문, section: 정치, url: "https://www.khan.co.kr/rss/rssdata/politic_news.xml" }
+    - { publisher: 경향신문, section: 경제, url: "https://www.khan.co.kr/rss/rssdata/economy_news.xml" }
+    - { publisher: 경향신문, section: 사회, url: "https://www.khan.co.kr/rss/rssdata/society_news.xml" }
+    - { publisher: 경향신문, section: 국제, url: "https://www.khan.co.kr/rss/rssdata/kh_world.xml" }
+    - { publisher: 동아일보, section: 정치, url: "https://rss.donga.com/politics.xml" }
+    - { publisher: 동아일보, section: 경제, url: "https://rss.donga.com/economy.xml" }
+    - { publisher: 동아일보, section: 사회, url: "https://rss.donga.com/national.xml" }
+    - { publisher: 동아일보, section: 국제, url: "https://rss.donga.com/international.xml" }
+    - { publisher: 조선일보, section: 정치, url: "https://www.chosun.com/arc/outboundfeeds/rss/category/politics/?outputType=xml" }
+    - { publisher: 조선일보, section: 경제, url: "https://www.chosun.com/arc/outboundfeeds/rss/category/economy/?outputType=xml" }
+    - { publisher: 조선일보, section: 사회, url: "https://www.chosun.com/arc/outboundfeeds/rss/category/national/?outputType=xml" }
+    - { publisher: 조선일보, section: 국제, url: "https://www.chosun.com/arc/outboundfeeds/rss/category/international/?outputType=xml" }
+    - { publisher: SBS, section: 정치, url: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=01&plink=RSSREADER" }
+    - { publisher: SBS, section: 경제, url: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=02&plink=RSSREADER" }
+    - { publisher: SBS, section: 사회, url: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=03&plink=RSSREADER" }
+    - { publisher: SBS, section: 국제, url: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=07&plink=RSSREADER" }
+    - { publisher: 한국경제, section: 정치, url: "https://www.hankyung.com/feed/politics" }
+    - { publisher: 한국경제, section: 경제, url: "https://www.hankyung.com/feed/economy" }
+    - { publisher: 한국경제, section: 사회, url: "https://www.hankyung.com/feed/society" }
+    - { publisher: 한국경제, section: 국제, url: "https://www.hankyung.com/feed/international" }
+    - { publisher: 뉴시스, section: 정치, url: "https://www.newsis.com/RSS/politics.xml" }
+    - { publisher: 뉴시스, section: 경제, url: "https://www.newsis.com/RSS/economy.xml" }
+    - { publisher: 뉴시스, section: 사회, url: "https://www.newsis.com/RSS/society.xml" }
+    - { publisher: 뉴시스, section: 국제, url: "https://www.newsis.com/RSS/international.xml" }
+  # 피드마다 최대 12건을 24시간에 고르게 뽑는다(32개 피드, 최대 384건)
+  articles-per-feed: 12
+  max-articles: 400
   max-drafts: 3
   # 초안 작성 방식: openai-api(기본, OPENAI_API_KEY 필요) 또는 codex-cli(로컬 테스트, 이 PC의 codex ChatGPT 로그인 사용)
   writer: ${NEWS_DRAFT_WRITER:openai-api}

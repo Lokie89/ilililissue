@@ -41,7 +41,7 @@ final class RssFeedParser {
     private RssFeedParser() {
     }
 
-    static List<NewsArticle> parse(byte[] xml, String publisher) {
+    static List<NewsArticle> parse(byte[] xml, String publisher, String section) {
         Document document = read(xml);
         OffsetDateTime feedDate = parseDate(firstText(document.getDocumentElement(), "lastBuildDate", "updated", "date"));
 
@@ -60,7 +60,7 @@ final class RssFeedParser {
             if (description.length() > DESCRIPTION_MAX_LENGTH) {
                 description = description.substring(0, DESCRIPTION_MAX_LENGTH) + "…";
             }
-            articles.add(new NewsArticle(publisher, title, url, description, publishedAt));
+            articles.add(new NewsArticle(publisher, section, title, url, description, publishedAt));
         }
         return articles;
     }
