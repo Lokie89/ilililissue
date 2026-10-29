@@ -2,6 +2,7 @@ package com.ilililissue.issue.domain;
 
 import com.ilililissue.issue.domain.entity.Issue;
 import com.ilililissue.issue.domain.vo.CategoryId;
+import com.ilililissue.issue.domain.vo.IssueFocus;
 import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.issue.domain.vo.IssueSource;
 import com.ilililissue.issue.domain.vo.IssueSources;
@@ -27,6 +28,6 @@ public class IssueFixture {
 
     public static Issue withStatus(long id, IssueStatus status) {
         return Issue.withId(new IssueId(id), IssueTitle.from("주 4일제를 도입해야 할까?"), IssueSummary.from("배경 설명"),
-                new CategoryId(1), sources(), status, status == IssueStatus.DRAFT ? null : NOW, null, null, null);
+                new CategoryId(1), sources(), IssueFocus.empty(), status, status == IssueStatus.DRAFT ? null : NOW, null, null, null);
     }
 }

@@ -49,6 +49,15 @@ public class IssueJpaEntity {
     @OrderColumn(name = "position")
     private List<IssueSourceEmbeddable> sources = new ArrayList<>();
 
+    @Column(length = 100)
+    private String keyPoint;
+
+    @Column(length = 300)
+    private String agreeReason;
+
+    @Column(length = 300)
+    private String disagreeReason;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private IssueStatus status;

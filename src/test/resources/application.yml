@@ -19,3 +19,7 @@ auth:
 # 테스트가 만드는 이슈 이미지는 build 아래에 둔다.
 issue:
   image-dir: build/test-issue-images
+
+# 로컬 .env의 NEWS_DRAFT_WRITER(codex-cli)가 테스트에 섞여 실제 Codex를 부르지 않도록 고정한다.
+news-draft:
+  writer: openai-api

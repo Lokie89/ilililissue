@@ -50,6 +50,31 @@ public class IssueApiTest extends ApiTestSupport {
                 .andExpect(jsonPath("$[*].id", hasItem((int) categoryId)));
     }
 
+    @DisplayName("핵심 쟁점과 입장별 근거를 함께 저장하고, 한쪽 근거만 있으면 거절한다")
+    @Test
+    void focus() throws Exception {
+        Cookie admin = loginAsNewAdmin();
+        long categoryId = createCategory(admin);
+        String body = """
+                {"title": "주 4일제를 도입해야 할까?", "summary": "사실관계", "categoryId": %d,
+                 "sources": [{"url": "https://news.example.com/f/1", "publisher": "예시일보", "publishedOn": "2026-10-27"}],
+                 "keyPoint": "생산성과 휴식 중 무엇을 앞세울까", "agreeReason": "휴식이 늘면 생산성도 오른다", "disagreeReason": "%s"}
+                """;
+
+        long issueId = readLong(mockMvc.perform(post("/api/admin/issues").cookie(admin)
+                        .contentType(MediaType.APPLICATION_JSON).content(body.formatted(categoryId, "업종별 여건이 다르다")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.keyPoint").value("생산성과 휴식 중 무엇을 앞세울까"))
+                .andExpect(jsonPath("$.disagreeReason").value("업종별 여건이 다르다"))
+                .andReturn(), "$.id");
+        mockMvc.perform(get("/api/admin/issues/{id}", issueId).cookie(admin))
+                .andExpect(jsonPath("$.agreeReason").value("휴식이 늘면 생산성도 오른다"));
+
+        mockMvc.perform(post("/api/admin/issues").cookie(admin)
+                        .contentType(MediaType.APPLICATION_JSON).content(body.formatted(categoryId, "")))
+                .andExpect(status().isBadRequest());
+    }
+
     @DisplayName("분야(카테고리)로 공개 이슈 목록을 거른다")
     @Test
     void filterByCategory() throws Exception {

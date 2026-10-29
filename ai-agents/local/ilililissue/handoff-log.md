@@ -18,6 +18,21 @@
 
 ## 현재 기록
 
+### 2026-10-29 (11) — 핵심 쟁점·입장별 근거로 내용 강조
+
+- 목표: "내용에서 강조할만한거 좀 표현 잘해줘볼래?" 사용자 선택: 핵심 쟁점 + 입장별 근거
+- 변경:
+  - 도메인 `IssueFocus`(keyPoint 100자, agreeReason·disagreeReason 각 300자, 근거는 둘 다 있거나 둘 다 없음), Flyway `V6__issue_focus.sql`(H2 호환 위해 ALTER 3문장), 작성·수정 요청과 상세 응답에 필드 추가
+  - AI 초안 스키마·프롬프트: keyPoint, 사실관계만 담은 summary(150~350자), agreeReason, disagreeReason(각 150자, 길이·어조 맞춤)
+  - 웹 상세: 핵심 쟁점(진한 배너) → 배경 → "이렇게 생각해요" 찬성·반대 카드(입장 색) → 원문 기사 → 투표. 관리 화면 작성 폼에 입력칸 3개
+  - 로컬 게시 이슈 5건: 기존 배경 설명을 Codex로 쟁점·사실·근거로 나눠(새 사실 추가 금지) DB에 직접 반영(게시 후라 API로 수정 불가)
+  - 테스트 설정에 `news-draft.writer: openai-api` 고정
+- 검증: `./gradlew test` 108개 통과(IssueFocus 3개, 작성 API 1개 추가), 웹 lint·tsc 통과, Chrome 1280px·390px 상세 화면 확인(가로 스크롤 0, 오류 0)
+- 남은 작업: `npm run build` 확인, OpenAI API 방식 이미지, 이전 남은 작업
+- 주의 사항:
+  - 로컬 `.env`의 `NEWS_DRAFT_WRITER=codex-cli`가 Gradle 테스트로 새어 이미지 API 테스트가 실제 Codex 이미지 생성을 띄웠다(프로세스는 종료). 테스트 설정에서 writer를 고정했다
+  - `Get-CimInstance ... -match 'codex'`로 프로세스를 셀 때는 검사 명령 자신도 걸린다
+
 ### 2026-10-29 (10) — 이슈 대표 이미지(AI 일러스트)
 
 - 목표: "그림같은것도 넣어주면 안되나? 만들어서"
@@ -63,18 +78,4 @@
 - 검증: `./gradlew test` 94개 통과, 실제 피드 32개 파싱 확인. Codex CLI 실행 → 기사 376건, 36초, 초안 3건(#7 전작권 전환 시기[정치, 경향·동아·한겨레], #8 의무공개매수제[경제, 경향·SBS·한경], #9 민간 정보시설 보안점검 확대[사회, 동아·경향·한겨레])
 - 남은 작업: 초안 검수, 운영용 OpenAI API 키, 언론사 RSS 이용 조건 확인
 - 주의 사항: 동아 사회·국제 피드에 같은 기사가 겹쳐 나온다(URL 중복 제거로 처리)
-
-### 2026-10-29 (6) — 투표 자동 마감(06:59)과 연장, 관리자 계정
-
-- 목표: "마감도 수동 할수 있고 전날꺼 6시59분에 자동 마감", "연장하면 열리는데 또 다음날 6시 59분에 마감"
-- 변경:
-  - `IssueAutoCloseScheduler`(매일 06:59 Asia/Seoul) → `CloseExpiredIssuesUseCase.closePublishedBeforeToday()`: `coalesce(extended_at, published_at) < 오늘 0시`인 `PUBLISHED` 마감
-  - `Issue.extend(now)`(`PUBLISHED`·`CLOSED` → `PUBLISHED`, `extendedAt` 기록), `POST /api/admin/issues/{id}/extend`, 응답에 `extendedAt`, Flyway `V4__issue_extended_at.sql`
-  - 관리 화면: 게시 중 "연장", 마감 "다시 열기(연장)" 버튼, 연장 시각 표시
-  - 로컬 관리자 계정 `admin@local.test`(닉네임 관리자, `admin` 닉네임은 다른 회원이 사용 중) 생성
-- 검증: `./gradlew test` 93개 통과(도메인 연장 2개, 자동 마감·연장 통합 3개 추가), 웹 lint·tsc 통과, 로컬 MySQL V4 적용 확인
-- 남은 작업: 이전과 같음
-- 주의 사항:
-  - 스모크 테스트에서 #1이 이미 게시된 줄 모르고 연장 API를 호출해 `extended_at`이 기록됐고, 바로 NULL로 되돌렸다. 공유 DB에서 상태를 바꾸는 호출 전에는 현재 상태를 먼저 조회한다
-  - 06:59 마감과 07:00 초안 작성 모두 서버가 켜져 있어야 동작한다
 

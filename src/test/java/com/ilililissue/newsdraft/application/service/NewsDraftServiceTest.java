@@ -98,7 +98,7 @@ class NewsDraftServiceTest {
                         "https://yna.example.com/a",
                         "https://made-up.example.com/x",
                         "https://hani.example.com/b",
-                        "https://yna.example.com/a"))));
+                        "https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거")));
         when(manageIssueUseCase.create(any())).thenReturn(new IssueId(10));
 
         NewsDraftRun run = service(properties(YNA, HANI)).generate();
@@ -136,9 +136,9 @@ class NewsDraftServiceTest {
         givenCategoryAndNoIssues();
         when(newsFeedPort.fetch(YNA)).thenReturn(List.of(article("연합뉴스", "https://yna.example.com/a", NOW.minusHours(1))));
         when(issueDraftWriterPort.write(anyList(), anyList(), anyList(), anyInt())).thenReturn(List.of(
-                new IssueDraft("질문인가?", "배경", 99, List.of("https://yna.example.com/a")),
-                new IssueDraft("질문인가?", "배경", 1, List.of("https://made-up.example.com/x")),
-                new IssueDraft("질".repeat(101), "배경", 1, List.of("https://yna.example.com/a"))));
+                new IssueDraft("질문인가?", "배경", 99, List.of("https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거"),
+                new IssueDraft("질문인가?", "배경", 1, List.of("https://made-up.example.com/x"), "쟁점", "찬성 근거", "반대 근거"),
+                new IssueDraft("질".repeat(101), "배경", 1, List.of("https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거")));
 
         NewsDraftRun run = service(properties(YNA)).generate();
 
@@ -155,9 +155,9 @@ class NewsDraftServiceTest {
         when(issueQuery.getAllIssues(any(PageQuery.class))).thenReturn(new PageResult<>(List.of(), 0, 30, 0));
         when(newsFeedPort.fetch(YNA)).thenReturn(List.of(article("연합뉴스", "https://yna.example.com/a", NOW.minusHours(1))));
         when(issueDraftWriterPort.write(anyList(), anyList(), anyList(), anyInt())).thenReturn(List.of(
-                new IssueDraft("사회 질문1?", "배경", 1, List.of("https://yna.example.com/a")),
-                new IssueDraft("사회 질문2?", "배경", 1, List.of("https://yna.example.com/a")),
-                new IssueDraft("경제 질문?", "배경", 2, List.of("https://yna.example.com/a"))));
+                new IssueDraft("사회 질문1?", "배경", 1, List.of("https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거"),
+                new IssueDraft("사회 질문2?", "배경", 1, List.of("https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거"),
+                new IssueDraft("경제 질문?", "배경", 2, List.of("https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거")));
         when(manageIssueUseCase.create(any())).thenReturn(new IssueId(1), new IssueId(2));
 
         NewsDraftRun run = service(properties(YNA)).generate();
@@ -174,8 +174,8 @@ class NewsDraftServiceTest {
         when(issueQuery.getAllIssues(any(PageQuery.class))).thenReturn(new PageResult<>(List.of(), 0, 30, 0));
         when(newsFeedPort.fetch(YNA)).thenReturn(List.of(article("연합뉴스", "https://yna.example.com/a", NOW.minusHours(1))));
         when(issueDraftWriterPort.write(anyList(), anyList(), anyList(), anyInt())).thenReturn(List.of(
-                new IssueDraft("사회 질문?", "배경", 1, List.of("https://yna.example.com/a")),
-                new IssueDraft("경제 질문?", "배경", 2, List.of("https://yna.example.com/a"))));
+                new IssueDraft("사회 질문?", "배경", 1, List.of("https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거"),
+                new IssueDraft("경제 질문?", "배경", 2, List.of("https://yna.example.com/a"), "쟁점", "찬성 근거", "반대 근거")));
         when(manageIssueUseCase.create(any())).thenReturn(new IssueId(1), new IssueId(2));
         when(generateIssueImageUseCase.available()).thenReturn(true);
         when(generateIssueImageUseCase.generate(new IssueId(1))).thenReturn(true);

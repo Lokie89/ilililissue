@@ -224,7 +224,8 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
         }
         try {
             return Optional.of(manageIssueUseCase.create(
-                    IssueCommand.of(draft.title(), draft.summary(), draft.categoryId(), sources)).getValue());
+                    IssueCommand.of(draft.title(), draft.summary(), draft.categoryId(), sources,
+                            draft.keyPoint(), draft.agreeReason(), draft.disagreeReason())).getValue());
         } catch (RuntimeException e) {
             log.warn("뉴스 초안 제외: 등록 실패 - {} ({})", draft.title(), e.getMessage());
             return Optional.empty();

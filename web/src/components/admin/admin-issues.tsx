@@ -19,11 +19,22 @@ const EMPTY_SOURCE: IssueSource = { url: "", publisher: "", publishedOn: "" };
 type Draft = {
   title: string;
   summary: string;
+  keyPoint: string;
+  agreeReason: string;
+  disagreeReason: string;
   categoryId: number | "";
   sources: IssueSource[];
 };
 
-const EMPTY_DRAFT: Draft = { title: "", summary: "", categoryId: "", sources: [{ ...EMPTY_SOURCE }] };
+const EMPTY_DRAFT: Draft = {
+  title: "",
+  summary: "",
+  keyPoint: "",
+  agreeReason: "",
+  disagreeReason: "",
+  categoryId: "",
+  sources: [{ ...EMPTY_SOURCE }],
+};
 
 function fetchAll(): Promise<[Page<IssueSummary>, Category[]]> {
   return Promise.all([
@@ -71,6 +82,9 @@ export function AdminIssues() {
     setDraft({
       title: issue.title,
       summary: issue.summary,
+      keyPoint: issue.keyPoint ?? "",
+      agreeReason: issue.agreeReason ?? "",
+      disagreeReason: issue.disagreeReason ?? "",
       categoryId: issue.category?.id ?? "",
       sources: issue.sources.length ? issue.sources : [{ ...EMPTY_SOURCE }],
     });
@@ -156,9 +170,34 @@ export function AdminIssues() {
             onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
             maxLength={1000}
             rows={5}
-            placeholder="배경 설명과 사실관계 (1000자 이내)"
+            placeholder="배경: 사실관계만 (1000자 이내)"
             className="field"
           />
+          <input
+            value={draft.keyPoint}
+            onChange={(e) => setDraft({ ...draft, keyPoint: e.target.value })}
+            maxLength={100}
+            placeholder="핵심 쟁점 한 줄 (선택, 100자 이내)"
+            className="field"
+          />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <textarea
+              value={draft.agreeReason}
+              onChange={(e) => setDraft({ ...draft, agreeReason: e.target.value })}
+              maxLength={300}
+              rows={3}
+              placeholder="찬성 측 근거 (선택, 반대 측과 함께)"
+              className="field"
+            />
+            <textarea
+              value={draft.disagreeReason}
+              onChange={(e) => setDraft({ ...draft, disagreeReason: e.target.value })}
+              maxLength={300}
+              rows={3}
+              placeholder="반대·신중 측 근거 (선택, 찬성 측과 함께)"
+              className="field"
+            />
+          </div>
           <select
             value={draft.categoryId}
             onChange={(e) => setDraft({ ...draft, categoryId: e.target.value ? Number(e.target.value) : "" })}

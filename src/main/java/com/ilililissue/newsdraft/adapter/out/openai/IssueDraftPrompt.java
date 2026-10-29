@@ -36,8 +36,12 @@ final class IssueDraftPrompt {
 
             작성 기준:
             - title: 찬성·중립·반대로 답할 수 있는 한 문장 질문. 한쪽 입장을 유도하는 표현(예: '당연히', '무리한')을 쓰지 않습니다. 100자 이내, 보통 40자 안팎.
-            - summary: 무엇이 쟁점인지, 각 입장의 대표 근거가 무엇인지 3~5문장의 중립적인 배경 설명. 300~600자, 최대 1000자.
-              기사 제목이나 요약문의 문장·표현을 그대로 옮기지 말고 사실관계만 바탕으로 새로 씁니다. 기사에 없는 수치나 사실을 지어내지 않습니다.
+            - keyPoint: 무엇을 두고 의견이 갈리는지 한 줄(40자 안팎, 최대 100자). 질문을 되풀이하지 말고 가치나 이해의 충돌로 씁니다.
+              예: '노동자 보호를 위해 영세 사업장에도 같은 적립 부담을 지울 것인가'
+            - summary: 무엇이 언제 어떻게 정해졌는지 같은 사실관계만 2~3문장(150~350자, 최대 1000자). 찬반 근거는 여기에 쓰지 않습니다.
+            - agreeReason: 찬성하는 쪽의 대표 근거 1~2문장(최대 150자). '찬성하는 쪽은'으로 시작하지 말고 근거만 씁니다.
+            - disagreeReason: 반대하거나 신중한 쪽의 대표 근거 1~2문장(최대 150자). 찬성 근거와 길이·어조를 비슷하게 맞춥니다.
+            - 모든 문장은 기사 제목이나 요약문의 문장·표현을 그대로 옮기지 말고 사실관계만 바탕으로 새로 씁니다. 기사에 없는 수치나 사실을 지어내지 않습니다.
             - categoryId: 주어진 카테고리 중 가장 맞는 것의 id.
             - sourceUrls: 근거 기사 1~3개의 url. 가능하면 서로 다른 언론사, 특히 논조가 다른 언론사의 기사를 함께 고릅니다.
               url은 기사 목록의 url을 한 글자도 바꾸지 말고 그대로 씁니다.
@@ -56,11 +60,14 @@ final class IssueDraftPrompt {
                                     "type", "object",
                                     "properties", Map.of(
                                             "title", Map.of("type", "string", "description", "찬성·중립·반대로 답할 수 있는 중립 질문, 100자 이내"),
-                                            "summary", Map.of("type", "string", "description", "기사 표현을 옮기지 않고 새로 쓴 중립적인 배경 설명, 300~600자"),
+                                            "keyPoint", Map.of("type", "string", "description", "무엇을 두고 의견이 갈리는지 한 줄, 최대 100자"),
+                                            "summary", Map.of("type", "string", "description", "사실관계만 담은 배경 설명 2~3문장, 150~350자"),
+                                            "agreeReason", Map.of("type", "string", "description", "찬성 측 대표 근거 1~2문장, 최대 150자"),
+                                            "disagreeReason", Map.of("type", "string", "description", "반대·신중 측 대표 근거 1~2문장, 최대 150자"),
                                             "categoryId", Map.of("type", "integer", "description", "주어진 카테고리 id"),
                                             "sourceUrls", Map.of("type", "array", "items", Map.of("type", "string"),
                                                     "description", "근거 기사 1~3개의 url. 기사 목록의 url 그대로")),
-                                    "required", List.of("title", "summary", "categoryId", "sourceUrls"),
+                                    "required", List.of("title", "keyPoint", "summary", "agreeReason", "disagreeReason", "categoryId", "sourceUrls"),
                                     "additionalProperties", false))),
             "required", List.of("drafts"),
             "additionalProperties", false);
@@ -116,7 +123,10 @@ final class IssueDraftPrompt {
                     draft.path("title").asString(""),
                     draft.path("summary").asString(""),
                     draft.path("categoryId").asLong(),
-                    urls));
+                    urls,
+                    draft.path("keyPoint").asString(""),
+                    draft.path("agreeReason").asString(""),
+                    draft.path("disagreeReason").asString("")));
         }
         return drafts;
     }

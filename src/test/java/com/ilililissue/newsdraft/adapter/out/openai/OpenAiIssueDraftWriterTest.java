@@ -24,7 +24,7 @@ class OpenAiIssueDraftWriterTest {
                  "output": [
                    {"type": "reasoning", "summary": []},
                    {"type": "message", "role": "assistant", "content": [
-                     {"type": "output_text", "text": "{\\"drafts\\":[{\\"title\\":\\"질문인가?\\",\\"summary\\":\\"배경\\",\\"categoryId\\":3,\\"sourceUrls\\":[\\"https://a.example.com/1\\",\\"https://b.example.com/2\\"]}]}"}
+                     {"type": "output_text", "text": "{\\"drafts\\":[{\\"title\\":\\"질문인가?\\",\\"summary\\":\\"배경\\",\\"keyPoint\\":\\"쟁점\\",\\"agreeReason\\":\\"찬성\\",\\"disagreeReason\\":\\"반대\\",\\"categoryId\\":3,\\"sourceUrls\\":[\\"https://a.example.com/1\\",\\"https://b.example.com/2\\"]}]}"}
                    ]}
                  ]}
                 """;
@@ -32,7 +32,7 @@ class OpenAiIssueDraftWriterTest {
         List<IssueDraft> drafts = writer.parseDrafts(body);
 
         Assertions.assertThat(drafts).containsExactly(new IssueDraft("질문인가?", "배경", 3,
-                List.of("https://a.example.com/1", "https://b.example.com/2")));
+                List.of("https://a.example.com/1", "https://b.example.com/2"), "쟁점", "찬성", "반대"));
     }
 
     @DisplayName("거절 응답이면 초안 0건으로 끝난다")

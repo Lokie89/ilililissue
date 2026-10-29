@@ -114,7 +114,7 @@ public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpire
     @Override
     public IssueId create(IssueCommand command) {
         requireCategory(command.categoryId());
-        Issue issue = Issue.draft(command.title(), command.summary(), command.categoryId(), command.sources());
+        Issue issue = Issue.draft(command.title(), command.summary(), command.categoryId(), command.sources(), command.focus());
         return issuePort.save(issue).getId();
     }
 
@@ -122,7 +122,8 @@ public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpire
     @Override
     public void edit(IssueId id, IssueCommand command) {
         requireCategory(command.categoryId());
-        update(id, issue -> issue.edit(command.title(), command.summary(), command.categoryId(), command.sources()));
+        update(id, issue -> issue.edit(command.title(), command.summary(), command.categoryId(), command.sources(),
+                command.focus()));
     }
 
     @Transactional

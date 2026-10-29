@@ -119,10 +119,16 @@ public class AdminIssueController {
     public record CategoryRequest(String name) {
     }
 
-    public record IssueRequest(String title, String summary, Long categoryId, List<IssueCommand.Source> sources) {
+    /**
+     * @param keyPoint       핵심 쟁점 한 줄(선택)
+     * @param agreeReason    찬성 측 근거(선택, 반대 측과 함께)
+     * @param disagreeReason 반대·신중 측 근거(선택, 찬성 측과 함께)
+     */
+    public record IssueRequest(String title, String summary, Long categoryId, List<IssueCommand.Source> sources,
+                               String keyPoint, String agreeReason, String disagreeReason) {
 
         IssueCommand toCommand() {
-            return IssueCommand.of(title, summary, categoryId, sources);
+            return IssueCommand.of(title, summary, categoryId, sources, keyPoint, agreeReason, disagreeReason);
         }
     }
 

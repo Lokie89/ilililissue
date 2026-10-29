@@ -62,6 +62,10 @@ export type IssueDetail = {
   summary: string;
   category: Category | null;
   sources: IssueSource[];
+  // 핵심 쟁점 한 줄과 입장별 대표 근거(선택). 근거는 둘 다 있거나 둘 다 없다.
+  keyPoint: string | null;
+  agreeReason: string | null;
+  disagreeReason: string | null;
   status: IssueStatus;
   publishedAt: string | null;
   corrected: boolean;

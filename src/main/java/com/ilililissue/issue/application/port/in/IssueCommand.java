@@ -1,6 +1,7 @@
 package com.ilililissue.issue.application.port.in;
 
 import com.ilililissue.issue.domain.vo.CategoryId;
+import com.ilililissue.issue.domain.vo.IssueFocus;
 import com.ilililissue.issue.domain.vo.IssueSource;
 import com.ilililissue.issue.domain.vo.IssueSources;
 import com.ilililissue.issue.domain.vo.IssueSummary;
@@ -16,17 +17,24 @@ public record IssueCommand(
         IssueTitle title,
         IssueSummary summary,
         CategoryId categoryId,
-        IssueSources sources
+        IssueSources sources,
+        IssueFocus focus
 ) {
 
     public static IssueCommand of(String title, String summary, Long categoryId, List<Source> sources) {
+        return of(title, summary, categoryId, sources, null, null, null);
+    }
+
+    public static IssueCommand of(String title, String summary, Long categoryId, List<Source> sources,
+                                  String keyPoint, String agreeReason, String disagreeReason) {
         return new IssueCommand(
                 IssueTitle.from(title),
                 IssueSummary.from(summary),
                 new CategoryId(categoryId == null ? 0 : categoryId),
                 IssueSources.from(sources == null ? List.of() : sources.stream()
                         .map(source -> IssueSource.of(source.url(), source.publisher(), source.publishedOn()))
-                        .toList())
+                        .toList()),
+                IssueFocus.of(keyPoint, agreeReason, disagreeReason)
         );
     }
 

@@ -84,7 +84,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/admin/categories` | 관리자 | 카테고리 생성 `{name}` |
 | GET | `/api/admin/issues` | 관리자 | 전체 이슈 목록 (모든 상태) |
 | GET | `/api/admin/issues/{id}` | 관리자 | 이슈 상세 (모든 상태) |
-| POST | `/api/admin/issues` | 관리자 | 이슈 작성 `{title, summary, categoryId, sources[{url, publisher, publishedOn}]}` |
+| POST | `/api/admin/issues` | 관리자 | 이슈 작성 `{title, summary, categoryId, sources[{url, publisher, publishedOn}], keyPoint?, agreeReason?, disagreeReason?}` (찬반 근거는 둘 다 쓰거나 둘 다 비움) |
 | PUT | `/api/admin/issues/{id}` | 관리자 | 이슈 수정 (작성·검수 상태만, 수정하면 다시 작성 상태) |
 | POST | `/api/admin/issues/{id}/review` | 관리자 | 검수 완료 |
 | POST | `/api/admin/issues/{id}/publish` | 관리자 | 게시 (출처 1개 이상) |

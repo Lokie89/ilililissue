@@ -7,6 +7,7 @@ import com.ilililissue.issue.application.port.out.IssuePort;
 import com.ilililissue.issue.domain.entity.Category;
 import com.ilililissue.issue.domain.entity.Issue;
 import com.ilililissue.issue.domain.vo.CategoryId;
+import com.ilililissue.issue.domain.vo.IssueFocus;
 import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.issue.domain.vo.IssueSource;
 import com.ilililissue.issue.domain.vo.IssueSources;
@@ -77,6 +78,9 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
                         .map(source -> new IssueSourceEmbeddable(source.getUrl(), source.getPublisher(),
                                 source.getPublishedOn()))
                         .toList()),
+                issue.getFocus().getKeyPoint(),
+                issue.getFocus().getAgreeReason(),
+                issue.getFocus().getDisagreeReason(),
                 issue.getStatus(),
                 issue.getPublishedAt(),
                 issue.getCorrectedAt(),
@@ -118,6 +122,7 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
                 IssueSources.from(entity.getSources().stream()
                         .map(source -> IssueSource.of(source.getUrl(), source.getPublisher(), source.getPublishedOn()))
                         .toList()),
+                IssueFocus.of(entity.getKeyPoint(), entity.getAgreeReason(), entity.getDisagreeReason()),
                 entity.getStatus(),
                 entity.getPublishedAt(),
                 entity.getCorrectedAt(),
