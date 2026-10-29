@@ -20,7 +20,7 @@ auth:
 metrics:
   event-retention: 365d
 
-# 뉴스 자동 초안: 매일 07:00 언론사 RSS 수집 → Claude가 이슈 초안 작성 → DRAFT로 등록(게시는 관리자가 검수 후).
+# 뉴스 자동 초안: 매일 07:00 언론사 RSS 수집 → OpenAI가 이슈 초안 작성 → DRAFT로 등록(게시는 관리자가 검수 후).
 # 키가 없으면 관리자 수동 실행은 설정 오류로 응답한다.
 # 피드 목록은 2026-10-29에 응답을 확인했다. 운영 전에 언론사별 RSS 이용 조건(상업적 이용, AI 입력)을 확인하거나 허락을 받는다.
 # 매일경제는 봇 차단(Cloudflare)이라 넣지 않았다. 차단을 우회하지 않는다.
@@ -38,8 +38,9 @@ news-draft:
   articles-per-feed: 40
   max-articles: 200
   max-drafts: 3
-  anthropic-api-key: ${ANTHROPIC_API_KEY:}
-  model: claude-opus-5-5
+  openai-api-key: ${OPENAI_API_KEY:}
+  # gpt-6-astra(최상위, 5배 비싸다)로 바꿀 수 있다
+  model: ${NEWS_DRAFT_MODEL:gpt-6.1-sol}
 
 ---
 spring:

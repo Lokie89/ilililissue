@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 뉴스 자동 초안 수동 실행. Claude 호출이 수십 초~수 분 걸려 백그라운드로 돌리고 202로 응답한다.
+ * 뉴스 자동 초안 수동 실행. AI 호출이 수십 초~수 분 걸려 백그라운드로 돌리고 202로 응답한다.
  * 결과는 {@code GET /api/admin/news-drafts/status}와 이슈 목록(DRAFT)에서 확인한다.
  */
 @Slf4j

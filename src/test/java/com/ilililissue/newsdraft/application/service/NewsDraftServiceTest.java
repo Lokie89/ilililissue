@@ -141,7 +141,7 @@ class NewsDraftServiceTest {
 
         verify(newsFeedPort, never()).fetch(any());
         Assertions.assertThat(service.isRunning()).isFalse();
-        Assertions.assertThat(service.lastRun()).get().extracting(NewsDraftRun::error).asString().contains("ANTHROPIC_API_KEY");
+        Assertions.assertThat(service.lastRun()).get().extracting(NewsDraftRun::error).asString().contains("OPENAI_API_KEY");
     }
 
     @DisplayName("피드를 하나도 읽지 못하면 초안을 만들지 않고 오류로 끝난다")

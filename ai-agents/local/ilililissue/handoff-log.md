@@ -18,6 +18,19 @@
 
 ## 현재 기록
 
+### 2026-10-29 (4) — 초안 작성 AI를 OpenAI API로 교체
+
+- 목표: "코덱스로 할래 코덱스키로 돌아가게해줘". 이 PC의 Codex는 ChatGPT 로그인(API 키 아님)이라 방식을 물었고, 사용자가 OpenAI API 키 방식을 골랐다
+- 변경:
+  - `ClaudeIssueDraftWriter`와 `anthropic-java` 의존성 삭제 → `OpenAiIssueDraftWriter`(SDK 없이 `RestClient` + Jackson 3 `JsonMapper`, Responses API `text.format` json_schema strict)
+  - 설정 `news-draft.openai-api-key`(`OPENAI_API_KEY`), `news-draft.model`(`NEWS_DRAFT_MODEL`, 기본 `gpt-6.1-sol`; 최상위 `gpt-6-astra`는 5배 비쌈). `.env`, `.env*.example`, `docker-compose.prod.yml`, README, 아키텍처 문서 반영
+  - 거절(`content[type=refusal]`)이면 0건, `status=incomplete`·HTTP 오류면 실행 실패. 읽기 타임아웃 10분
+- 검증: `./gradlew test` 87개 통과(응답 파싱 테스트 3개 추가). 재시작 후 수동 실행 → "OpenAI API 키가 설정되지 않았습니다" 확인. **OpenAI 실제 호출은 키가 없어 미실행**
+- 남은 작업: `.env`에 `OPENAI_API_KEY` 입력 후 실제 초안 생성·품질 확인(요청 형식이 실제 API와 맞는지도 이때 확인), 언론사 RSS 이용 조건 확인, 이전 남은 작업
+- 주의 사항:
+  - 모델 ID와 Responses API 형식은 2026-10-29 OpenAI 문서(developers.openai.com/api/docs)로 확인했다
+  - OpenAI 서비스 약관상 API 입력·출력 데이터 처리 조건도 운영 전에 확인한다
+
 ### 2026-10-29 (3) — 뉴스 수집원을 언론사 RSS로 교체, 더미 데이터 정리
 
 - 목표: 실제 이슈 가져오기(사용자: "실제 이슈들좀 가져와바", 네이버 개발자센터에 '검색' API가 없다는 제보)
@@ -78,17 +91,4 @@
   - 기존 회원(동의 절차 이전 가입)은 `terms_agreed_at`이 null이다. 운영 데이터가 없으므로 별도 재동의 절차는 만들지 않았다
   - 검증 오류 메시지는 `필드: 메시지` 형식이다(`GlobalExceptionHandler`). 앱이 그대로 보여주면 필드명이 보인다
   - `.gitignore`의 `db/` 규칙이 `src/main/resources/db/migration`까지 무시해 V1·V2가 커밋되지 않았었다. `/db/`로 고치고 V1~V3을 커밋했다(`b8cad2b`). 새 파일이 `git status`에 안 보이면 `git check-ignore -v <경로>`로 확인한다
-
-### 2026-10-28 (6) — 앱 대비: 앱 모드 인증, 회원 차단, 개인정보 처리방침 초안
-
-- 목표: 앱 출시 전 막히는 부분 해결(사용자: "응 수정해줘", "응 진행해줘")
-- 변경:
-  - 앱 모드 인증 `X-Client: app`(토큰을 본문으로, 재발급·로그아웃은 본문 `refreshToken`), 앱 방문자 ID `X-Visitor-Id` 헤더
-  - 회원 차단: `POST /api/opinions/{id}/author-block`, `GET /api/members/me/blocks`, `DELETE /api/members/me/blocks/{blockId}`. 차단한 회원의 의견은 차단한 사람의 의견 목록에서만 빠진다. Flyway `V2__member_block.sql`
-  - 웹: 의견 카드 "차단" 버튼, `/me`에 차단 목록·해제, `/privacy` 개인정보 처리방침 초안(대괄호 항목 미기입), 푸터·가입 화면 링크
-- 검증: `./gradlew test` 73개 통과(Flyway V1+V2 검증 포함), 웹 lint·build 통과. 로컬 MySQL에 V2 적용 후 `bootRun` 스모크 50개 통과(차단·해제 포함)
-- 남은 작업: 처리방침 대괄호 항목 기입·법률 검토, 이용약관(앱 심사 1.2), 이용 기록 보관 기간 결정, 브라우저 화면 확인, 실제 배포, PR(사용자 보류)
-- 주의 사항:
-  - 처리방침(`web/src/app/privacy/page.tsx`)은 실제 수집 항목·쿠키·보관 기간을 그대로 적었다. 수집 항목이나 보관 기간을 바꾸면 함께 고친다
-  - 로컬 `ilililissue` DB는 V2까지 적용된 상태다
 

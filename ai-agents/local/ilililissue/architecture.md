@@ -51,11 +51,12 @@
 | 연동 | 방향·방식 | 계약 | 비밀값 | 실패 처리 |
 | --- | --- | --- | --- | --- |
 | 언론사 RSS 피드 8곳 | 아웃바운드 HTTPS, `RestClient`(JDK `HttpClient`, 리다이렉트 따름) | `GET <피드 URL>`, 인증 없음, User-Agent `ilililissue-news-draft/1.0`. RSS 2.0·RSS 1.0·Atom. 항목의 `title`, `link`(없으면 URL형 `guid`), `description`/`summary`(앞 200자), 시각 `pubDate`(RFC 1123, `+09:00`형 포함)·`dc:date`·`published`·`updated`, 없으면 피드 `lastBuildDate`(한겨레). `utm_*` 파라미터는 뗀다. 목록: `application.yml` `news-draft.feeds` | 없음 | 타임아웃 10초. 피드별 실패는 건너뛰고, 모두 실패하면 실행 실패. DOCTYPE 거부(XXE·봇 차단 HTML). 봇 차단은 우회하지 않는다(매일경제 제외) |
-| Claude Messages API | 아웃바운드 HTTPS, 공식 Java SDK `com.anthropic:anthropic-java` | 모델 `news-draft.model`(기본 `claude-opus-5-5`), 구조화 출력(`outputConfig(DraftList.class)`) `{drafts[{title, summary, categoryId, sources[{url, publisher}]}]}`. 입력은 카테고리·최근 이슈 질문·기사 메타데이터(URL·발행 시각·제목·요약문) | `ANTHROPIC_API_KEY` | 거절(`refusal`)이면 초안 0건, 길이 초과·API 오류면 실행 실패. SDK 기본 재시도 2회 |
+| OpenAI Responses API | 아웃바운드 HTTPS, `RestClient`(SDK 없이 JSON) | `POST https://api.openai.com/v1/responses`, 본문 `{model, instructions, input, text.format{type: json_schema, name: issue_drafts, schema, strict: true}}`. 모델 `news-draft.model`(기본 `gpt-6.1-sol`, 환경변수 `NEWS_DRAFT_MODEL`). 출력 `{drafts[{title, summary, categoryId, sourceUrls[]}]}`는 `output[type=message].content[type=output_text].text`. 입력은 카테고리·최근 이슈 질문·기사 메타데이터(언론사·URL·발행 시각·제목·요약문 앞 200자) | `OPENAI_API_KEY`(Bearer) | 거절(`content[type=refusal]`)이면 초안 0건, `status=incomplete`·HTTP 오류면 실행 실패. 읽기 타임아웃 10분, 재시도 없음 |
 
 - 실행: `NewsDraftScheduler`(매일 07:00, `news-draft.enabled=true`일 때) 또는 `POST /api/admin/news-drafts`(백그라운드 `applicationTaskExecutor`). 서버 한 대 전제로 메모리 플래그로 중복 실행을 막고, 마지막 결과도 메모리에만 둔다(재시작하면 사라짐).
 - 신뢰 경계: AI 응답의 출처 URL은 수집한 기사 URL과 일치할 때만 쓰고, 언론사·발행일은 피드 값을 쓴다. 카테고리 id가 없거나 이슈 검증(제목 100자 등)에 실패한 초안은 건너뛴다. 기사 텍스트는 프롬프트에서 데이터로만 취급하도록 지시한다.
 - 비용: 기사 최대 200건(약 수만 토큰) 입력, 하루 1회 기준.
+- 초안 작성 모델 변경(2026-10-29): 처음엔 Claude(Anthropic Java SDK)였으나 사용자 요청으로 OpenAI API 키 방식으로 바꿨다. Codex CLI(ChatGPT 로그인)를 서버에서 호출하는 방식은 운영 서버 자동 실행에 맞지 않아 쓰지 않는다.
 - 수집원 변경(2026-10-29): 처음엔 네이버 검색 API(뉴스)를 썼으나, 2026-07-30부터 개발자센터 신규 신청이 막히고(NAVER API HUB로 이관) 2026-09-07 시행 약관이 검색 결과를 AI에 입력하는 것을 금지해 언론사 RSS로 바꿨다.
 - 법적 확인 필요: 신문사들이 공동으로 게시한 「디지털 뉴스콘텐츠 이용규칙」은 RSS를 개인 열람용으로 보고, 무단 재배포·봇 대량 수집·영리 목적 링크 모음을 문제 삼는다. 이 서비스는 기사 본문을 저장·게시하지 않고 자체 작성 설명과 원문 링크만 쓰지만, 운영 전에 언론사별 조건을 확인하거나 이용 허락을 받는다.
 
@@ -91,7 +92,7 @@
 
 ## 비밀값 이름
 
-- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS`, 선택: `NEWS_DRAFT_ENABLED`, `ANTHROPIC_API_KEY` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS`, 선택: `NEWS_DRAFT_ENABLED`, `NEWS_DRAFT_MODEL`, `OPENAI_API_KEY` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
 
 ## 변경 가능성
 

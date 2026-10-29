@@ -10,9 +10,9 @@ import java.util.List;
  * @param enabled         true면 매일 07:00(Asia/Seoul)에 실행한다. 관리자 수동 실행은 이 값과 무관하다.
  * @param feeds           언론사 RSS 피드. 운영 전에 언론사별 RSS 이용 조건을 확인한다.
  * @param articlesPerFeed 피드마다 쓸 최신 기사 수 상한
- * @param maxArticles     Claude에 넘길 기사 수 상한(중복 제거 후)
+ * @param maxArticles     AI에 넘길 기사 수 상한(중복 제거 후)
  * @param maxDrafts       한 번에 만들 이슈 초안 수 상한
- * @param model           Claude 모델 ID
+ * @param model           OpenAI 모델 ID
  */
 @ConfigurationProperties("news-draft")
 public record NewsDraftProperties(
@@ -21,7 +21,7 @@ public record NewsDraftProperties(
         int articlesPerFeed,
         int maxArticles,
         int maxDrafts,
-        String anthropicApiKey,
+        String openaiApiKey,
         String model
 ) {
 
@@ -32,11 +32,11 @@ public record NewsDraftProperties(
         articlesPerFeed = articlesPerFeed <= 0 ? 40 : articlesPerFeed;
         maxArticles = maxArticles <= 0 ? 200 : maxArticles;
         maxDrafts = maxDrafts <= 0 ? 3 : maxDrafts;
-        model = model == null || model.isBlank() ? "claude-opus-5-5" : model;
+        model = model == null || model.isBlank() ? "gpt-6.1-sol" : model;
     }
 
-    public boolean hasAnthropicKey() {
-        return anthropicApiKey != null && !anthropicApiKey.isBlank();
+    public boolean hasOpenaiKey() {
+        return openaiApiKey != null && !openaiApiKey.isBlank();
     }
 
     /**

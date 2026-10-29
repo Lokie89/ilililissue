@@ -124,8 +124,8 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
     }
 
     private void requireConfigured() {
-        if (!properties.hasAnthropicKey()) {
-            throw NewsDraftException.notConfigured("Anthropic API 키(ANTHROPIC_API_KEY)가 설정되지 않았습니다.");
+        if (!properties.hasOpenaiKey()) {
+            throw NewsDraftException.notConfigured("OpenAI API 키(OPENAI_API_KEY)가 설정되지 않았습니다.");
         }
         if (properties.feeds().isEmpty()) {
             throw NewsDraftException.notConfigured("언론사 RSS 피드(news-draft.feeds)가 없습니다.");
