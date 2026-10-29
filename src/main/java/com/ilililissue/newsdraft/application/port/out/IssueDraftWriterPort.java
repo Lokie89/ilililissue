@@ -13,5 +13,5 @@ public interface IssueDraftWriterPort {
      *
      * @param recentTitles 최근 이슈 질문. 같은 주제를 다시 만들지 않도록 넘긴다
      */
-    List<IssueDraft> write(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int maxDrafts);
+    List<IssueDraft> write(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int draftsPerCategory);
 }

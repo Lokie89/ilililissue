@@ -49,10 +49,10 @@ public class CodexCliIssueDraftWriter implements IssueDraftWriterPort {
     }
 
     @Override
-    public List<IssueDraft> write(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int maxDrafts) {
+    public List<IssueDraft> write(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int draftsPerCategory) {
         String prompt = IssueDraftPrompt.INSTRUCTIONS
                 + "\n도구나 명령을 실행하지 말고, 아래 입력만 보고 바로 최종 답을 JSON으로 주세요.\n\n"
-                + IssueDraftPrompt.input(articles, categories, recentTitles, maxDrafts);
+                + IssueDraftPrompt.input(articles, categories, recentTitles, draftsPerCategory);
         Path dir = null;
         try {
             dir = Files.createTempDirectory("news-draft-codex");

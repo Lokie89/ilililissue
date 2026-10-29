@@ -67,7 +67,7 @@ class NewsDraftServiceTest {
     }
 
     private static NewsDraftProperties properties(Feed... feeds) {
-        return new NewsDraftProperties(true, List.of(feeds), 40, 200, 3, "key", null, null, null, null);
+        return new NewsDraftProperties(true, List.of(feeds), 40, 200, 1, "key", null, null, null, null);
     }
 
     private static NewsArticle article(String publisher, String url, OffsetDateTime publishedAt) {
@@ -100,7 +100,7 @@ class NewsDraftServiceTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<NewsArticle>> articles = ArgumentCaptor.forClass(List.class);
-        verify(issueDraftWriterPort).write(articles.capture(), anyList(), anyList(), eq(3));
+        verify(issueDraftWriterPort).write(articles.capture(), anyList(), anyList(), eq(1));
         Assertions.assertThat(articles.getValue()).containsExactly(other, fresh);
 
         ArgumentCaptor<IssueCommand> command = ArgumentCaptor.forClass(IssueCommand.class);
@@ -140,6 +140,25 @@ class NewsDraftServiceTest {
         verify(manageIssueUseCase, never()).create(any());
         Assertions.assertThat(run.createdIssueIds()).isEmpty();
         Assertions.assertThat(run.skippedDrafts()).isEqualTo(3);
+    }
+
+    @DisplayName("분야마다 상한(기본 1건)까지만 등록한다")
+    @Test
+    void onePerCategory() {
+        when(issueQuery.getCategories()).thenReturn(List.of(
+                Category.withId(new CategoryId(1), "사회"), Category.withId(new CategoryId(2), "경제")));
+        when(issueQuery.getAllIssues(any(PageQuery.class))).thenReturn(new PageResult<>(List.of(), 0, 30, 0));
+        when(newsFeedPort.fetch(YNA)).thenReturn(List.of(article("연합뉴스", "https://yna.example.com/a", NOW.minusHours(1))));
+        when(issueDraftWriterPort.write(anyList(), anyList(), anyList(), anyInt())).thenReturn(List.of(
+                new IssueDraft("사회 질문1?", "배경", 1, List.of("https://yna.example.com/a")),
+                new IssueDraft("사회 질문2?", "배경", 1, List.of("https://yna.example.com/a")),
+                new IssueDraft("경제 질문?", "배경", 2, List.of("https://yna.example.com/a"))));
+        when(manageIssueUseCase.create(any())).thenReturn(new IssueId(1), new IssueId(2));
+
+        NewsDraftRun run = service(properties(YNA)).generate();
+
+        Assertions.assertThat(run.createdIssueIds()).containsExactly(1L, 2L);
+        Assertions.assertThat(run.skippedDrafts()).isEqualTo(1);
     }
 
     @DisplayName("API 키가 없으면 피드를 읽지 않고 설정 오류로 끝나며, 마지막 실행 결과에 사유를 남긴다")

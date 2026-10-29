@@ -18,6 +18,16 @@
 
 ## 현재 기록
 
+### 2026-10-29 (9) — 분야마다 1건 초안, 로컬 이슈 정리 후 오늘 이슈 5건 게시
+
+- 목표: "지금 있는거 정리해주고 각 분야별로 오늘 뉴스중에 인기많았던 내용 토대로 작성". 사용자 선택: 기존 9건 모두 삭제, 바로 게시, 매일 자동 초안도 분야마다 1건
+- 변경:
+  - `news-draft.max-drafts` → `drafts-per-category`(기본 1). 프롬프트: 카테고리마다 보도량이 가장 많은 쟁점 1건, '생활'은 사회·경제 면의 일상 주제에서, 한 주제는 한 카테고리에만. 서비스가 분야별 상한을 넘는 초안은 건너뜀
+  - 로컬 DB: 이슈 9건·출처·이용 기록 삭제(투표·의견·신고 0건), `issue` AUTO_INCREMENT 초기화
+- 검증: `./gradlew test` 96개 통과(분야별 상한 1개 추가). Codex CLI로 기사 378건 → 43초, 5건 생성 후 검수·게시: #1 정치 전작권 전환 시기, #2 경제 퇴직급여 사외적립 의무화, #3 사회 수능 AI 안경 응시 제한 3년, #4 생활 경기 그린벨트 해제 주택 공급, #5 국제 이스라엘 진영 넘는 연정. 분야별 공개 이슈 각 1건, 웹 홈·분야 탭·상세 200
+- 남은 작업: #4 수치(6곳, 약 7만6700가구) 원문 대조, #5는 국내 독자 관련성이 약함(필요하면 교체), `npm run build` 확인, 운영용 OpenAI API 키, 언론사 RSS 이용 조건
+- 주의 사항: 관리자 액세스 토큰은 30분이라 긴 스크립트에서는 재로그인하고, 상태 폴링은 401을 실패로 처리한다(이번에 10분 낭비)
+
 ### 2026-10-29 (8) — 분야별 이슈 목록, 이슈 화면 오류(웹 서버 워커 손상) 복구
 
 - 목표: "분야별로 보고 들어갈수있게", "내 입장 고르기 누르면 pending만 반복"
@@ -67,17 +77,4 @@
 - 주의 사항:
   - `docker exec ... mysql`로 한글을 넣을 때는 `--default-character-set=utf8mb4`를 붙인다
   - Codex CLI 방식은 서버 PC에 codex 설치·ChatGPT 로그인이 필요하고 요금제 한도를 쓴다. 운영 자동 실행에는 OpenAI API 키 방식을 쓴다
-
-### 2026-10-29 (4) — 초안 작성 AI를 OpenAI API로 교체
-
-- 목표: "코덱스로 할래 코덱스키로 돌아가게해줘". 이 PC의 Codex는 ChatGPT 로그인(API 키 아님)이라 방식을 물었고, 사용자가 OpenAI API 키 방식을 골랐다
-- 변경:
-  - `ClaudeIssueDraftWriter`와 `anthropic-java` 의존성 삭제 → `OpenAiIssueDraftWriter`(SDK 없이 `RestClient` + Jackson 3 `JsonMapper`, Responses API `text.format` json_schema strict)
-  - 설정 `news-draft.openai-api-key`(`OPENAI_API_KEY`), `news-draft.model`(`NEWS_DRAFT_MODEL`, 기본 `gpt-6.1-sol`; 최상위 `gpt-6-astra`는 5배 비쌈). `.env`, `.env*.example`, `docker-compose.prod.yml`, README, 아키텍처 문서 반영
-  - 거절(`content[type=refusal]`)이면 0건, `status=incomplete`·HTTP 오류면 실행 실패. 읽기 타임아웃 10분
-- 검증: `./gradlew test` 87개 통과(응답 파싱 테스트 3개 추가). 재시작 후 수동 실행 → "OpenAI API 키가 설정되지 않았습니다" 확인. **OpenAI 실제 호출은 키가 없어 미실행**
-- 남은 작업: `.env`에 `OPENAI_API_KEY` 입력 후 실제 초안 생성·품질 확인(요청 형식이 실제 API와 맞는지도 이때 확인), 언론사 RSS 이용 조건 확인, 이전 남은 작업
-- 주의 사항:
-  - 모델 ID와 Responses API 형식은 2026-10-29 OpenAI 문서(developers.openai.com/api/docs)로 확인했다
-  - OpenAI 서비스 약관상 API 입력·출력 데이터 처리 조건도 운영 전에 확인한다
 

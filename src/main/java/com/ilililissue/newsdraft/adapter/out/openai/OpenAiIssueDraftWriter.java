@@ -53,11 +53,11 @@ public class OpenAiIssueDraftWriter implements IssueDraftWriterPort {
     }
 
     @Override
-    public List<IssueDraft> write(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int maxDrafts) {
+    public List<IssueDraft> write(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int draftsPerCategory) {
         Map<String, Object> request = Map.of(
                 "model", properties.model(),
                 "instructions", IssueDraftPrompt.INSTRUCTIONS,
-                "input", IssueDraftPrompt.input(articles, categories, recentTitles, maxDrafts),
+                "input", IssueDraftPrompt.input(articles, categories, recentTitles, draftsPerCategory),
                 "text", Map.of("format", Map.of(
                         "type", "json_schema",
                         "name", "issue_drafts",

@@ -21,17 +21,18 @@ final class IssueDraftPrompt {
             당신은 '1일 1이슈' 서비스의 이슈 편집자입니다. 이 서비스는 사회·경제·생활 이슈에 대해 회원이 찬성·중립·반대로 투표하고,
             서로 다른 입장의 의견을 비교합니다. '누가 이겼는지'가 아니라 '사람들이 왜 다르게 생각하는지'를 보여주는 것이 목적입니다.
 
-            주어진 최근 기사 목록에서 오늘 다룰 이슈 후보를 고르고, 각 후보의 초안을 씁니다. 초안은 관리자가 검수한 뒤 게시합니다.
+            주어진 최근 기사 목록에서 분야(카테고리)마다 오늘 다룰 이슈를 고르고, 각 이슈의 초안을 씁니다. 초안은 관리자가 검수한 뒤 게시합니다.
 
             고르는 기준:
             - 관심도: 기사 목록에는 조회수가 없으므로 같은 주제를 다룬 언론사 수(보도량)로 관심도를 판단합니다.
               여러 언론사(가능하면 3곳 이상)가 함께 다룬 주제를 우선하고, 한 곳만 다룬 주제는 다른 후보가 없을 때만 고릅니다.
             - 일반 시민이 찬성·반대 이유를 각자 말할 수 있는 정책·제도·사회적 쟁점을 우선합니다.
-            - 후보가 여럿이면 정치·경제·사회·국제 중 한 분야로 몰리지 않게 고릅니다.
+            - 카테고리마다 따로 고르고, 그 카테고리 안에서 보도량이 가장 많은 쟁점을 고릅니다. 그 분야에 맞는 쟁점이 없으면 그 카테고리는 건너뜁니다.
+            - 기사의 section은 언론사 면입니다. '생활'처럼 면이 따로 없는 카테고리는 사회·경제 면 기사 중 물가·주거·교육·건강·교통·노동처럼 일상에 직접 닿는 주제에서 고릅니다.
+            - 한 기사 묶음(같은 주제)은 한 카테고리에만 씁니다.
             - 단순 사건·사고, 인물 동정, 연예, 스포츠 결과, 주가 등락처럼 입장이 갈리지 않는 기사는 고르지 않습니다.
             - 특정 개인을 비난하거나 사생활을 다루는 주제, 수사·재판 중인 개인의 유무죄를 묻는 주제는 고르지 않습니다.
             - 최근 이슈 목록과 같은 주제는 고르지 않습니다. 후보끼리도 주제가 겹치지 않게 합니다.
-            - 적당한 후보가 없으면 요청한 수보다 적게, 혹은 0개를 반환해도 됩니다.
 
             작성 기준:
             - title: 찬성·중립·반대로 답할 수 있는 한 문장 질문. 한쪽 입장을 유도하는 표현(예: '당연히', '무리한')을 쓰지 않습니다. 100자 이내, 보통 40자 안팎.
@@ -70,7 +71,7 @@ final class IssueDraftPrompt {
     private IssueDraftPrompt() {
     }
 
-    static String input(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int maxDrafts) {
+    static String input(List<NewsArticle> articles, List<Category> categories, List<String> recentTitles, int draftsPerCategory) {
         String categoryLines = categories.stream()
                 .map(category -> "- id=" + category.getId().getValue() + " " + category.getName())
                 .collect(Collectors.joining("\n"));
@@ -87,7 +88,7 @@ final class IssueDraftPrompt {
                         + "\n</article>")
                 .collect(Collectors.joining("\n"));
         return """
-                이슈 초안을 최대 %d개 만들어 주세요.
+                카테고리마다 이슈 초안을 최대 %d개씩 만들어 주세요.
 
                 <categories>
                 %s
@@ -100,7 +101,7 @@ final class IssueDraftPrompt {
                 <articles>
                 %s
                 </articles>
-                """.formatted(maxDrafts, categoryLines, recentLines, articleLines);
+                """.formatted(draftsPerCategory, categoryLines, recentLines, articleLines);
     }
 
     /**

@@ -161,3 +161,16 @@
   - 신문사 공동 「디지털 뉴스콘텐츠 이용규칙」은 RSS를 개인 열람용으로 보고 봇 대량 수집·영리 목적 링크 모음을 문제 삼는다. 본문 저장·게시는 하지 않지만 법적 확인이 필요하다
   - 한겨레 피드는 항목 시각이 없어 피드 갱신 시각을 발행일로 쓴다(하루 이내 오차)
   - 로컬 `.env`는 UTF-8이 아니다(CP949로 보임). 스크립트로 고칠 때 바이트 단위로 다룬다
+
+### 2026-10-29 (4) — 초안 작성 AI를 OpenAI API로 교체
+
+- 목표: "코덱스로 할래 코덱스키로 돌아가게해줘". 이 PC의 Codex는 ChatGPT 로그인(API 키 아님)이라 방식을 물었고, 사용자가 OpenAI API 키 방식을 골랐다
+- 변경:
+  - `ClaudeIssueDraftWriter`와 `anthropic-java` 의존성 삭제 → `OpenAiIssueDraftWriter`(SDK 없이 `RestClient` + Jackson 3 `JsonMapper`, Responses API `text.format` json_schema strict)
+  - 설정 `news-draft.openai-api-key`(`OPENAI_API_KEY`), `news-draft.model`(`NEWS_DRAFT_MODEL`, 기본 `gpt-6.1-sol`; 최상위 `gpt-6-astra`는 5배 비쌈). `.env`, `.env*.example`, `docker-compose.prod.yml`, README, 아키텍처 문서 반영
+  - 거절(`content[type=refusal]`)이면 0건, `status=incomplete`·HTTP 오류면 실행 실패. 읽기 타임아웃 10분
+- 검증: `./gradlew test` 87개 통과(응답 파싱 테스트 3개 추가). 재시작 후 수동 실행 → "OpenAI API 키가 설정되지 않았습니다" 확인. **OpenAI 실제 호출은 키가 없어 미실행**
+- 남은 작업: `.env`에 `OPENAI_API_KEY` 입력 후 실제 초안 생성·품질 확인(요청 형식이 실제 API와 맞는지도 이때 확인), 언론사 RSS 이용 조건 확인, 이전 남은 작업
+- 주의 사항:
+  - 모델 ID와 Responses API 형식은 2026-10-29 OpenAI 문서(developers.openai.com/api/docs)로 확인했다
+  - OpenAI 서비스 약관상 API 입력·출력 데이터 처리 조건도 운영 전에 확인한다

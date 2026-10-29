@@ -62,7 +62,8 @@ news-draft:
   # 피드마다 최대 12건을 24시간에 고르게 뽑는다(32개 피드, 최대 384건)
   articles-per-feed: 12
   max-articles: 400
-  max-drafts: 3
+  # 분야(카테고리)마다 만들 초안 수
+  drafts-per-category: 1
   # 초안 작성 방식: openai-api(기본, OPENAI_API_KEY 필요) 또는 codex-cli(로컬 테스트, 이 PC의 codex ChatGPT 로그인 사용)
   writer: ${NEWS_DRAFT_WRITER:openai-api}
   codex-command: ${NEWS_DRAFT_CODEX_COMMAND:codex}

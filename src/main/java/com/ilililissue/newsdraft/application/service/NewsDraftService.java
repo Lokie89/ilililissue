@@ -24,6 +24,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
  * <li>언론사 면별 RSS 피드에서 지난 24시간에 나온 기사를 모아 URL 기준으로 중복을 없앤다.
  * 피드마다 상한을 넘으면 최신순으로 자르지 않고 24시간에 고르게 뽑아, 밤사이 기사나 기사가 많은 언론사로 쏠리지 않게 한다.</li>
  * <li>RSS에는 조회수가 없어 '인기'는 보도량(같은 주제를 다룬 언론사 수)으로 판단하도록 AI에 맡긴다.</li>
+ * <li>분야(카테고리)마다 상한({@code draftsPerCategory}, 기본 1)까지만 등록한다.</li>
  * <li>AI가 고른 초안 중 카테고리가 있고 출처가 수집한 기사 URL인 것만 DRAFT 이슈로 등록한다. 언론사·발행일은 피드 값을 쓴다.</li>
  * <li>기사 제목·요약문은 저장하지 않는다. 게시는 관리자 검수 후에만 한다.</li>
  * <li>외부 호출이 길어 전체를 한 트랜잭션으로 묶지 않고, 초안마다 따로 등록한다. 서버 한 대 전제로 메모리에서 중복 실행을 막는다.</li>
@@ -106,15 +108,22 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
         List<String> recentTitles = issueQuery.getAllIssues(PageQuery.of(0, RECENT_ISSUE_COUNT)).content().stream()
                 .map(view -> view.issue().getTitle().getValue())
                 .toList();
-        List<IssueDraft> drafts = issueDraftWriterPort.write(articles, categories, recentTitles, properties.maxDrafts());
+        List<IssueDraft> drafts = issueDraftWriterPort.write(articles, categories, recentTitles, properties.draftsPerCategory());
 
         Map<String, NewsArticle> articlesByUrl = articles.stream()
                 .collect(Collectors.toMap(NewsArticle::url, a -> a, (a, b) -> a));
         Set<Long> categoryIds = categories.stream().map(c -> c.getId().getValue()).collect(Collectors.toSet());
         List<Long> created = new ArrayList<>();
         int skipped = 0;
-        for (IssueDraft draft : drafts.stream().limit(properties.maxDrafts()).toList()) {
+        Map<Long, Integer> createdPerCategory = new HashMap<>();
+        for (IssueDraft draft : drafts) {
+            if (createdPerCategory.getOrDefault(draft.categoryId(), 0) >= properties.draftsPerCategory()) {
+                log.warn("뉴스 초안 제외: 분야별 상한 초과 - {}", draft.title());
+                skipped++;
+                continue;
+            }
             Optional<Long> issueId = register(draft, articlesByUrl, categoryIds);
+            issueId.ifPresent(id -> createdPerCategory.merge(draft.categoryId(), 1, Integer::sum));
             if (issueId.isPresent()) {
                 created.add(issueId.get());
             } else {

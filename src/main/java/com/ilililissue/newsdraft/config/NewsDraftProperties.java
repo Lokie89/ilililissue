@@ -11,7 +11,7 @@ import java.util.List;
  * @param feeds           언론사 면별 RSS 피드. 운영 전에 언론사별 RSS 이용 조건을 확인한다.
  * @param articlesPerFeed 피드마다 쓸 기사 수 상한. 넘으면 24시간에 고르게 나눠 뽑는다
  * @param maxArticles     AI에 넘길 기사 수 상한(중복 제거 후)
- * @param maxDrafts       한 번에 만들 이슈 초안 수 상한
+ * @param draftsPerCategory 분야(카테고리)마다 만들 이슈 초안 수 상한. 쟁점이 없는 분야는 건너뛴다
  * @param openaiApiKey    {@code writer=openai-api}일 때 필요한 OpenAI API 키
  * @param model           OpenAI API 모델 ID
  * @param writer          초안 작성 방식. {@code openai-api}(기본, 운영) 또는 {@code codex-cli}(로컬 테스트, ChatGPT 로그인)
@@ -24,7 +24,7 @@ public record NewsDraftProperties(
         List<Feed> feeds,
         int articlesPerFeed,
         int maxArticles,
-        int maxDrafts,
+        int draftsPerCategory,
         String openaiApiKey,
         String model,
         String writer,
@@ -41,7 +41,7 @@ public record NewsDraftProperties(
                 .toList();
         articlesPerFeed = articlesPerFeed <= 0 ? 12 : articlesPerFeed;
         maxArticles = maxArticles <= 0 ? 400 : maxArticles;
-        maxDrafts = maxDrafts <= 0 ? 3 : maxDrafts;
+        draftsPerCategory = draftsPerCategory <= 0 ? 1 : draftsPerCategory;
         model = model == null || model.isBlank() ? "gpt-6.1-sol" : model;
         writer = writer == null || writer.isBlank() ? WRITER_OPENAI_API : writer.strip();
         codexCommand = codexCommand == null || codexCommand.isBlank() ? "codex" : codexCommand;
