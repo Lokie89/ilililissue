@@ -44,6 +44,8 @@ export type IssueSummary = {
   category: Category | null;
   status: IssueStatus;
   publishedAt: string | null;
+  // 투표를 연장한 시각. 매일 06:59에 이 값(없으면 게시 시각)이 그날 0시 전이면 자동 마감된다.
+  extendedAt: string | null;
 };
 
 export type IssueSource = {
@@ -62,6 +64,7 @@ export type IssueDetail = {
   publishedAt: string | null;
   corrected: boolean;
   correctedAt: string | null;
+  extendedAt: string | null;
 };
 
 export type Opinion = {

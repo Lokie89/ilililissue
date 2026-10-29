@@ -56,4 +56,6 @@ public class IssueJpaEntity {
     private LocalDateTime publishedAt;
 
     private LocalDateTime correctedAt;
+
+    private LocalDateTime extendedAt;
 }

@@ -32,6 +32,29 @@ public class IssueTest {
         Assertions.assertThat(issue.isOpenForVoting()).isFalse();
     }
 
+    @DisplayName("게시 중이거나 마감된 이슈를 연장하면 게시 중이 되고 연장 시각을 남긴다")
+    @Test
+    void extend() {
+        Issue closed = IssueFixture.withStatus(1, IssueStatus.CLOSED);
+        closed.extend(NOW.plusDays(1));
+        Assertions.assertThat(closed.getStatus()).isEqualTo(IssueStatus.PUBLISHED);
+        Assertions.assertThat(closed.getExtendedAt()).isEqualTo(NOW.plusDays(1));
+        Assertions.assertThat(closed.getPublishedAt()).isEqualTo(NOW);
+
+        Issue published = IssueFixture.withStatus(2, IssueStatus.PUBLISHED);
+        published.extend(NOW.plusHours(1));
+        Assertions.assertThat(published.getExtendedAt()).isEqualTo(NOW.plusHours(1));
+    }
+
+    @DisplayName("게시 전 이슈는 연장할 수 없다")
+    @Test
+    void extendBeforePublish() {
+        Assertions.assertThatThrownBy(() -> IssueFixture.withStatus(1, IssueStatus.DRAFT).extend(NOW))
+                .isInstanceOf(IllegalIssueStateException.class);
+        Assertions.assertThatThrownBy(() -> IssueFixture.withStatus(1, IssueStatus.REVIEWED).extend(NOW))
+                .isInstanceOf(IllegalIssueStateException.class);
+    }
+
     @DisplayName("검수하지 않은 이슈는 게시할 수 없다")
     @Test
     void publishWithoutReview() {

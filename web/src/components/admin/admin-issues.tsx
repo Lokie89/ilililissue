@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, errorMessage } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import { AdminNewsDrafts } from "./admin-news-drafts";
 import {
   type Category,
@@ -240,6 +241,7 @@ export function AdminIssues() {
                     {ISSUE_STATUS_LABEL[issue.status]}
                   </span>
                   {issue.category && <span>{issue.category.name}</span>}
+                  {issue.extendedAt && <span>· {formatDateTime(issue.extendedAt)} 연장</span>}
                 </div>
                 <p className="mt-1 font-medium">{issue.title}</p>
               </div>
@@ -274,6 +276,20 @@ export function AdminIssues() {
                       className="btn btn-sm btn-secondary"
                     >
                       마감
+                    </button>
+                  )}
+                  {(issue.status === "PUBLISHED" || issue.status === "CLOSED") && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        run(
+                          () => api(`/api/admin/issues/${issue.id}/extend`, { method: "POST" }),
+                          "연장했습니다. 내일 오전 6시 59분에 다시 마감됩니다.",
+                        )
+                      }
+                      className="btn btn-sm btn-secondary"
+                    >
+                      {issue.status === "CLOSED" ? "다시 열기(연장)" : "연장"}
                     </button>
                   )}
                   {(issue.status === "PUBLISHED" || issue.status === "CLOSED") && (

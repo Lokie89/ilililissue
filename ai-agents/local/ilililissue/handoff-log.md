@@ -18,6 +18,20 @@
 
 ## 현재 기록
 
+### 2026-10-29 (6) — 투표 자동 마감(06:59)과 연장, 관리자 계정
+
+- 목표: "마감도 수동 할수 있고 전날꺼 6시59분에 자동 마감", "연장하면 열리는데 또 다음날 6시 59분에 마감"
+- 변경:
+  - `IssueAutoCloseScheduler`(매일 06:59 Asia/Seoul) → `CloseExpiredIssuesUseCase.closePublishedBeforeToday()`: `coalesce(extended_at, published_at) < 오늘 0시`인 `PUBLISHED` 마감
+  - `Issue.extend(now)`(`PUBLISHED`·`CLOSED` → `PUBLISHED`, `extendedAt` 기록), `POST /api/admin/issues/{id}/extend`, 응답에 `extendedAt`, Flyway `V4__issue_extended_at.sql`
+  - 관리 화면: 게시 중 "연장", 마감 "다시 열기(연장)" 버튼, 연장 시각 표시
+  - 로컬 관리자 계정 `admin@local.test`(닉네임 관리자, `admin` 닉네임은 다른 회원이 사용 중) 생성
+- 검증: `./gradlew test` 93개 통과(도메인 연장 2개, 자동 마감·연장 통합 3개 추가), 웹 lint·tsc 통과, 로컬 MySQL V4 적용 확인
+- 남은 작업: 이전과 같음
+- 주의 사항:
+  - 스모크 테스트에서 #1이 이미 게시된 줄 모르고 연장 API를 호출해 `extended_at`이 기록됐고, 바로 NULL로 되돌렸다. 공유 DB에서 상태를 바꾸는 호출 전에는 현재 상태를 먼저 조회한다
+  - 06:59 마감과 07:00 초안 작성 모두 서버가 켜져 있어야 동작한다
+
 ### 2026-10-29 (5) — Codex CLI로 실제 초안 생성
 
 - 목표: "지금은 테스트니까 그냥 해보자" — API 키 없이 이 PC의 Codex(ChatGPT 로그인)로 실제 초안 만들기
@@ -74,20 +88,4 @@
 - 주의 사항:
   - `globals.css`에 `@import "tailwindcss"` 뒤로 다른 `@import`를 넣으면 이후 `@theme`·`@layer components`가 통째로 빠졌다(Next 16 Turbopack, 오류 없음). 외부 CSS는 `layout.tsx`에서 JS로 import한다
   - 새 화면은 `stone-*` 같은 원색 클래스 대신 토큰 클래스를 쓴다. 입장 색은 `STANCE_STYLE`로만 쓴다
-
-### 2026-10-29 — 뉴스 자동 초안(네이버 뉴스 검색 + Claude)
-
-- 목표: 매일 아침 7시에 여러 언론사 기사를 모아 내용을 추린 이슈 초안을 자동 등록(사용자: "응 진행해줘" — 네이버 뉴스 검색 API + Claude 요약 + 초안으로만 등록 안 승인). 세션 시작 시 서버 기동 요청은 Docker MySQL + `bootRun` + `next dev`로 처리
-- 변경:
-  - 모듈 `newsdraft`: `NewsDraftService`(지난 24시간 수집·URL 중복 제거·최대 200건, 초안 검증 후 `ManageIssueUseCase.create`로 `DRAFT` 등록), `NaverNewsSearchAdapter`(RestClient), `ClaudeIssueDraftWriter`(Java SDK `anthropic-java:3.2.0`, 구조화 출력, `claude-opus-5-5`), `NewsDraftScheduler`(07:00, `news-draft.enabled=true`일 때만), `POST /api/admin/news-drafts`(백그라운드, 202/409), `GET /api/admin/news-drafts/status`
-  - 설정 `news-draft.*`, 환경변수 `NEWS_DRAFT_ENABLED`, `NEWS_DRAFT_KEYWORDS`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `ANTHROPIC_API_KEY`(`.env.example`, `.env.prod.example`, `docker-compose.prod.yml`)
-  - 웹 관리 화면 이슈 탭에 "뉴스 자동 초안" 섹션(지금 초안 만들기, 실행 중 5초마다 상태 확인, 끝나면 목록 새로고침)
-  - 문서: `goal.md` 범위 변경, `architecture.md` 외부 연동 인터페이스, `domain-policy.md` 자동 초안, `README.md`, `deploy/README.md`
-- 검증: `./gradlew test` 82개 통과(신규 8개: 서비스 단위·네이버 응답 변환·관리자 권한), 웹 lint·build 통과. MySQL `bootRun` + `next dev` 프록시 경유로 관리자 POST 202 → status에 "네이버 검색 API 키가 설정되지 않았습니다" 확인. **실제 네이버·Claude 호출은 키가 없어 미실행**
-- 남은 작업: 네이버 검색 API·Anthropic API 키 발급 후 실제 실행으로 초안 품질(중립성·원문 표현 유사도·언론사 이름) 확인과 프롬프트 조정, 운영에서 `NEWS_DRAFT_ENABLED=true`. 이전 남은 작업(약관·처리방침 기입, 보관 기간 확정, 회원 정지 여부, 배포, PR)은 그대로
-- 주의 사항:
-  - 스모크 테스트용 관리자 계정 `newsdraft-*@example.com`을 로컬 MySQL에 만들었다
-  - Claude 서버 측 거절 대체 모델(`fallbacks`)은 쓰지 않았다. 거절되면 그날 초안 0건으로 끝나고 마지막 실행 결과에 남는다
-  - 실행 중 플래그와 마지막 결과는 메모리에만 있다. 서버를 여러 대로 늘리면 중복 실행 방지(DB 잠금 등)가 필요하다
-  - 네이버 검색 API는 검색어가 필수라 분야 단어 10개로 넓게 모은다. 주제가 치우치면 `NEWS_DRAFT_KEYWORDS`를 조정한다
 

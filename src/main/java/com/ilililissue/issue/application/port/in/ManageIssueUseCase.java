@@ -21,5 +21,7 @@ public interface ManageIssueUseCase {
 
     void close(IssueId id);
 
+    void extend(IssueId id);
+
     void correct(IssueId id, IssueSummary correctedSummary);
 }

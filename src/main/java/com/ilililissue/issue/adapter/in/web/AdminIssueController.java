@@ -87,6 +87,13 @@ public class AdminIssueController {
         return IssueDetailResponse.from(issueQuery.getIssue(id));
     }
 
+    @PostMapping("/issues/{issueId}/extend")
+    public IssueDetailResponse extend(@PathVariable long issueId) {
+        IssueId id = new IssueId(issueId);
+        manageIssueUseCase.extend(id);
+        return IssueDetailResponse.from(issueQuery.getIssue(id));
+    }
+
     @PostMapping("/issues/{issueId}/correction")
     public IssueDetailResponse correct(@PathVariable long issueId, @RequestBody CorrectionRequest request) {
         IssueId id = new IssueId(issueId);

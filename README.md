@@ -88,6 +88,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/admin/issues/{id}/review` | 관리자 | 검수 완료 |
 | POST | `/api/admin/issues/{id}/publish` | 관리자 | 게시 (출처 1개 이상) |
 | POST | `/api/admin/issues/{id}/close` | 관리자 | 투표 마감 |
+| POST | `/api/admin/issues/{id}/extend` | 관리자 | 투표 연장 (게시 중·마감 이슈, 마감이면 다시 열림. 다음 날 06:59에 다시 자동 마감) |
 | POST | `/api/admin/issues/{id}/correction` | 관리자 | 게시 후 배경 설명 정정 `{summary}` |
 | GET | `/api/admin/reports?status&page&size` | 관리자 | 신고 목록 (기본 `RECEIVED`) |
 | POST | `/api/admin/reports/{id}/hide` | 관리자 | 신고된 의견 숨김 |
@@ -99,7 +100,7 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/admin/news-drafts` | 관리자 | 뉴스 자동 초안 수동 실행 (백그라운드, 202. 실행 중이면 409) |
 | GET | `/api/admin/news-drafts/status` | 관리자 | 실행 중 여부와 마지막 실행 결과 `{running, lastRun}` |
 
-이슈 상태: `DRAFT` → `REVIEWED` → `PUBLISHED` → `CLOSED`. 투표는 `PUBLISHED`에서만 가능합니다.
+이슈 상태: `DRAFT` → `REVIEWED` → `PUBLISHED` → `CLOSED`. 투표는 `PUBLISHED`에서만 가능합니다. 매일 06:59(Asia/Seoul)에 그날 0시 전에 게시(연장했으면 연장)된 이슈를 자동 마감합니다.
 
 ## 뉴스 자동 초안
 

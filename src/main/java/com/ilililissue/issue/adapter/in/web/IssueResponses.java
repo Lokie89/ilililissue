@@ -25,7 +25,8 @@ public final class IssueResponses {
             String title,
             CategoryResponse category,
             String status,
-            LocalDateTime publishedAt
+            LocalDateTime publishedAt,
+            LocalDateTime extendedAt
     ) {
 
         public static IssueSummaryResponse from(IssueView view) {
@@ -35,7 +36,8 @@ public final class IssueResponses {
                     issue.getTitle().getValue(),
                     CategoryResponse.from(view.category()),
                     issue.getStatus().name(),
-                    issue.getPublishedAt()
+                    issue.getPublishedAt(),
+                    issue.getExtendedAt()
             );
         }
     }
@@ -49,7 +51,8 @@ public final class IssueResponses {
             String status,
             LocalDateTime publishedAt,
             boolean corrected,
-            LocalDateTime correctedAt
+            LocalDateTime correctedAt,
+            LocalDateTime extendedAt
     ) {
 
         public static IssueDetailResponse from(IssueView view) {
@@ -66,7 +69,8 @@ public final class IssueResponses {
                     issue.getStatus().name(),
                     issue.getPublishedAt(),
                     issue.isCorrected(),
-                    issue.getCorrectedAt()
+                    issue.getCorrectedAt(),
+                    issue.getExtendedAt()
             );
         }
     }

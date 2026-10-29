@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,6 +48,13 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
     }
 
     @Override
+    public List<Issue> findPublishedBefore(LocalDateTime cutoff) {
+        return issueRepository.findOpenedBefore(IssueStatus.PUBLISHED, cutoff).stream()
+                .map(this::mapToDomain)
+                .toList();
+    }
+
+    @Override
     public Issue save(Issue issue) {
         IssueJpaEntity saved = issueRepository.save(new IssueJpaEntity(
                 issue.getId() == null ? null : issue.getId().getValue(),
@@ -59,7 +67,8 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
                         .toList()),
                 issue.getStatus(),
                 issue.getPublishedAt(),
-                issue.getCorrectedAt()
+                issue.getCorrectedAt(),
+                issue.getExtendedAt()
         ));
         return mapToDomain(saved);
     }
@@ -98,7 +107,8 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
                         .toList()),
                 entity.getStatus(),
                 entity.getPublishedAt(),
-                entity.getCorrectedAt()
+                entity.getCorrectedAt(),
+                entity.getExtendedAt()
         );
     }
 

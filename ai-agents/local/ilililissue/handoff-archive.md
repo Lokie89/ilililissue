@@ -114,3 +114,19 @@
   - 기존 회원(동의 절차 이전 가입)은 `terms_agreed_at`이 null이다. 운영 데이터가 없으므로 별도 재동의 절차는 만들지 않았다
   - 검증 오류 메시지는 `필드: 메시지` 형식이다(`GlobalExceptionHandler`). 앱이 그대로 보여주면 필드명이 보인다
   - `.gitignore`의 `db/` 규칙이 `src/main/resources/db/migration`까지 무시해 V1·V2가 커밋되지 않았었다. `/db/`로 고치고 V1~V3을 커밋했다(`b8cad2b`). 새 파일이 `git status`에 안 보이면 `git check-ignore -v <경로>`로 확인한다
+
+### 2026-10-29 — 뉴스 자동 초안(네이버 뉴스 검색 + Claude)
+
+- 목표: 매일 아침 7시에 여러 언론사 기사를 모아 내용을 추린 이슈 초안을 자동 등록(사용자: "응 진행해줘" — 네이버 뉴스 검색 API + Claude 요약 + 초안으로만 등록 안 승인). 세션 시작 시 서버 기동 요청은 Docker MySQL + `bootRun` + `next dev`로 처리
+- 변경:
+  - 모듈 `newsdraft`: `NewsDraftService`(지난 24시간 수집·URL 중복 제거·최대 200건, 초안 검증 후 `ManageIssueUseCase.create`로 `DRAFT` 등록), `NaverNewsSearchAdapter`(RestClient), `ClaudeIssueDraftWriter`(Java SDK `anthropic-java:3.2.0`, 구조화 출력, `claude-opus-5-5`), `NewsDraftScheduler`(07:00, `news-draft.enabled=true`일 때만), `POST /api/admin/news-drafts`(백그라운드, 202/409), `GET /api/admin/news-drafts/status`
+  - 설정 `news-draft.*`, 환경변수 `NEWS_DRAFT_ENABLED`, `NEWS_DRAFT_KEYWORDS`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `ANTHROPIC_API_KEY`(`.env.example`, `.env.prod.example`, `docker-compose.prod.yml`)
+  - 웹 관리 화면 이슈 탭에 "뉴스 자동 초안" 섹션(지금 초안 만들기, 실행 중 5초마다 상태 확인, 끝나면 목록 새로고침)
+  - 문서: `goal.md` 범위 변경, `architecture.md` 외부 연동 인터페이스, `domain-policy.md` 자동 초안, `README.md`, `deploy/README.md`
+- 검증: `./gradlew test` 82개 통과(신규 8개: 서비스 단위·네이버 응답 변환·관리자 권한), 웹 lint·build 통과. MySQL `bootRun` + `next dev` 프록시 경유로 관리자 POST 202 → status에 "네이버 검색 API 키가 설정되지 않았습니다" 확인. **실제 네이버·Claude 호출은 키가 없어 미실행**
+- 남은 작업: 네이버 검색 API·Anthropic API 키 발급 후 실제 실행으로 초안 품질(중립성·원문 표현 유사도·언론사 이름) 확인과 프롬프트 조정, 운영에서 `NEWS_DRAFT_ENABLED=true`. 이전 남은 작업(약관·처리방침 기입, 보관 기간 확정, 회원 정지 여부, 배포, PR)은 그대로
+- 주의 사항:
+  - 스모크 테스트용 관리자 계정 `newsdraft-*@example.com`을 로컬 MySQL에 만들었다
+  - Claude 서버 측 거절 대체 모델(`fallbacks`)은 쓰지 않았다. 거절되면 그날 초안 0건으로 끝나고 마지막 실행 결과에 남는다
+  - 실행 중 플래그와 마지막 결과는 메모리에만 있다. 서버를 여러 대로 늘리면 중복 실행 방지(DB 잠금 등)가 필요하다
+  - 네이버 검색 API는 검색어가 필수라 분야 단어 10개로 넓게 모은다. 주제가 치우치면 `NEWS_DRAFT_KEYWORDS`를 조정한다

@@ -4,6 +4,7 @@ import com.ilililissue.common.application.PageQuery;
 import com.ilililissue.common.application.PageResult;
 import com.ilililissue.issue.application.CategoryException;
 import com.ilililissue.issue.application.IssueNotFoundException;
+import com.ilililissue.issue.application.port.in.CloseExpiredIssuesUseCase;
 import com.ilililissue.issue.application.port.in.IssueCommand;
 import com.ilililissue.issue.application.port.in.IssueQuery;
 import com.ilililissue.issue.application.port.in.IssueView;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.List;
@@ -32,7 +34,7 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
-public class IssueService implements IssueQuery, ManageIssueUseCase {
+public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpiredIssuesUseCase {
 
     private static final Set<IssueStatus> PUBLIC_STATUSES = EnumSet.of(IssueStatus.PUBLISHED, IssueStatus.CLOSED);
 
@@ -119,8 +121,25 @@ public class IssueService implements IssueQuery, ManageIssueUseCase {
 
     @Transactional
     @Override
+    public void extend(IssueId id) {
+        update(id, issue -> issue.extend(now()));
+    }
+
+    @Transactional
+    @Override
     public void correct(IssueId id, IssueSummary correctedSummary) {
         update(id, issue -> issue.correct(correctedSummary, now()));
+    }
+
+    @Transactional
+    @Override
+    public int closePublishedBeforeToday() {
+        List<Issue> issues = issuePort.findPublishedBefore(LocalDate.now(clock).atStartOfDay());
+        issues.forEach(issue -> {
+            issue.close();
+            issuePort.save(issue);
+        });
+        return issues.size();
     }
 
     private void update(IssueId id, Consumer<Issue> change) {
