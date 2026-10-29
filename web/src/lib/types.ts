@@ -46,6 +46,8 @@ export type IssueSummary = {
   publishedAt: string | null;
   // 투표를 연장한 시각. 매일 06:59에 이 값(없으면 게시 시각)이 그날 0시 전이면 자동 마감된다.
   extendedAt: string | null;
+  // 대표 이미지(AI 일러스트) 키. 없으면 null
+  imageKey: string | null;
 };
 
 export type IssueSource = {
@@ -65,6 +67,7 @@ export type IssueDetail = {
   corrected: boolean;
   correctedAt: string | null;
   extendedAt: string | null;
+  imageKey: string | null;
 };
 
 export type Opinion = {
@@ -162,6 +165,7 @@ export type NewsDraftRun = {
   articleCount: number;
   createdIssueIds: number[];
   skippedDrafts: number;
+  imageCount: number;
   error: string | null;
 };
 

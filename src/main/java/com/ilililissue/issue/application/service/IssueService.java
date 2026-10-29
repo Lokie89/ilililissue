@@ -10,6 +10,7 @@ import com.ilililissue.issue.application.port.in.IssueQuery;
 import com.ilililissue.issue.application.port.in.IssueView;
 import com.ilililissue.issue.application.port.in.ManageIssueUseCase;
 import com.ilililissue.issue.application.port.out.CategoryPort;
+import com.ilililissue.issue.application.port.out.IssueImageStore;
 import com.ilililissue.issue.application.port.out.IssuePort;
 import com.ilililissue.issue.domain.entity.Category;
 import com.ilililissue.issue.domain.entity.Issue;
@@ -40,6 +41,7 @@ public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpire
 
     private final IssuePort issuePort;
     private final CategoryPort categoryPort;
+    private final IssueImageStore issueImageStore;
     private final Clock clock;
 
     @Transactional(readOnly = true)
@@ -74,6 +76,22 @@ public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpire
     @Override
     public IssueView getIssue(IssueId id) {
         return toView(loadIssue(id));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public byte[] getPublicImage(IssueId id) {
+        Issue issue = loadIssue(id);
+        if (!PUBLIC_STATUSES.contains(issue.getStatus())) {
+            throw new IssueNotFoundException();
+        }
+        return loadImage(issue);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public byte[] getImage(IssueId id) {
+        return loadImage(loadIssue(id));
     }
 
     @Transactional(readOnly = true)
@@ -133,6 +151,28 @@ public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpire
 
     @Transactional
     @Override
+    public void attachImage(IssueId id, byte[] jpeg) {
+        Issue issue = loadIssue(id);
+        String previous = issue.replaceImage(issueImageStore.save(jpeg));
+        issuePort.save(issue);
+        if (previous != null) {
+            issueImageStore.delete(previous);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void removeImage(IssueId id) {
+        Issue issue = loadIssue(id);
+        String previous = issue.replaceImage(null);
+        issuePort.save(issue);
+        if (previous != null) {
+            issueImageStore.delete(previous);
+        }
+    }
+
+    @Transactional
+    @Override
     public void correct(IssueId id, IssueSummary correctedSummary) {
         update(id, issue -> issue.correct(correctedSummary, now()));
     }
@@ -152,6 +192,13 @@ public class IssueService implements IssueQuery, ManageIssueUseCase, CloseExpire
         Issue issue = loadIssue(id);
         change.accept(issue);
         issuePort.save(issue);
+    }
+
+    private byte[] loadImage(Issue issue) {
+        if (!issue.hasImage()) {
+            throw new IssueNotFoundException();
+        }
+        return issueImageStore.load(issue.getImageKey()).orElseThrow(IssueNotFoundException::new);
     }
 
     private Issue loadIssue(IssueId id) {

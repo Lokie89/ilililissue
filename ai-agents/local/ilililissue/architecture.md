@@ -56,6 +56,7 @@
 - 실행: `NewsDraftScheduler`(매일 07:00, `news-draft.enabled=true`일 때) 또는 `POST /api/admin/news-drafts`(백그라운드 `applicationTaskExecutor`). 서버 한 대 전제로 메모리 플래그로 중복 실행을 막고, 마지막 결과도 메모리에만 둔다(재시작하면 사라짐).
 - 신뢰 경계: AI 응답의 출처 URL은 수집한 기사 URL과 일치할 때만 쓰고, 언론사·발행일은 피드 값을 쓴다. 카테고리 id가 없거나 이슈 검증(제목 100자 등)에 실패한 초안은 건너뛴다. 기사 텍스트는 프롬프트에서 데이터로만 취급하도록 지시한다.
 - 비용: 기사 최대 200건(약 수만 토큰) 입력, 하루 1회 기준.
+- 이슈 대표 이미지(2026-10-29): Codex CLI 방식에서만 만든다(`CodexCliIssueImageGenerator`, `codex exec --sandbox workspace-write -C <빈 임시 폴더> -`, 프롬프트에서 `issue-image.png`로 저장하게 하고 없으면 폴더의 PNG). 한 장에 약 1분, 가로 1200px JPEG(품질 0.85, 60~220KB)로 줄여 `FileIssueImageStore`(`issue.image-dir`, 기본 `data/issue-images`, 운영 Docker 볼륨 `issue-images`)에 `<32자 hex 키>.jpg`로 저장하고 `issue.image_key`(Flyway V5)에 키만 둔다. 초안 등록 뒤 이슈마다 순서대로 만들고, 실패해도 초안은 남긴다. OpenAI API 방식(`NoIssueImageGenerator`)은 아직 이미지를 만들지 않는다
 - 로컬 테스트용 Codex CLI(`news-draft.writer=codex-cli`, `CodexCliIssueDraftWriter`): `codex exec --skip-git-repo-check --ephemeral --sandbox read-only -C <빈 임시 폴더> --output-schema <스키마> -o <결과 파일> -`(프롬프트는 표준 입력 UTF-8, Windows는 `cmd.exe /c`). ChatGPT 로그인을 쓰므로 키가 없고 요금제 한도를 쓴다. 타임아웃 10분, 실행 후 임시 폴더 삭제. 운영 자동 실행에는 쓰지 않는다
 - 초안 작성 모델 변경(2026-10-29): 처음엔 Claude(Anthropic Java SDK)였으나 사용자 요청으로 OpenAI API 키 방식으로 바꿨다. Codex CLI(ChatGPT 로그인)를 서버에서 호출하는 방식은 운영 서버 자동 실행에 맞지 않아 쓰지 않는다.
 - 수집원 변경(2026-10-29): 처음엔 네이버 검색 API(뉴스)를 썼으나, 2026-07-30부터 개발자센터 신규 신청이 막히고(NAVER API HUB로 이관) 2026-09-07 시행 약관이 검색 결과를 AI에 입력하는 것을 금지해 언론사 RSS로 바꿨다.
@@ -93,6 +94,7 @@
 
 ## 비밀값 이름
 
+- 이슈 이미지 폴더 `ISSUE_IMAGE_DIR`(비밀값 아님)
 - `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_ROOT_PASSWORD`(docker), `JWT_SECRET`(32바이트 이상), `ALLOWED_ORIGINS`, 선택: `NEWS_DRAFT_ENABLED`, `NEWS_DRAFT_MODEL`, `OPENAI_API_KEY`, `NEWS_DRAFT_WRITER`(`openai-api`|`codex-cli`), `NEWS_DRAFT_CODEX_COMMAND`, `NEWS_DRAFT_CODEX_MODEL` — 실제 값은 저장소에 두지 않는다. 예시: 루트 `.env.example`
 
 ## 변경 가능성

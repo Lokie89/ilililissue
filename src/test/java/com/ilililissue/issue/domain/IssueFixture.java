@@ -27,6 +27,6 @@ public class IssueFixture {
 
     public static Issue withStatus(long id, IssueStatus status) {
         return Issue.withId(new IssueId(id), IssueTitle.from("주 4일제를 도입해야 할까?"), IssueSummary.from("배경 설명"),
-                new CategoryId(1), sources(), status, status == IssueStatus.DRAFT ? null : NOW, null, null);
+                new CategoryId(1), sources(), status, status == IssueStatus.DRAFT ? null : NOW, null, null, null);
     }
 }

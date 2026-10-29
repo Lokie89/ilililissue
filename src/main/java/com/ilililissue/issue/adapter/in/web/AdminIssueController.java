@@ -11,7 +11,10 @@ import com.ilililissue.issue.application.port.in.ManageIssueUseCase;
 import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.issue.domain.vo.IssueSummary;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,6 +94,18 @@ public class AdminIssueController {
     public IssueDetailResponse extend(@PathVariable long issueId) {
         IssueId id = new IssueId(issueId);
         manageIssueUseCase.extend(id);
+        return IssueDetailResponse.from(issueQuery.getIssue(id));
+    }
+
+    @GetMapping(value = "/issues/{issueId}/image", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> image(@PathVariable long issueId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(issueQuery.getImage(new IssueId(issueId)));
+    }
+
+    @DeleteMapping("/issues/{issueId}/image")
+    public IssueDetailResponse removeImage(@PathVariable long issueId) {
+        IssueId id = new IssueId(issueId);
+        manageIssueUseCase.removeImage(id);
         return IssueDetailResponse.from(issueQuery.getIssue(id));
     }
 

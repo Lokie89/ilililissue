@@ -29,5 +29,15 @@ public interface IssueQuery {
 
     IssueView getIssue(IssueId id);
 
+    /**
+     * 공개 이슈의 대표 이미지(JPEG). 게시 전 이슈이거나 이미지가 없으면 찾을 수 없음.
+     */
+    byte[] getPublicImage(IssueId id);
+
+    /**
+     * 관리자용: 상태와 관계없이 대표 이미지(JPEG).
+     */
+    byte[] getImage(IssueId id);
+
     List<Category> getCategories();
 }

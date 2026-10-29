@@ -23,5 +23,12 @@ public interface ManageIssueUseCase {
 
     void extend(IssueId id);
 
+    /**
+     * 대표 이미지(JPEG)를 저장하고 이슈에 붙인다. 이전 이미지는 지운다.
+     */
+    void attachImage(IssueId id, byte[] jpeg);
+
+    void removeImage(IssueId id);
+
     void correct(IssueId id, IssueSummary correctedSummary);
 }

@@ -5,7 +5,9 @@ import com.ilililissue.issue.application.port.in.IssueCommand;
 import com.ilililissue.issue.application.port.in.IssueQuery;
 import com.ilililissue.issue.application.port.in.ManageIssueUseCase;
 import com.ilililissue.issue.domain.entity.Category;
+import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.newsdraft.application.NewsDraftException;
+import com.ilililissue.newsdraft.application.port.in.GenerateIssueImageUseCase;
 import com.ilililissue.newsdraft.application.port.in.GenerateNewsDraftsUseCase;
 import com.ilililissue.newsdraft.application.port.out.IssueDraftWriterPort;
 import com.ilililissue.newsdraft.application.port.out.NewsFeedPort;
@@ -40,6 +42,7 @@ import java.util.stream.Collectors;
  * 피드마다 상한을 넘으면 최신순으로 자르지 않고 24시간에 고르게 뽑아, 밤사이 기사나 기사가 많은 언론사로 쏠리지 않게 한다.</li>
  * <li>RSS에는 조회수가 없어 '인기'는 보도량(같은 주제를 다룬 언론사 수)으로 판단하도록 AI에 맡긴다.</li>
  * <li>분야(카테고리)마다 상한({@code draftsPerCategory}, 기본 1)까지만 등록한다.</li>
+ * <li>이미지를 만들 수 있는 설정(Codex CLI)이면 등록한 초안마다 대표 이미지를 만든다. 실패해도 초안은 남긴다.</li>
  * <li>AI가 고른 초안 중 카테고리가 있고 출처가 수집한 기사 URL인 것만 DRAFT 이슈로 등록한다. 언론사·발행일은 피드 값을 쓴다.</li>
  * <li>기사 제목·요약문은 저장하지 않는다. 게시는 관리자 검수 후에만 한다.</li>
  * <li>외부 호출이 길어 전체를 한 트랜잭션으로 묶지 않고, 초안마다 따로 등록한다. 서버 한 대 전제로 메모리에서 중복 실행을 막는다.</li>
@@ -59,6 +62,7 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
     private final IssueDraftWriterPort issueDraftWriterPort;
     private final IssueQuery issueQuery;
     private final ManageIssueUseCase manageIssueUseCase;
+    private final GenerateIssueImageUseCase generateIssueImageUseCase;
     private final NewsDraftProperties properties;
     private final Clock clock;
 
@@ -75,7 +79,7 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
             lastRun = run(startedAt);
             return lastRun;
         } catch (RuntimeException e) {
-            lastRun = new NewsDraftRun(startedAt, LocalDateTime.now(clock), 0, List.of(), 0, e.getMessage());
+            lastRun = new NewsDraftRun(startedAt, LocalDateTime.now(clock), 0, List.of(), 0, 0, e.getMessage());
             throw e;
         } finally {
             running.set(false);
@@ -102,7 +106,7 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
         List<NewsArticle> articles = collect();
         if (articles.isEmpty()) {
             log.info("뉴스 초안: 지난 24시간 기사가 없어 건너뜁니다.");
-            return new NewsDraftRun(startedAt, LocalDateTime.now(clock), 0, List.of(), 0, null);
+            return new NewsDraftRun(startedAt, LocalDateTime.now(clock), 0, List.of(), 0, 0, null);
         }
 
         List<String> recentTitles = issueQuery.getAllIssues(PageQuery.of(0, RECENT_ISSUE_COUNT)).content().stream()
@@ -131,7 +135,22 @@ public class NewsDraftService implements GenerateNewsDraftsUseCase {
             }
         }
         log.info("뉴스 초안: 기사 {}건으로 초안 {}건 등록, {}건 제외", articles.size(), created.size(), skipped);
-        return new NewsDraftRun(startedAt, LocalDateTime.now(clock), articles.size(), created, skipped, null);
+        int imageCount = attachImages(created);
+        return new NewsDraftRun(startedAt, LocalDateTime.now(clock), articles.size(), created, skipped, imageCount, null);
+    }
+
+    // 한 장에 1~2분 걸려 하나씩 만든다. 실패해도 초안은 그대로 두고 관리 화면에서 다시 만들 수 있다.
+    private int attachImages(List<Long> issueIds) {
+        if (!generateIssueImageUseCase.available()) {
+            return 0;
+        }
+        int count = 0;
+        for (Long issueId : issueIds) {
+            if (generateIssueImageUseCase.generate(new IssueId(issueId))) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private void requireConfigured() {

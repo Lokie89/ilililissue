@@ -18,6 +18,19 @@
 
 ## 현재 기록
 
+### 2026-10-29 (10) — 이슈 대표 이미지(AI 일러스트)
+
+- 목표: "그림같은것도 넣어주면 안되나? 만들어서"
+- 확인: 이 PC의 Codex CLI에 `image_generation` 기능이 켜져 있어 ChatGPT 로그인으로 이미지를 만들 수 있다(시험 1장 95초)
+- 변경:
+  - 이슈 모듈: `Issue.imageKey`·`replaceImage`, Flyway `V5__issue_image_key.sql`, `IssueImageStore`/`FileIssueImageStore`(`issue.image-dir`), `GET /api/issues/{id}/image`(공개, 7일 캐시), 관리자 `GET`·`DELETE /api/admin/issues/{id}/image`, 응답에 `imageKey`
+  - 뉴스 초안 모듈: `IssueImageGeneratorPort`, `CodexCliIssueImageGenerator`(PNG→1200px JPEG), `NoIssueImageGenerator`(OpenAI API 방식), `IssueImageService`(`GenerateIssueImageUseCase`), 초안 등록 뒤 이슈마다 이미지 생성(`NewsDraftRun.imageCount`), `POST /api/admin/issues/{id}/image`(백그라운드)·`/status`
+  - 웹: `IssueImage` 컴포넌트, 홈 강조 카드 이미지·목록 썸네일, 상세 이미지와 "AI로 만든 이미지" 안내, 관리 화면 썸네일·"이미지 (다시) 만들기"·"이미지 삭제"
+  - 운영: Dockerfile에 `/app/data/issue-images`(app 소유), compose 볼륨 `issue-images`, `ISSUE_IMAGE_DIR`. `.gitignore`에 `/data/`
+- 검증: `./gradlew test` 104개 통과(이미지 저장소·API·JPEG 변환·서비스 연동 8개 추가), 웹 lint·tsc 통과. 로컬 V5 적용, 게시 중 5건 이미지 생성(48~79초, 60~220KB) — 실존 인물·글자·사진풍 없음 확인. Chrome 1280px·390px 홈·상세·관리 화면 이미지 표시, 가로 스크롤 0(썸네일 너비 충돌로 생긴 76px 넘침 수정), 오류 0
+- 남은 작업: OpenAI API 방식(운영) 이미지 생성(이미지 API 연동), `npm run build` 확인, 이전 남은 작업
+- 주의 사항: `IssueImage`는 너비 클래스를 받지 않으면 너비가 없다(쓰는 쪽에서 `w-full`·`w-20` 등 지정). 기본값에 `w-full`을 두면 썸네일 `w-20`과 충돌한다
+
 ### 2026-10-29 (9) — 분야마다 1건 초안, 로컬 이슈 정리 후 오늘 이슈 5건 게시
 
 - 목표: "지금 있는거 정리해주고 각 분야별로 오늘 뉴스중에 인기많았던 내용 토대로 작성". 사용자 선택: 기존 9건 모두 삭제, 바로 게시, 매일 자동 초안도 분야마다 1건
@@ -64,17 +77,4 @@
 - 주의 사항:
   - 스모크 테스트에서 #1이 이미 게시된 줄 모르고 연장 API를 호출해 `extended_at`이 기록됐고, 바로 NULL로 되돌렸다. 공유 DB에서 상태를 바꾸는 호출 전에는 현재 상태를 먼저 조회한다
   - 06:59 마감과 07:00 초안 작성 모두 서버가 켜져 있어야 동작한다
-
-### 2026-10-29 (5) — Codex CLI로 실제 초안 생성
-
-- 목표: "지금은 테스트니까 그냥 해보자" — API 키 없이 이 PC의 Codex(ChatGPT 로그인)로 실제 초안 만들기
-- 변경:
-  - `CodexCliIssueDraftWriter`(`news-draft.writer=codex-cli`), 프롬프트·스키마를 `IssueDraftPrompt`로 분리해 OpenAI API 방식과 공유. 기본값은 `openai-api`
-  - 설정 `writer`, `codex-command`, `codex-model`. 로컬 `.env`에 `NEWS_DRAFT_WRITER=codex-cli`
-  - 로컬 DB 카테고리 이름이 깨져 있던 것 수정(이전 세션에 `docker exec mysql`로 넣을 때 클라이언트 문자셋 미지정)
-- 검증: `./gradlew test` 88개 통과. MySQL `bootRun`에서 관리자 수동 실행 → 기사 200건으로 26초 만에 DRAFT 3건(#1 다문화가족 산후조리 지원 기준, #2 수능 스마트안경 부정행위 응시 제한, #3 수도권 신규 택지·개발제한구역) 생성, 출처는 수집 URL만
-- 남은 작업: 초안 3건 사실관계 검수(특히 #3은 후보지가 개발제한구역인지 원문 확인 필요, #1은 출처 2건이 한겨레), 배경 설명이 목표(300~600자)보다 짧음(약 280자) → 프롬프트 조정 검토, 운영용 OpenAI API 키, 언론사 RSS 이용 조건 확인
-- 주의 사항:
-  - `docker exec ... mysql`로 한글을 넣을 때는 `--default-character-set=utf8mb4`를 붙인다
-  - Codex CLI 방식은 서버 PC에 codex 설치·ChatGPT 로그인이 필요하고 요금제 한도를 쓴다. 운영 자동 실행에는 OpenAI API 키 방식을 쓴다
 

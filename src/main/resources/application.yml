@@ -16,6 +16,10 @@ auth:
   cookie-secure: true
   allowed-origins: ${ALLOWED_ORIGINS:}
 
+# 이슈 대표 이미지(AI 일러스트) 저장 폴더. 운영(Docker)에서는 볼륨으로 둔다.
+issue:
+  image-dir: ${ISSUE_IMAGE_DIR:data/issue-images}
+
 # 이용 기록 보관 기간(가안 1년). 바꾸면 개인정보 처리방침 2장도 고친다.
 metrics:
   event-retention: 365d

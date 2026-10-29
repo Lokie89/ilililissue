@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
  * <li>DRAFT, REVIEWED 상태에서만 내용을 수정할 수 있고, 수정하면 다시 검수가 필요하다(DRAFT).</li>
  * <li>출처가 1개 이상이어야 게시할 수 있다.</li>
  * <li>게시 후 사실관계 정정은 배경 설명만 바꿀 수 있고 정정 시각을 남긴다.</li>
+ * <li>대표 이미지(AI가 만든 일러스트)는 상태와 관계없이 붙이거나 뗄 수 있다. 파일은 저장소에 두고 키만 가진다.</li>
  * <li>게시 중이거나 마감된 이슈는 연장할 수 있다. 연장하면 다시 게시 중이 되고 연장 시각을 남긴다(다음 날 06:59 자동 마감 대상).</li>
  * <li>관리자 권한 검증은 application 계층에서 한다.</li>
  * </ul>
@@ -52,6 +53,8 @@ public class Issue extends SelfValidating<Issue> {
 
     private LocalDateTime extendedAt;
 
+    private String imageKey;
+
     private Issue(
             IssueId id,
             IssueTitle title,
@@ -61,7 +64,8 @@ public class Issue extends SelfValidating<Issue> {
             IssueStatus status,
             LocalDateTime publishedAt,
             LocalDateTime correctedAt,
-            LocalDateTime extendedAt
+            LocalDateTime extendedAt,
+            String imageKey
     ) {
         this.id = id;
         this.title = title;
@@ -72,17 +76,19 @@ public class Issue extends SelfValidating<Issue> {
         this.publishedAt = publishedAt;
         this.correctedAt = correctedAt;
         this.extendedAt = extendedAt;
+        this.imageKey = imageKey;
         this.validate();
     }
 
     public static Issue draft(IssueTitle title, IssueSummary summary, CategoryId categoryId, IssueSources sources) {
-        return new Issue(null, title, summary, categoryId, sources, IssueStatus.DRAFT, null, null, null);
+        return new Issue(null, title, summary, categoryId, sources, IssueStatus.DRAFT, null, null, null, null);
     }
 
     public static Issue withId(IssueId id, IssueTitle title, IssueSummary summary, CategoryId categoryId,
                                IssueSources sources, IssueStatus status,
-                               LocalDateTime publishedAt, LocalDateTime correctedAt, LocalDateTime extendedAt) {
-        return new Issue(id, title, summary, categoryId, sources, status, publishedAt, correctedAt, extendedAt);
+                               LocalDateTime publishedAt, LocalDateTime correctedAt, LocalDateTime extendedAt,
+                               String imageKey) {
+        return new Issue(id, title, summary, categoryId, sources, status, publishedAt, correctedAt, extendedAt, imageKey);
     }
 
     public void edit(IssueTitle title, IssueSummary summary, CategoryId categoryId, IssueSources sources) {
@@ -128,6 +134,19 @@ public class Issue extends SelfValidating<Issue> {
         this.summary = correctedSummary;
         this.correctedAt = now;
         this.validate();
+    }
+
+    /**
+     * 대표 이미지를 바꾼다. 이전 이미지 키를 돌려준다(없으면 null).
+     */
+    public String replaceImage(String newImageKey) {
+        String previous = this.imageKey;
+        this.imageKey = newImageKey;
+        return previous;
+    }
+
+    public boolean hasImage() {
+        return this.imageKey != null;
     }
 
     public boolean isOpenForVoting() {

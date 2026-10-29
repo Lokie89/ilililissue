@@ -9,6 +9,7 @@ import com.ilililissue.issue.domain.entity.Category;
 import com.ilililissue.issue.domain.vo.CategoryId;
 import com.ilililissue.issue.domain.vo.IssueId;
 import com.ilililissue.newsdraft.application.NewsDraftException;
+import com.ilililissue.newsdraft.application.port.in.GenerateIssueImageUseCase;
 import com.ilililissue.newsdraft.application.port.in.GenerateNewsDraftsUseCase.NewsDraftRun;
 import com.ilililissue.newsdraft.application.port.out.IssueDraftWriterPort;
 import com.ilililissue.newsdraft.application.port.out.NewsFeedPort;
@@ -62,8 +63,12 @@ class NewsDraftServiceTest {
     @Mock
     ManageIssueUseCase manageIssueUseCase;
 
+    @Mock
+    GenerateIssueImageUseCase generateIssueImageUseCase;
+
     private NewsDraftService service(NewsDraftProperties properties) {
-        return new NewsDraftService(newsFeedPort, issueDraftWriterPort, issueQuery, manageIssueUseCase, properties, CLOCK);
+        return new NewsDraftService(newsFeedPort, issueDraftWriterPort, issueQuery, manageIssueUseCase, generateIssueImageUseCase,
+                properties, CLOCK);
     }
 
     private static NewsDraftProperties properties(Feed... feeds) {
@@ -159,6 +164,27 @@ class NewsDraftServiceTest {
 
         Assertions.assertThat(run.createdIssueIds()).containsExactly(1L, 2L);
         Assertions.assertThat(run.skippedDrafts()).isEqualTo(1);
+    }
+
+    @DisplayName("이미지를 만들 수 있으면 등록한 초안마다 대표 이미지를 만들고, 실패한 것은 세지 않는다")
+    @Test
+    void attachesImages() {
+        when(issueQuery.getCategories()).thenReturn(List.of(
+                Category.withId(new CategoryId(1), "사회"), Category.withId(new CategoryId(2), "경제")));
+        when(issueQuery.getAllIssues(any(PageQuery.class))).thenReturn(new PageResult<>(List.of(), 0, 30, 0));
+        when(newsFeedPort.fetch(YNA)).thenReturn(List.of(article("연합뉴스", "https://yna.example.com/a", NOW.minusHours(1))));
+        when(issueDraftWriterPort.write(anyList(), anyList(), anyList(), anyInt())).thenReturn(List.of(
+                new IssueDraft("사회 질문?", "배경", 1, List.of("https://yna.example.com/a")),
+                new IssueDraft("경제 질문?", "배경", 2, List.of("https://yna.example.com/a"))));
+        when(manageIssueUseCase.create(any())).thenReturn(new IssueId(1), new IssueId(2));
+        when(generateIssueImageUseCase.available()).thenReturn(true);
+        when(generateIssueImageUseCase.generate(new IssueId(1))).thenReturn(true);
+        when(generateIssueImageUseCase.generate(new IssueId(2))).thenReturn(false);
+
+        NewsDraftRun run = service(properties(YNA)).generate();
+
+        Assertions.assertThat(run.createdIssueIds()).containsExactly(1L, 2L);
+        Assertions.assertThat(run.imageCount()).isEqualTo(1);
     }
 
     @DisplayName("API 키가 없으면 피드를 읽지 않고 설정 오류로 끝나며, 마지막 실행 결과에 사유를 남긴다")

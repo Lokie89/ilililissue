@@ -10,7 +10,7 @@ RUN ./gradlew --no-daemon bootJar -x test
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-RUN useradd --system --no-create-home app
+RUN useradd --system --no-create-home app \n    && mkdir -p /app/data/issue-images && chown -R app /app/data
 COPY --from=build /app/build/libs/*.jar app.jar
 USER app
 EXPOSE 8080

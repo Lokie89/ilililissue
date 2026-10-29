@@ -32,8 +32,11 @@ services:
       ALLOWED_ORIGINS: https://${DOMAIN}
       NEWS_DRAFT_ENABLED: ${NEWS_DRAFT_ENABLED:-false}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ISSUE_IMAGE_DIR: /app/data/issue-images
       JAVA_OPTS: ${API_JAVA_OPTS:--Xmx512m}
       TZ: Asia/Seoul
+    volumes:
+      - issue-images:/app/data/issue-images
     depends_on:
       db:
         condition: service_healthy
@@ -67,5 +70,6 @@ services:
 
 volumes:
   db-data:
+  issue-images:
   caddy-data:
   caddy-config:

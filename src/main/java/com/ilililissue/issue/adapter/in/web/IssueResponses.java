@@ -26,7 +26,8 @@ public final class IssueResponses {
             CategoryResponse category,
             String status,
             LocalDateTime publishedAt,
-            LocalDateTime extendedAt
+            LocalDateTime extendedAt,
+            String imageKey
     ) {
 
         public static IssueSummaryResponse from(IssueView view) {
@@ -37,7 +38,8 @@ public final class IssueResponses {
                     CategoryResponse.from(view.category()),
                     issue.getStatus().name(),
                     issue.getPublishedAt(),
-                    issue.getExtendedAt()
+                    issue.getExtendedAt(),
+                    issue.getImageKey()
             );
         }
     }
@@ -52,7 +54,8 @@ public final class IssueResponses {
             LocalDateTime publishedAt,
             boolean corrected,
             LocalDateTime correctedAt,
-            LocalDateTime extendedAt
+            LocalDateTime extendedAt,
+            String imageKey
     ) {
 
         public static IssueDetailResponse from(IssueView view) {
@@ -70,7 +73,8 @@ public final class IssueResponses {
                     issue.getPublishedAt(),
                     issue.isCorrected(),
                     issue.getCorrectedAt(),
-                    issue.getExtendedAt()
+                    issue.getExtendedAt(),
+                    issue.getImageKey()
             );
         }
     }

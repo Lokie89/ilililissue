@@ -67,7 +67,8 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | POST | `/api/auth/logout` | 누구나 | 로그아웃 (쿠키 삭제, 리프레시 토큰 폐기) |
 | GET | `/api/categories` | 누구나 | 카테고리 목록 |
 | GET | `/api/issues?page&size&categoryId` | 누구나 | 공개 이슈 목록 (게시·마감, 최신순, `categoryId`로 분야 필터) |
-| GET | `/api/issues/{id}` | 누구나 | 이슈 상세 (질문, 배경 설명, 원문 출처) |
+| GET | `/api/issues/{id}` | 누구나 | 이슈 상세 (질문, 배경 설명, 원문 출처, 대표 이미지 키 `imageKey`) |
+| GET | `/api/issues/{id}/image` | 누구나 | 공개 이슈 대표 이미지(JPEG, AI 일러스트). 없으면 404 |
 | POST | `/api/issues/{id}/views` | 누구나 | 조회 기록 (지표용, 없으면 `visitor_id` 쿠키 발급. 앱은 `X-Visitor-Id: <UUID>` 헤더) |
 | GET | `/api/issues/{id}/participation` | 누구나 | 내 투표 입장·의견 (비회원은 `voted: false`) |
 | POST | `/api/issues/{id}/votes` | 회원 | 투표 `{stance: AGREE \| NEUTRAL \| DISAGREE}` (1회, 변경 불가) |
@@ -97,6 +98,9 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 | GET | `/api/admin/opinions/hidden?page&size` | 관리자 | 숨긴 의견 목록 |
 | POST | `/api/admin/opinions/{id}/unhide` | 관리자 | 숨김 해제 |
 | GET | `/api/admin/metrics?from&to` | 관리자 | 참여 지표 (날짜 `YYYY-MM-DD`) |
+| GET | `/api/admin/issues/{id}/image` | 관리자 | 대표 이미지(게시 전 이슈 포함) |
+| POST | `/api/admin/issues/{id}/image` | 관리자 | 대표 이미지 다시 만들기 (Codex CLI 방식만, 백그라운드 202, 상태 `GET .../image/status`) |
+| DELETE | `/api/admin/issues/{id}/image` | 관리자 | 대표 이미지 삭제 |
 | POST | `/api/admin/news-drafts` | 관리자 | 뉴스 자동 초안 수동 실행 (백그라운드, 202. 실행 중이면 409) |
 | GET | `/api/admin/news-drafts/status` | 관리자 | 실행 중 여부와 마지막 실행 결과 `{running, lastRun}` |
 
@@ -110,4 +114,5 @@ H2 인메모리 DB를 쓰므로 MySQL 없이 실행됩니다.
 - 로컬 테스트: `.env`에 `NEWS_DRAFT_WRITER=codex-cli`를 넣으면 API 키 없이 이 PC에 설치·로그인된 Codex CLI(ChatGPT 요금제)로 초안을 씁니다. 운영 서버의 매일 자동 실행에는 쓰지 않습니다. 매일 자동 실행은 `NEWS_DRAFT_ENABLED=true`일 때만 합니다.
 - 피드 목록·건수: `application.yml`의 `news-draft.feeds`. **운영 전에 언론사별 RSS 이용 조건(상업적 이용, AI 입력)을 확인하거나 허락을 받아야 합니다.** 네이버 검색 API는 2026-09-07 약관부터 검색 결과를 AI에 넣는 것을 금지해 쓰지 않습니다.
 - RSS에는 조회수가 없어 관심도는 보도량(같은 주제를 다룬 언론사 수)으로 판단합니다. 여러 언론사가 함께 다룬 주제를 우선합니다.
+- Codex CLI 방식이면 초안마다 대표 이미지(AI 일러스트, 한 장에 약 1분)도 만들어 `data/issue-images`에 저장합니다. 실존 인물·글자·사진 같은 표현은 금지하고 화면에 "AI로 만든 이미지"라고 표시합니다.
 - 기사 제목·요약문(앞 200자)은 초안 작성에만 쓰고 저장하지 않습니다. 출처는 수집한 기사 URL만 인정하고, 언론사·발행일은 피드 값을 씁니다.

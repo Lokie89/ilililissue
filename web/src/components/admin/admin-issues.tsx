@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, errorMessage } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
+import { IssueImage } from "@/components/issue-image";
 import { AdminNewsDrafts } from "./admin-news-drafts";
 import {
   type Category,
@@ -38,6 +39,7 @@ export function AdminIssues() {
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
   const [newCategory, setNewCategory] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [imageGenerating, setImageGenerating] = useState<number[]>([]);
 
   const apply = useCallback(([issuePage, categoryList]: [Page<IssueSummary>, Category[]]) => {
     setIssues(issuePage.content);
@@ -89,6 +91,32 @@ export function AdminIssues() {
       }
       resetDraft();
     }, editingId ? "수정했습니다. 다시 검수가 필요합니다." : "작성했습니다.");
+  }
+
+  // 이미지는 백그라운드로 1~2분 걸린다. 끝날 때까지 5초마다 확인하고 목록을 새로 읽는다.
+  async function generateImage(id: number) {
+    setMessage(null);
+    try {
+      await api(`/api/admin/issues/${id}/image`, { method: "POST" });
+    } catch (e) {
+      setMessage(errorMessage(e));
+      return;
+    }
+    setImageGenerating((prev) => [...prev, id]);
+    setMessage(`#${id} 이미지를 만드는 중이에요. 1~2분 걸려요.`);
+    const deadline = Date.now() + 5 * 60 * 1000;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      try {
+        const status = await api<{ generating: boolean }>(`/api/admin/issues/${id}/image/status`);
+        if (!status.generating) break;
+      } catch {
+        break;
+      }
+    }
+    setImageGenerating((prev) => prev.filter((value) => value !== id));
+    await reload();
+    setMessage(`#${id} 이미지 작업이 끝났어요. 이미지가 없으면 다시 시도해 주세요.`);
   }
 
   async function correct(id: number) {
@@ -234,7 +262,14 @@ export function AdminIssues() {
         <ul className="mt-3 divide-y divide-line">
           {issues.map((issue) => (
             <li key={issue.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-              <div className="min-w-0">
+              {issue.imageKey ? (
+                <IssueImage issueId={issue.id} imageKey={issue.imageKey} admin className="w-full shrink-0 rounded-lg sm:w-28" />
+              ) : (
+                <div className="hidden aspect-video w-28 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-xs text-subtle sm:flex">
+                  이미지 없음
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-subtle">
                   <span>#{issue.id}</span>
                   <span className={`chip ${issue.status === "PUBLISHED" ? "bg-emerald-50 text-emerald-700" : ""}`}>
@@ -295,6 +330,27 @@ export function AdminIssues() {
                   {(issue.status === "PUBLISHED" || issue.status === "CLOSED") && (
                     <button type="button" onClick={() => correct(issue.id)} className="btn btn-sm btn-secondary">
                       정정
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => generateImage(issue.id)}
+                    disabled={imageGenerating.includes(issue.id)}
+                    className="btn btn-sm btn-secondary"
+                  >
+                    {imageGenerating.includes(issue.id) ? "이미지 만드는 중…" : issue.imageKey ? "이미지 다시 만들기" : "이미지 만들기"}
+                  </button>
+                  {issue.imageKey && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("대표 이미지를 지울까요?")) {
+                          run(() => api(`/api/admin/issues/${issue.id}/image`, { method: "DELETE" }), "이미지를 지웠습니다.");
+                        }
+                      }}
+                      className="btn btn-sm btn-ghost"
+                    >
+                      이미지 삭제
                     </button>
                   )}
                 </div>

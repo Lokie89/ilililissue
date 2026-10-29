@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { IssueImage } from "@/components/issue-image";
 import { formatDate } from "@/lib/format";
 import { getCategories, getIssues } from "@/lib/server-api";
 import { type Category, ISSUE_STATUS_LABEL, type IssueSummary } from "@/lib/types";
@@ -86,7 +87,10 @@ function IssueList({ issues, category }: { issues: IssueSummary[]; category?: Ca
                   href={`/issues/${issue.id}`}
                   className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-ink/[0.02] sm:px-6"
                 >
-                  <div className="min-w-0">
+                  {issue.imageKey && (
+                    <IssueImage issueId={issue.id} imageKey={issue.imageKey} className="w-20 shrink-0 rounded-lg sm:w-28" />
+                  )}
+                  <div className="min-w-0 flex-1">
                     <IssueMeta issue={issue} />
                     <h3 className="mt-1 font-semibold group-hover:underline group-hover:underline-offset-4">
                       {issue.title}
@@ -111,17 +115,20 @@ function FeaturedIssue({ issue, category }: { issue: IssueSummary; category?: Ca
   return (
     <Link
       href={`/issues/${issue.id}`}
-      className="group card relative block overflow-hidden transition-shadow hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.15)] sm:p-8"
+      className="group card relative block overflow-hidden p-0 transition-shadow hover:shadow-[0_8px_30px_-12px_rgba(0,0,0,0.15)] sm:p-0"
     >
-      <span aria-hidden className="absolute inset-x-0 top-0 flex h-1">
+      <span aria-hidden className="absolute inset-x-0 top-0 z-10 flex h-1">
         <span className="flex-1 bg-stance-agree" />
         <span className="flex-1 bg-stance-neutral" />
         <span className="flex-1 bg-stance-disagree" />
       </span>
-      <p className="eyebrow mb-3">{category ? `${category.name} · ${label}` : label}</p>
-      <IssueMeta issue={issue} />
-      <h2 className="mt-2 text-2xl leading-snug font-bold tracking-tight sm:text-[28px]">{issue.title}</h2>
-      <span className="btn btn-primary mt-6">{open ? "내 입장 고르기" : "결과 보기"} →</span>
+      {issue.imageKey && <IssueImage issueId={issue.id} imageKey={issue.imageKey} className="w-full" priority />}
+      <div className="p-5 sm:p-8">
+        <p className="eyebrow mb-3">{category ? `${category.name} · ${label}` : label}</p>
+        <IssueMeta issue={issue} />
+        <h2 className="mt-2 text-2xl leading-snug font-bold tracking-tight sm:text-[28px]">{issue.title}</h2>
+        <span className="btn btn-primary mt-6">{open ? "내 입장 고르기" : "결과 보기"} →</span>
+      </div>
     </Link>
   );
 }

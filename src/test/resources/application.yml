@@ -15,3 +15,7 @@ auth:
   refresh-token-ttl: 14d
   cookie-secure: false
   allowed-origins: http://localhost:3000
+
+# 테스트가 만드는 이슈 이미지는 build 아래에 둔다.
+issue:
+  image-dir: build/test-issue-images

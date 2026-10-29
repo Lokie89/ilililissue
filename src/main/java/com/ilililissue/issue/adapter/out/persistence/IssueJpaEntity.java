@@ -58,4 +58,7 @@ public class IssueJpaEntity {
     private LocalDateTime correctedAt;
 
     private LocalDateTime extendedAt;
+
+    @Column(length = 64)
+    private String imageKey;
 }

@@ -80,7 +80,8 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
                 issue.getStatus(),
                 issue.getPublishedAt(),
                 issue.getCorrectedAt(),
-                issue.getExtendedAt()
+                issue.getExtendedAt(),
+                issue.getImageKey()
         ));
         return mapToDomain(saved);
     }
@@ -120,7 +121,8 @@ public class IssuePersistenceAdapter implements IssuePort, CategoryPort {
                 entity.getStatus(),
                 entity.getPublishedAt(),
                 entity.getCorrectedAt(),
-                entity.getExtendedAt()
+                entity.getExtendedAt(),
+                entity.getImageKey()
         );
     }
 

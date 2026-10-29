@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { IssueImage } from "@/components/issue-image";
 import { Participation } from "@/components/participation";
 import { ViewTracker } from "@/components/view-tracker";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -43,6 +44,13 @@ async function Issue({ params }: Pick<PageProps<"/issues/[id]">, "params">) {
         </div>
         <h1 className="text-[26px] leading-snug font-bold tracking-tight sm:text-3xl">{issue.title}</h1>
       </header>
+
+      {issue.imageKey && (
+        <figure>
+          <IssueImage issueId={issue.id} imageKey={issue.imageKey} className="w-full rounded-2xl" priority />
+          <figcaption className="mt-2 text-right text-xs text-subtle">AI로 만든 이미지입니다. 실제 장면이 아닙니다.</figcaption>
+        </figure>
+      )}
 
       <section className="card flex flex-col gap-6">
         <div>

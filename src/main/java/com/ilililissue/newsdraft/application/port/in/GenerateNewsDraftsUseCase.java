@@ -22,7 +22,8 @@ public interface GenerateNewsDraftsUseCase {
     Optional<NewsDraftRun> lastRun();
 
     /**
-     * @param error 실패했으면 사유, 성공이면 null
+     * @param imageCount 대표 이미지를 만든 이슈 수
+     * @param error      실패했으면 사유, 성공이면 null
      */
     record NewsDraftRun(
             LocalDateTime startedAt,
@@ -30,6 +31,7 @@ public interface GenerateNewsDraftsUseCase {
             int articleCount,
             List<Long> createdIssueIds,
             int skippedDrafts,
+            int imageCount,
             String error
     ) {
     }
