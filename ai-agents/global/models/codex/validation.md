@@ -18,6 +18,8 @@
 - [ ] 구현 결과를 구현 모델보다 높은 등급의 Reviewer 관점으로 독립 검수했다.
 - [ ] 되돌리기 어렵거나 공유 상태에 영향을 주는 행동은 실행 전 사용자 확인을 받았다.
 - [ ] push 실패나 원격 이력 충돌이 발생했을 때 사용자 해결 없이 `git pull`, `git merge`, `git rebase`, conflict resolution, force push를 실행하지 않았다.
+- [ ] 오류·버그 수정이 증상별 덧붙이기용 코드가 아니라 원인이 된 도메인 개념·정책을 명확히 하는 방향으로 이루어졌다.
+- [ ] 프로젝트 세션이라면 설치된 `global/` 사본을 수정하지 않고, 새 규칙은 해당 프로젝트의 local 문서에만 썼다.
 - [ ] 요청한 목표가 실제 변경에 반영되었다.
 - [ ] 관련 없는 파일 변경이 없다.
 - [ ] 작업 범위 안의 사용하지 않는 코드, 죽은 분기, 불필요한 주석을 정리했다.
@@ -112,9 +114,7 @@
 ## 문서 변경 검증
 
 - 링크가 올바른 상대 경로를 가리키는지 확인한다.
-- 프로젝트 루트 부트스트랩 정책을 변경했다면 `node scripts/bootstrap-project-root.mjs`가 기존 `AGENTS.md`, `CLAUDE.md`, `.codex/agents/*.toml`을 덮어쓰지 않는지 확인한다.
-- 루트 진입 문서 생성 정책만 변경했다면 `node scripts/ensure-entrypoints.mjs`가 기존 `AGENTS.md`와 `CLAUDE.md`를 덮어쓰지 않는지 확인한다.
-- nested `ai-agents/` 부모 루트 진입점 정책을 변경했다면 `node scripts/install-parent-entrypoints.mjs`가 부모 루트의 기존 `AGENTS.md`와 `CLAUDE.md`를 덮어쓰지 않는지 확인한다.
+- 배포 정책이나 `scripts/lib/sync.mjs`를 변경했다면 `node scripts/test-sync.mjs`를 실행하고, 실제 대상에는 `node scripts/sync.mjs --dry-run`으로 변경 예정과 경고를 먼저 확인한다.
 - 문서 구조가 해당 문서의 목적에 맞는 필수 섹션을 포함하는지 확인한다.
 - 저장소 운영 문서와 로컬 하네스 문서의 본문이 기본적으로 한국어로 작성되었는지 확인한다.
 - 파일명, 코드 식별자, 명령어, 스키마 필드명, 모델 ID, 외부 API 이름은 원문 또는 영어를 유지해도 되는 예외로 취급한다.

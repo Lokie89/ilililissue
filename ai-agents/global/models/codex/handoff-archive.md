@@ -169,3 +169,11 @@
 - 검증: `bash scripts/validate-docs.sh`, `node scripts/validate-harness.mjs`, `node scripts/test-evaluator.mjs`, `git diff --check`를 실행한다.
 - 남은 작업: 없음.
 - 주의 사항: Claude 전용 `Workflow`, hook, `AskUserQuestion`, Plan Mode 도구명은 Codex 문서로 옮기지 않았다. Codex의 리뷰 재기획 확인은 여전히 문서 기준의 수동 Reviewer 체크다.
+
+## 2026-08-27 (push 실패 시 원격 충돌 자동 해결 금지)
+
+- 목표: push 요청 또는 자동 push 설정이 있더라도 원격 저장소 이력 충돌이 발생하면 에이전트가 merge/rebase/conflict resolution으로 해결하지 않고 사용자에게 넘기도록 규칙을 명시한다.
+- 변경: Codex/Claude `tools.md`에 `Git 원격 동기화 경계` 절을 추가해 push 실패 시 원인 보고 후 중단하고, `git pull`, `git merge`, `git rebase`, conflict resolution, force push를 임의로 실행하지 않도록 했다. 양쪽 실패 케이스와 검증 문서, 문서 검증 스크립트에 같은 기준을 연결했다.
+- 검증: `bash scripts/validate-docs.sh`, `node scripts/validate-harness.mjs`, `node scripts/test-evaluator.mjs`, `git diff --check`를 실행한다.
+- 남은 작업: 없음.
+- 주의 사항: 사용자가 merge/rebase까지 명시하더라도 원격 이력 변경이나 충돌 해결이 포함되면 별도 승인과 현재 변경 보호 확인 없이는 진행하지 않는다.

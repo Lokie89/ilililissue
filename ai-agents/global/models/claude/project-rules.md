@@ -7,9 +7,9 @@
 ## 프로젝트 진입 기준
 
 - 먼저 사용자 요청이 새 프로젝트 생성인지, 기존 프로젝트 수정인지, 단순 분석인지 분류한다.
-- 이 문서 세트를 다른 프로젝트 루트로 복사했는데 루트 `AGENTS.md`, `CLAUDE.md`, 기본 `.codex/agents/`/`.claude/agents/` 에이전트가 없으면 `node scripts/bootstrap-project-root.mjs`로 생성한다. 기존 파일은 덮어쓰지 않는다.
-- `ai-agents/` 디렉터리 자체를 다른 프로젝트 루트 안에 넣어 쓰는 nested 구성이라면, Claude가 이 문서 세트를 한 번이라도 읽었을 때 부모 루트에 얇은 `AGENTS.md`/`CLAUDE.md` 진입점이 있는지 확인하고 없으면 `node scripts/install-parent-entrypoints.mjs`로 생성한다. 기존 파일은 덮어쓰지 않는다.
-- 루트 진입 문서만 보강하면 충분한 경우에는 `node scripts/ensure-entrypoints.mjs`를 사용할 수 있다.
+- 다른 프로젝트로의 배포는 원본 `ai-agents` 저장소 세션에서 `node scripts/sync.mjs`로만 한다. 대상 목록은 `sync-targets.json`이다. 다른 프로젝트에 설치된 사본 안에서는 진입점, `ai-agents/` 사본, 루트 `.claude/`·`.codex/` 설치 파일을 직접 만들거나 고치지 않는다.
+- `sync.mjs`는 `ai-agents/` 사본을 원본으로 덮어쓰고, 루트 진입점의 관리 블록(`<!-- ai-agents:start -->`~`end`)만 갱신하며, 루트 `.claude/`·`.codex/`에 원본 에이전트와 hook을 설치한다. 원본 이력에 없는 사용자 수정본은 덮어쓰지 않는다.
+- 대상 프로젝트의 local 하네스(`docs/agents/`)는 없을 때 템플릿 뼈대만 만들고 그 뒤로는 고치지 않는다. 옛 위치(`ai-agents/local/<project-name>/`)에 있으면 한 번 옮기고 경로를 고친다.
 - 새 프로젝트 생성이나 프로젝트 초기 세팅으로 분류되면 기본 동작은 청사진 먼저 제시이며, 사용자가 청사진 승인 또는 즉시 파일 생성을 명시하기 전까지 구현을 시작하지 않는다.
 - `Glob`/`Read`로 저장소 구조, 실행 파일, 설정 파일, lockfile, 테스트 파일, README를 확인한다.
 - 해당 프로젝트의 로컬 문서가 있는지 확인한다.

@@ -18,6 +18,17 @@
 
 ## 현재 기록
 
+### 2026-11-03 (오류·버그 수정 시 도메인·정책 우선 원칙)
+
+- 목표: 사용자가 "그때그때 에러, 버그 수정을 위한 덧붙이기용 코드를 양산하면 안 되고, 명확한 도메인과 정책을 쌓아가야 하며, 궁금증이 있으면 도메인·정책 질문을 우선한다"는 원칙을 요청했다.
+- 변경: Codex/Claude `domain-rules.md`에 `오류·버그 수정 원칙` 절을 추가했다. `goal.md` 금지 항목, `roles.md` Developer/Reviewer 관점, `harness/failure-cases.md` 도메인 정책 위반, `validation.md` 체크리스트에 같은 기준을 연결하고 `scripts/validate-docs.sh`에 핵심 문구 확인을 추가했다.
+- 검증: `bash scripts/validate-docs.sh`, `node scripts/validate-harness.mjs`, `node scripts/test-evaluator.mjs`, `git diff --check`를 실행한다.
+- 추가 변경: 사용자가 global/local 샌드박스 정책을 확정했다. global은 원본 저장소에서 사용자만 쓰고 프로젝트로 한 방향으로만 배포하며, 프로젝트 세션은 local에만 쓰고 global로 올리지 않는다. 확인 순서는 global → local이고 충돌하면 local을 따른다. `AGENT.md` `글로벌과 로컬`, 실패 케이스, 검증 체크리스트에 반영했다.
+- 배포 변경: 단일 `scripts/sync.mjs`(+`scripts/lib/sync.mjs`, 회귀 테스트 `scripts/test-sync.mjs`, 대상 `sync-targets.json`)로 기존 부트스트랩 스크립트 3개를 대체했다. 대상의 `ai-agents/`는 읽기 전용 사본으로 덮어쓰고, 루트 진입점은 관리 블록(`@import`)만 갱신하며, 루트 `.claude/`·`.codex/`에 에이전트와 hook을 설치하고, local 하네스는 `docs/agents/`(옛 `ai-agents/local/<project>/`는 이동·경로 수정)로 둔다. `_Study` 10개와 `_Project` fms2, fms3, fms-lb, fms-daeduck, fms-ygone, fms-shinsung에 적용했고 재실행 시 변경 없음을 확인했다(대상 커밋은 하지 않음).
+- 배포 남은 작업: auto-simulate는 처음에 다른 세션이 폴더를 잡고 있어(EPERM) 이동이 실패했고, 잠금이 풀린 뒤 다시 적용했다. fms2는 사용자 결정에 따라 대상 하나로 두고 모듈별 local을 `docs/agents/fms/`, `docs/agents/fms-ui/`에 두며 `docs/agents/context-map.md`를 모듈 색인으로 삼았다(루트 평면 사본은 원본 이력 확인 후 제거). fms_simulator는 사용자 결정으로 동기화 대상에서 제외한다. chart-manager 루트 `CLAUDE.md`의 "ai-agents는 무관" 문구는 사용자 승인으로 "규칙을 따르고 수정하지 않는다"로 바꿨다. 큰 local 문서(auto-simulate, simulation-reporter, nyamlog, fms3, fms2/fms 등)와 템플릿 뼈대만 생긴 프로젝트의 `context-map.md` 채우기가 남았다.
+- 남은 작업: 없음.
+- 주의 사항: 정책과 무관한 단순 구현 실수는 최소 수정 대상이며, 임시 우회는 사용자 확인과 제거 조건 기록이 있을 때만 허용한다.
+
 ### 2026-09-21 (낮은 모델 우선 구현과 독립 Reviewer 검수)
 
 - 목표: 구현을 가장 낮은 가용 모델·낮은 추론 강도에서 시작하고, 필요한 경우에만 승격하며, 구현보다 높은 등급의 Reviewer로 결과를 독립 검수하는 기준을 Codex 문서에 반영한다.
@@ -49,12 +60,3 @@
 - 검증: `bash scripts/validate-docs.sh`, `node scripts/validate-harness.mjs`, `node scripts/test-evaluator.mjs`, `git diff --check`를 실행한다.
 - 남은 작업: 없음.
 - 주의 사항: 요약은 최신 글로벌 기록과 현재 요청에 해당하는 로컬 프로젝트 기록을 근거로 하며, 첫 응답 뒤에는 반복하지 않는다.
-
-### 2026-08-27 (push 실패 시 원격 충돌 자동 해결 금지)
-
-- 목표: push 요청 또는 자동 push 설정이 있더라도 원격 저장소 이력 충돌이 발생하면 에이전트가 merge/rebase/conflict resolution으로 해결하지 않고 사용자에게 넘기도록 규칙을 명시한다.
-- 변경: Codex/Claude `tools.md`에 `Git 원격 동기화 경계` 절을 추가해 push 실패 시 원인 보고 후 중단하고, `git pull`, `git merge`, `git rebase`, conflict resolution, force push를 임의로 실행하지 않도록 했다. 양쪽 실패 케이스와 검증 문서, 문서 검증 스크립트에 같은 기준을 연결했다.
-- 검증: `bash scripts/validate-docs.sh`, `node scripts/validate-harness.mjs`, `node scripts/test-evaluator.mjs`, `git diff --check`를 실행한다.
-- 남은 작업: 없음.
-- 주의 사항: 사용자가 merge/rebase까지 명시하더라도 원격 이력 변경이나 충돌 해결이 포함되면 별도 승인과 현재 변경 보호 확인 없이는 진행하지 않는다.
-

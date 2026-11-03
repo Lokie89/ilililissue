@@ -126,3 +126,11 @@
 - 검증: `bash scripts/validate-docs.sh`, `node scripts/validate-harness.mjs`(6 fixture), `node scripts/test-evaluator.mjs`(2 case) 모두 통과.
 - 남은 작업: 실제 DB를 쓰는 local 프로젝트가 생기면 해당 `architecture.md`/`domain-policy.md`에 트랜잭션 격리 수준, 커밋 시점, 예외 처리 방식을 구체적으로 기록해야 한다.
 - 주의 사항: 이 저장소에는 현재 실제 DB를 쓰는 local 프로젝트가 없어 글로벌 원칙 수준으로만 문서화했다. 코드 구현이나 실제 DB 연결 검증은 하지 않았다.
+
+## 2026-08-20 (코드 분석 산출물 문서화 규칙 추가)
+
+- 목표: 사용자가 "코드 분석도 토큰을 많이 쓰니 분석할 때마다 내용을 별도 문서로 만들자"고 요청했다. `AskUserQuestion`으로 적용 범위(이 저장소 전역 규칙)와 저장 위치/형식(`local/<project-name>/analysis/`에 Markdown)을 확인한 뒤 반영했다.
+- 변경: `project-rules.md`에 `코드 분석 산출물` 절을 추가해, 코드베이스·아키텍처를 설명·요약·평가하는 분석 작업(짧은 단일 질의·자명한 파일 확인 제외)은 `local/<project-name>/analysis/YYYY-MM-DD-<주제-슬러그>.md`로 남기고, 분석 문서만 단독으로 만들 때는 로컬 하네스 전체 생성을 강제하지 않으며, 재분석 전 기존 문서 확인을 먼저 하도록 명시했다. `AGENT.md`의 `작업 후 규칙`에 이 기준을 참조하는 문장을 추가했다. `local/README.md`의 권장 구조에 선택 항목 `analysis/`를 추가했다.
+- 검증: `bash scripts/validate-docs.sh`, `node scripts/validate-harness.mjs`, `node scripts/test-evaluator.mjs`를 실행한다.
+- 남은 작업: Codex 쪽(`global/models/codex/project-rules.md` 등)에는 아직 이 규칙을 반영하지 않았다 — 필요하면 동일한 절을 추가해 두 모델 간 비대칭을 없앤다. `local/_template/`이나 `local/sample-project/`에 `analysis/` 예시 디렉터리는 아직 만들지 않았다.
+- 주의 사항: 이 규칙은 기존 로컬 하네스 필수 파일 6종을 대체하지 않고, 분석 산출물만 별도로 다룬다.

@@ -4,7 +4,7 @@
 
 > '누가 이겼는지 보여주는 서비스'가 아니라 '사람들이 왜 다르게 생각하는지 보여주는 서비스'.
 
-- 기획·도메인 정책: [`ai-agents/local/ilililissue/`](./ai-agents/local/ilililissue/) (`goal.md`, `domain-policy.md`, `architecture.md`)
+- 기획·도메인 정책: [`docs/agents/`](./docs/agents/) (`goal.md`, `domain-policy.md`, `architecture.md`)
 - 에이전트 작업 기준: [`CLAUDE.md`](./CLAUDE.md), [`AGENTS.md`](./AGENTS.md)
 
 ## 기술 스택
