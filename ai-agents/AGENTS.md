@@ -1,6 +1,6 @@
 # ai-agents 사본 (읽기 전용)
 
-이 디렉터리는 원본 `ai-agents` 저장소에서 `scripts/sync.mjs`로 복사한 global 규칙의 읽기 전용 사본이다 (원본 커밋: `d2dc8b56f6abc33f31c76f24e1da94f20b0346af+uncommitted`).
+이 디렉터리는 원본 `ai-agents` 저장소에서 `scripts/sync.mjs`로 복사한 global 규칙의 읽기 전용 사본이다 (원본 커밋: `0ceb2485c2d4eafa7db96f90880cd773d758cba8`).
 
 - 작업 진입점은 프로젝트 루트의 `AGENTS.md`다.
 - 이 디렉터리 안의 파일은 수정하지 않는다. 다음 동기화 때 덮어써진다.
